@@ -427,7 +427,7 @@ interface DataTableProps<TData, TValue> {
 | `CheckboxField` | Single checkbox bound to boolean field. | Various settings |
 | `RadioGroupField` | Radio button group bound to enum field. | Pricing type (fixed/weight_based), discount type (percentage/fixed_amount) |
 | `PasswordField` | Input with show/hide toggle for password entry. | User creation (password), user creation (PIN code) |
-| `PinCodeField` | Masked numeric input (4-8 digits) with dots. | User creation/edit (PIN code) |
+| `PinCodeField` | Masked numeric input (6 digits) with dots. | User creation/edit (PIN code) |
 
 **Each field follows the established pattern:**
 1. Uses `useFieldContext()` to read field state (value, errors, meta)

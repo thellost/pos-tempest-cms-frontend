@@ -5,7 +5,7 @@ import * as TanstackQuery from './integrations/tanstack-query/root-provider'
 import * as Sentry from '@sentry/tanstackstart-react'
 
 // Import the generated route tree
-import { routeTree } from './routeTree.gen'
+import { routeTree } from './routeTree.gen.ts'
 
 // Create a new router instance
 export const getRouter = () => {
