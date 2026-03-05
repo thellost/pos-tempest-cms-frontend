@@ -2,7 +2,7 @@
 
 > **Base URL:** `http://localhost:8080`  
 > **Content-Type:** `application/json`  
-> **Total Endpoints:** 93
+> **Total Endpoints:** 95
 
 ---
 
@@ -804,6 +804,8 @@ Get the financial summary for a shift.
     "closing_cash": 1850000.00,
     "expected_cash": 1830000.00,
     "cash_difference": 20000.00,
+    "total_cash_in": 100000.00,
+    "total_cash_out": 200000.00,
     "payment_breakdown": [
       {
         "payment_method": "cash",
@@ -822,6 +824,19 @@ Get the financial summary for a shift.
         "count": 8,
         "total_amount": 1250000.00,
         "percentage": 18.52
+      }
+    ],
+    "cash_transactions": [
+      {
+        "id": 1,
+        "shift_id": 1,
+        "user_id": 2,
+        "type": "cash_out",
+        "reason": "owner_withdrawal",
+        "amount": 200000.00,
+        "note": "Owner took cash for supplies",
+        "created_at": "2026-03-03T10:30:00Z",
+        "user_name": "Sarah Cashier"
       }
     ]
   }
@@ -883,6 +898,106 @@ cash_difference = closing_cash - expected_cash
 ```
 
 **Response `200 OK`:** Returns the updated (closed) shift object with computed fields.
+
+---
+
+### `POST /api/v1/shifts/:id/cash-transactions`
+
+> **Roles:** all staff
+
+Record a non-order cash movement (e.g., owner withdrawal, petty cash, cash deposit) against an **open** shift. This does not affect order payments — it only tracks manual cash drawer changes for accurate cash reconciliation.
+
+**Path Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | int | Shift ID |
+
+**Request Body:**
+```json
+{
+  "type": "cash_out",
+  "reason": "owner_withdrawal",
+  "amount": 200000.00,
+  "note": "Owner took cash for supplies"
+}
+```
+
+| Field | Type | Required | Validation |
+|-------|------|----------|------------|
+| `type` | string | ✅ | `cash_in` or `cash_out` |
+| `reason` | string | ✅ | See [Cash Transaction Reason](#cash-transaction-reason) enum |
+| `amount` | float | ✅ | > 0 |
+| `note` | string | ❌ | Free-text note |
+
+**Response `201 Created`:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "shift_id": 1,
+    "user_id": 2,
+    "type": "cash_out",
+    "reason": "owner_withdrawal",
+    "amount": 200000.00,
+    "note": "Owner took cash for supplies",
+    "created_at": "2026-03-03T10:30:00Z",
+    "user_name": "Sarah Cashier"
+  }
+}
+```
+
+**Error `404`:** Shift not found.
+
+**Error `400`:** Shift is not open (transactions cannot be added to a closed shift).
+
+---
+
+### `GET /api/v1/shifts/:id/cash-transactions`
+
+> **Roles:** all staff
+
+List all non-order cash transactions recorded against a shift, ordered chronologically. The full list is also embedded in the shift summary response under `cash_transactions`.
+
+**Path Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `id` | int | Shift ID |
+
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "shift_id": 1,
+      "user_id": 2,
+      "type": "cash_out",
+      "reason": "owner_withdrawal",
+      "amount": 200000.00,
+      "note": "Owner took cash for supplies",
+      "created_at": "2026-03-03T10:30:00Z",
+      "user_name": "Sarah Cashier"
+    },
+    {
+      "id": 2,
+      "shift_id": 1,
+      "user_id": 2,
+      "type": "cash_in",
+      "reason": "change_refill",
+      "amount": 100000.00,
+      "note": "Added change supply",
+      "created_at": "2026-03-03T11:15:00Z",
+      "user_name": "Sarah Cashier"
+    }
+  ]
+}
+```
+
+**Error `404`:** Shift not found.
 
 ---
 
@@ -3524,3 +3639,21 @@ Get a detailed financial report for a specific shift.
 | `adjustment` | Manual stock adjustment |
 | `waste` | Stock written off as waste |
 | `transfer` | Stock transferred between branches |
+
+### Cash Transaction Type
+| Value | Description |
+|-------|-------------|
+| `cash_in` | Cash added to the drawer (non-order) |
+| `cash_out` | Cash removed from the drawer (non-order) |
+
+### Cash Transaction Reason
+| Value | Description |
+|-------|-------------|
+| `owner_withdrawal` | Owner withdrawing cash from drawer |
+| `supply_purchase` | Cash paid out for a supply/vendor purchase |
+| `staff_advance` | Cash advance given to a staff member |
+| `petty_cash` | Petty cash disbursement |
+| `tip_out` | Tip payout to staff |
+| `cash_deposit` | Cash deposited into drawer |
+| `change_refill` | Adding coins/notes for making change |
+| `other` | Other reason (use `note` field for details) |

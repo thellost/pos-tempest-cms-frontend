@@ -28,6 +28,39 @@ export interface PaymentBreakdown {
   percentage: number
 }
 
+// ─── Cash Transaction Types ───────────────────────────────────────────────────
+
+export type CashTransactionType = 'cash_in' | 'cash_out'
+
+export type CashTransactionReason =
+  | 'owner_withdrawal'
+  | 'supply_purchase'
+  | 'staff_advance'
+  | 'petty_cash'
+  | 'tip_out'
+  | 'cash_deposit'
+  | 'change_refill'
+  | 'other'
+
+export interface CashTransaction {
+  id: number
+  shift_id: number
+  user_id: number
+  type: CashTransactionType
+  reason: CashTransactionReason
+  amount: number
+  note: string | null
+  created_at: string
+  user_name: string
+}
+
+export interface CreateCashTransactionPayload {
+  type: CashTransactionType
+  reason: CashTransactionReason
+  amount: number
+  note?: string
+}
+
 export interface ShiftSummary {
   shift_id: number
   total_orders: number
@@ -40,7 +73,10 @@ export interface ShiftSummary {
   closing_cash: number | null
   expected_cash: number | null
   cash_difference: number | null
+  total_cash_in: number
+  total_cash_out: number
   payment_breakdown: PaymentBreakdown[]
+  cash_transactions: CashTransaction[]
 }
 
 export interface OpenShiftPayload {
@@ -93,4 +129,16 @@ export const shiftsService = {
 
   close: (id: number, payload: CloseShiftPayload) =>
     api.post<Shift>(`/api/v1/shifts/${id}/close`, payload),
+
+  listCashTransactions: (shiftId: number) =>
+    api.get<CashTransaction[]>(`/api/v1/shifts/${shiftId}/cash-transactions`),
+
+  createCashTransaction: (
+    shiftId: number,
+    payload: CreateCashTransactionPayload,
+  ) =>
+    api.post<CashTransaction>(
+      `/api/v1/shifts/${shiftId}/cash-transactions`,
+      payload,
+    ),
 }

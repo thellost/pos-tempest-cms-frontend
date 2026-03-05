@@ -263,7 +263,8 @@ CREATE TABLE "categories" (
   "sort_order" integer NOT NULL DEFAULT 0,
   "is_active" boolean NOT NULL DEFAULT true,
   "created_at" timestamp NOT NULL DEFAULT (now()),
-  "updated_at" timestamp NOT NULL DEFAULT (now())
+  "updated_at" timestamp NOT NULL DEFAULT (now()),
+  "button_color" text,
 );
 
 CREATE TABLE "menu_items" (

@@ -4,6 +4,7 @@ import {
   shiftsService,
   type CloseShiftPayload,
   type OpenShiftPayload,
+  type CreateCashTransactionPayload,
 } from '@/lib/services/shifts'
 import { queryKeys, type ShiftFilters } from '@/lib/query-keys'
 
@@ -61,6 +62,39 @@ export function useCloseShift() {
       queryClient.invalidateQueries({ queryKey: queryKeys.shifts.detail(id) })
       queryClient.invalidateQueries({ queryKey: queryKeys.shifts.summary(id) })
       toast.success('Shift closed successfully')
+    },
+    onError: (err: Error) => toast.error(err.message),
+  })
+}
+
+// ─── Cash Transactions ────────────────────────────────────────────────────────
+
+export function useShiftCashTransactions(shiftId: number) {
+  return useQuery({
+    queryKey: queryKeys.shifts.cashTransactions(shiftId),
+    queryFn: () => shiftsService.listCashTransactions(shiftId),
+    enabled: shiftId > 0,
+  })
+}
+
+export function useCreateCashTransaction() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({
+      shiftId,
+      payload,
+    }: {
+      shiftId: number
+      payload: CreateCashTransactionPayload
+    }) => shiftsService.createCashTransaction(shiftId, payload),
+    onSuccess: (_, { shiftId }) => {
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.shifts.cashTransactions(shiftId),
+      })
+      queryClient.invalidateQueries({
+        queryKey: queryKeys.shifts.summary(shiftId),
+      })
+      toast.success('Transaction recorded successfully')
     },
     onError: (err: Error) => toast.error(err.message),
   })

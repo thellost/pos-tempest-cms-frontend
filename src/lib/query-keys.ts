@@ -202,6 +202,8 @@ export const queryKeys = {
     list: (filters?: ShiftFilters) => ['shifts', 'list', filters ?? {}] as const,
     detail: (id: number) => ['shifts', 'detail', id] as const,
     summary: (id: number) => ['shifts', 'summary', id] as const,
+    cashTransactions: (shiftId: number) =>
+      ['shifts', 'cash-transactions', shiftId] as const,
   },
 
   // ── Floor Areas ───────────────────────────────────────────────────────────

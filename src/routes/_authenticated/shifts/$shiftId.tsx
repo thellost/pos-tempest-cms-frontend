@@ -1,16 +1,30 @@
 import { useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { ArrowLeftIcon, LockIcon } from 'lucide-react'
+import {
+  ArrowLeftIcon,
+  LockIcon,
+  ArrowDownCircleIcon,
+  ArrowUpCircleIcon,
+} from 'lucide-react'
 import { PieChart, Pie, Cell } from 'recharts'
-import { useShift, useShiftSummary, useCloseShift } from '@/hooks/use-shifts'
+import {
+  useShift,
+  useShiftSummary,
+  useCloseShift,
+} from '@/hooks/use-shifts'
 import { useAppForm } from '@/hooks/use-form'
-import type { CloseShiftPayload } from '@/lib/services/shifts'
+import type {
+  CloseShiftPayload,
+  CashTransaction,
+  CashTransactionReason,
+} from '@/lib/services/shifts'
 import { PageHeader } from '@/components/page-header'
 import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Separator } from '@/components/ui/separator'
+import { Badge } from '@/components/ui/badge'
 import {
   Dialog,
   DialogContent,
@@ -52,6 +66,17 @@ const PAYMENT_LABELS: Record<string, string> = {
   credit_card: 'Credit Card',
   qris: 'QRIS',
   bank_transfer: 'Bank Transfer',
+}
+
+const CASH_TX_REASON_LABELS: Record<CashTransactionReason, string> = {
+  owner_withdrawal: 'Owner Withdrawal',
+  supply_purchase: 'Supply Purchase',
+  staff_advance: 'Staff Advance',
+  petty_cash: 'Petty Cash',
+  tip_out: 'Tip Out',
+  cash_deposit: 'Cash Deposit',
+  change_refill: 'Change Refill',
+  other: 'Other',
 }
 
 const CHART_COLORS = [
@@ -233,6 +258,26 @@ function ShiftDetailPage() {
                 label="Opening Cash"
                 value={formatIDR(summary.opening_cash)}
               />
+              {(summary.total_cash_in > 0 || summary.total_cash_out > 0) && (
+                <>
+                  <InfoRow
+                    label="Cash In"
+                    value={
+                      <span className="text-emerald-600 dark:text-emerald-400">
+                        +{formatIDR(summary.total_cash_in)}
+                      </span>
+                    }
+                  />
+                  <InfoRow
+                    label="Cash Out"
+                    value={
+                      <span className="text-destructive">
+                        -{formatIDR(summary.total_cash_out)}
+                      </span>
+                    }
+                  />
+                </>
+              )}
               <InfoRow
                 label="Expected Cash"
                 value={formatIDR(summary.expected_cash)}
@@ -343,6 +388,26 @@ function ShiftDetailPage() {
         </Card>
       )}
 
+      {/* ── Cash Transactions ───────────────────────────────────────── */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle>Cash Transactions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {!summary?.cash_transactions?.length ? (
+            <p className="py-6 text-center text-sm text-muted-foreground">
+              No cash transactions recorded for this shift.
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {summary.cash_transactions.map((tx) => (
+                <CashTransactionRow key={tx.id} tx={tx} />
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* ── Close Shift Dialog ─────────────────────────────────────────── */}
       <Dialog open={closeDialogOpen} onOpenChange={setCloseDialogOpen}>
         <DialogContent className="sm:max-w-sm">
@@ -356,6 +421,56 @@ function ShiftDetailPage() {
           />
         </DialogContent>
       </Dialog>
+
+    </div>
+  )
+}
+
+// ─── Cash Transaction Row ─────────────────────────────────────────────────────
+
+function CashTransactionRow({ tx }: { tx: CashTransaction }) {
+  const isCashIn = tx.type === 'cash_in'
+  return (
+    <div className="flex items-start justify-between gap-3 rounded-md border px-3 py-2.5 text-sm">
+      <div className="flex min-w-0 items-start gap-2.5">
+        {isCashIn ? (
+          <ArrowDownCircleIcon className="mt-0.5 size-4 shrink-0 text-emerald-500" />
+        ) : (
+          <ArrowUpCircleIcon className="mt-0.5 size-4 shrink-0 text-destructive" />
+        )}
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Badge
+              variant={isCashIn ? 'default' : 'destructive'}
+              className="text-xs"
+            >
+              {isCashIn ? 'Cash In' : 'Cash Out'}
+            </Badge>
+            <span className="font-medium">
+              {CASH_TX_REASON_LABELS[tx.reason] ?? tx.reason}
+            </span>
+          </div>
+          {tx.note && (
+            <p className="mt-0.5 truncate text-xs text-muted-foreground">
+              {tx.note}
+            </p>
+          )}
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {tx.user_name} · {formatDate(tx.created_at)}
+          </p>
+        </div>
+      </div>
+      <span
+        className={cn(
+          'shrink-0 font-semibold tabular-nums',
+          isCashIn
+            ? 'text-emerald-600 dark:text-emerald-400'
+            : 'text-destructive',
+        )}
+      >
+        {isCashIn ? '+' : '-'}
+        {formatIDR(tx.amount)}
+      </span>
     </div>
   )
 }

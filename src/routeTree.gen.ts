@@ -17,6 +17,7 @@ import { Route as AuthenticatedTablesIndexRouteImport } from './routes/_authenti
 import { Route as AuthenticatedShiftsIndexRouteImport } from './routes/_authenticated/shifts/index'
 import { Route as AuthenticatedDevicesIndexRouteImport } from './routes/_authenticated/devices/index'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard/index'
+import { Route as AuthenticatedCategoriesIndexRouteImport } from './routes/_authenticated/categories/index'
 import { Route as AuthenticatedBranchesIndexRouteImport } from './routes/_authenticated/branches/index'
 import { Route as AuthenticatedUsersCreateRouteImport } from './routes/_authenticated/users/create'
 import { Route as AuthenticatedUsersUserIdRouteImport } from './routes/_authenticated/users/$userId'
@@ -65,6 +66,12 @@ const AuthenticatedDashboardIndexRoute =
     path: '/dashboard/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedCategoriesIndexRoute =
+  AuthenticatedCategoriesIndexRouteImport.update({
+    id: '/categories/',
+    path: '/categories/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedBranchesIndexRoute =
   AuthenticatedBranchesIndexRouteImport.update({
     id: '/branches/',
@@ -97,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/users/$userId': typeof AuthenticatedUsersUserIdRoute
   '/users/create': typeof AuthenticatedUsersCreateRoute
   '/branches/': typeof AuthenticatedBranchesIndexRoute
+  '/categories/': typeof AuthenticatedCategoriesIndexRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/devices/': typeof AuthenticatedDevicesIndexRoute
   '/shifts/': typeof AuthenticatedShiftsIndexRoute
@@ -110,6 +118,7 @@ export interface FileRoutesByTo {
   '/users/$userId': typeof AuthenticatedUsersUserIdRoute
   '/users/create': typeof AuthenticatedUsersCreateRoute
   '/branches': typeof AuthenticatedBranchesIndexRoute
+  '/categories': typeof AuthenticatedCategoriesIndexRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/devices': typeof AuthenticatedDevicesIndexRoute
   '/shifts': typeof AuthenticatedShiftsIndexRoute
@@ -125,6 +134,7 @@ export interface FileRoutesById {
   '/_authenticated/users/$userId': typeof AuthenticatedUsersUserIdRoute
   '/_authenticated/users/create': typeof AuthenticatedUsersCreateRoute
   '/_authenticated/branches/': typeof AuthenticatedBranchesIndexRoute
+  '/_authenticated/categories/': typeof AuthenticatedCategoriesIndexRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/devices/': typeof AuthenticatedDevicesIndexRoute
   '/_authenticated/shifts/': typeof AuthenticatedShiftsIndexRoute
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
     | '/users/$userId'
     | '/users/create'
     | '/branches/'
+    | '/categories/'
     | '/dashboard/'
     | '/devices/'
     | '/shifts/'
@@ -153,6 +164,7 @@ export interface FileRouteTypes {
     | '/users/$userId'
     | '/users/create'
     | '/branches'
+    | '/categories'
     | '/dashboard'
     | '/devices'
     | '/shifts'
@@ -167,6 +179,7 @@ export interface FileRouteTypes {
     | '/_authenticated/users/$userId'
     | '/_authenticated/users/create'
     | '/_authenticated/branches/'
+    | '/_authenticated/categories/'
     | '/_authenticated/dashboard/'
     | '/_authenticated/devices/'
     | '/_authenticated/shifts/'
@@ -237,6 +250,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/categories/': {
+      id: '/_authenticated/categories/'
+      path: '/categories'
+      fullPath: '/categories/'
+      preLoaderRoute: typeof AuthenticatedCategoriesIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/branches/': {
       id: '/_authenticated/branches/'
       path: '/branches'
@@ -274,6 +294,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedUsersUserIdRoute: typeof AuthenticatedUsersUserIdRoute
   AuthenticatedUsersCreateRoute: typeof AuthenticatedUsersCreateRoute
   AuthenticatedBranchesIndexRoute: typeof AuthenticatedBranchesIndexRoute
+  AuthenticatedCategoriesIndexRoute: typeof AuthenticatedCategoriesIndexRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
   AuthenticatedDevicesIndexRoute: typeof AuthenticatedDevicesIndexRoute
   AuthenticatedShiftsIndexRoute: typeof AuthenticatedShiftsIndexRoute
@@ -287,6 +308,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedUsersUserIdRoute: AuthenticatedUsersUserIdRoute,
   AuthenticatedUsersCreateRoute: AuthenticatedUsersCreateRoute,
   AuthenticatedBranchesIndexRoute: AuthenticatedBranchesIndexRoute,
+  AuthenticatedCategoriesIndexRoute: AuthenticatedCategoriesIndexRoute,
   AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
   AuthenticatedDevicesIndexRoute: AuthenticatedDevicesIndexRoute,
   AuthenticatedShiftsIndexRoute: AuthenticatedShiftsIndexRoute,

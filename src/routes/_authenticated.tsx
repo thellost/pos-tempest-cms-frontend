@@ -3,6 +3,8 @@ import { supabase } from '@/lib/supabase'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/sidebar'
 import { TopBar } from '@/components/layout/top-bar'
+import { LayoutSkeleton } from '@/components/layout/layout-skeleton'
+import { useAuth } from '@/hooks/use-auth'
 
 // --- Route -------------------------------------------------------------------
 //
@@ -15,7 +17,7 @@ import { TopBar } from '@/components/layout/top-bar'
 
 export const Route = createFileRoute('/_authenticated')({
   beforeLoad: async ({ location }) => {
-    // Skip on SSR � session lives in localStorage
+    // Skip on SSR — session lives in localStorage
     if (typeof window === 'undefined') return
 
     const {
@@ -31,12 +33,20 @@ export const Route = createFileRoute('/_authenticated')({
       })
     }
   },
+  pendingComponent: LayoutSkeleton,
+  pendingMs: 0,
   component: AuthenticatedLayout,
 })
 
 // --- Layout ------------------------------------------------------------------
 
 function AuthenticatedLayout() {
+  const { isLoading } = useAuth()
+
+  // Keep the skeleton showing until the /me fetch resolves so there's no
+  // flash of the sidebar with null user/role data.
+  if (isLoading) return <LayoutSkeleton />
+
   return (
     <SidebarProvider>
       <AppSidebar />
