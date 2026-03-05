@@ -13,6 +13,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
+import { Route as AuthenticatedTablesIndexRouteImport } from './routes/_authenticated/tables/index'
 import { Route as AuthenticatedShiftsIndexRouteImport } from './routes/_authenticated/shifts/index'
 import { Route as AuthenticatedDevicesIndexRouteImport } from './routes/_authenticated/devices/index'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard/index'
@@ -40,6 +41,12 @@ const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexRouteImport.update({
   path: '/users/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedTablesIndexRoute =
+  AuthenticatedTablesIndexRouteImport.update({
+    id: '/tables/',
+    path: '/tables/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedShiftsIndexRoute =
   AuthenticatedShiftsIndexRouteImport.update({
     id: '/shifts/',
@@ -93,6 +100,7 @@ export interface FileRoutesByFullPath {
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/devices/': typeof AuthenticatedDevicesIndexRoute
   '/shifts/': typeof AuthenticatedShiftsIndexRoute
+  '/tables/': typeof AuthenticatedTablesIndexRoute
   '/users/': typeof AuthenticatedUsersIndexRoute
 }
 export interface FileRoutesByTo {
@@ -105,6 +113,7 @@ export interface FileRoutesByTo {
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/devices': typeof AuthenticatedDevicesIndexRoute
   '/shifts': typeof AuthenticatedShiftsIndexRoute
+  '/tables': typeof AuthenticatedTablesIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
 }
 export interface FileRoutesById {
@@ -119,6 +128,7 @@ export interface FileRoutesById {
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/devices/': typeof AuthenticatedDevicesIndexRoute
   '/_authenticated/shifts/': typeof AuthenticatedShiftsIndexRoute
+  '/_authenticated/tables/': typeof AuthenticatedTablesIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
 }
 export interface FileRouteTypes {
@@ -133,6 +143,7 @@ export interface FileRouteTypes {
     | '/dashboard/'
     | '/devices/'
     | '/shifts/'
+    | '/tables/'
     | '/users/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -145,6 +156,7 @@ export interface FileRouteTypes {
     | '/dashboard'
     | '/devices'
     | '/shifts'
+    | '/tables'
     | '/users'
   id:
     | '__root__'
@@ -158,6 +170,7 @@ export interface FileRouteTypes {
     | '/_authenticated/dashboard/'
     | '/_authenticated/devices/'
     | '/_authenticated/shifts/'
+    | '/_authenticated/tables/'
     | '/_authenticated/users/'
   fileRoutesById: FileRoutesById
 }
@@ -194,6 +207,13 @@ declare module '@tanstack/react-router' {
       path: '/users'
       fullPath: '/users/'
       preLoaderRoute: typeof AuthenticatedUsersIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/tables/': {
+      id: '/_authenticated/tables/'
+      path: '/tables'
+      fullPath: '/tables/'
+      preLoaderRoute: typeof AuthenticatedTablesIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/shifts/': {
@@ -257,6 +277,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
   AuthenticatedDevicesIndexRoute: typeof AuthenticatedDevicesIndexRoute
   AuthenticatedShiftsIndexRoute: typeof AuthenticatedShiftsIndexRoute
+  AuthenticatedTablesIndexRoute: typeof AuthenticatedTablesIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
 }
 
@@ -269,6 +290,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
   AuthenticatedDevicesIndexRoute: AuthenticatedDevicesIndexRoute,
   AuthenticatedShiftsIndexRoute: AuthenticatedShiftsIndexRoute,
+  AuthenticatedTablesIndexRoute: AuthenticatedTablesIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
 }
 
