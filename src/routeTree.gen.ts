@@ -15,13 +15,20 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
 import { Route as AuthenticatedTablesIndexRouteImport } from './routes/_authenticated/tables/index'
 import { Route as AuthenticatedShiftsIndexRouteImport } from './routes/_authenticated/shifts/index'
+import { Route as AuthenticatedReservationsIndexRouteImport } from './routes/_authenticated/reservations/index'
+import { Route as AuthenticatedModifiersIndexRouteImport } from './routes/_authenticated/modifiers/index'
+import { Route as AuthenticatedMenuItemsIndexRouteImport } from './routes/_authenticated/menu-items/index'
 import { Route as AuthenticatedDevicesIndexRouteImport } from './routes/_authenticated/devices/index'
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard/index'
+import { Route as AuthenticatedCustomersIndexRouteImport } from './routes/_authenticated/customers/index'
 import { Route as AuthenticatedCategoriesIndexRouteImport } from './routes/_authenticated/categories/index'
 import { Route as AuthenticatedBranchesIndexRouteImport } from './routes/_authenticated/branches/index'
 import { Route as AuthenticatedUsersCreateRouteImport } from './routes/_authenticated/users/create'
 import { Route as AuthenticatedUsersUserIdRouteImport } from './routes/_authenticated/users/$userId'
 import { Route as AuthenticatedShiftsShiftIdRouteImport } from './routes/_authenticated/shifts/$shiftId'
+import { Route as AuthenticatedMenuItemsCreateRouteImport } from './routes/_authenticated/menu-items/create'
+import { Route as AuthenticatedMenuItemsItemIdRouteImport } from './routes/_authenticated/menu-items/$itemId'
+import { Route as AuthenticatedCustomersCustomerIdRouteImport } from './routes/_authenticated/customers/$customerId'
 
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
@@ -54,6 +61,24 @@ const AuthenticatedShiftsIndexRoute =
     path: '/shifts/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedReservationsIndexRoute =
+  AuthenticatedReservationsIndexRouteImport.update({
+    id: '/reservations/',
+    path: '/reservations/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedModifiersIndexRoute =
+  AuthenticatedModifiersIndexRouteImport.update({
+    id: '/modifiers/',
+    path: '/modifiers/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedMenuItemsIndexRoute =
+  AuthenticatedMenuItemsIndexRouteImport.update({
+    id: '/menu-items/',
+    path: '/menu-items/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedDevicesIndexRoute =
   AuthenticatedDevicesIndexRouteImport.update({
     id: '/devices/',
@@ -64,6 +89,12 @@ const AuthenticatedDashboardIndexRoute =
   AuthenticatedDashboardIndexRouteImport.update({
     id: '/dashboard/',
     path: '/dashboard/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedCustomersIndexRoute =
+  AuthenticatedCustomersIndexRouteImport.update({
+    id: '/customers/',
+    path: '/customers/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedCategoriesIndexRoute =
@@ -96,17 +127,42 @@ const AuthenticatedShiftsShiftIdRoute =
     path: '/shifts/$shiftId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedMenuItemsCreateRoute =
+  AuthenticatedMenuItemsCreateRouteImport.update({
+    id: '/menu-items/create',
+    path: '/menu-items/create',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedMenuItemsItemIdRoute =
+  AuthenticatedMenuItemsItemIdRouteImport.update({
+    id: '/menu-items/$itemId',
+    path: '/menu-items/$itemId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedCustomersCustomerIdRoute =
+  AuthenticatedCustomersCustomerIdRouteImport.update({
+    id: '/customers/$customerId',
+    path: '/customers/$customerId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
+  '/customers/$customerId': typeof AuthenticatedCustomersCustomerIdRoute
+  '/menu-items/$itemId': typeof AuthenticatedMenuItemsItemIdRoute
+  '/menu-items/create': typeof AuthenticatedMenuItemsCreateRoute
   '/shifts/$shiftId': typeof AuthenticatedShiftsShiftIdRoute
   '/users/$userId': typeof AuthenticatedUsersUserIdRoute
   '/users/create': typeof AuthenticatedUsersCreateRoute
   '/branches/': typeof AuthenticatedBranchesIndexRoute
   '/categories/': typeof AuthenticatedCategoriesIndexRoute
+  '/customers/': typeof AuthenticatedCustomersIndexRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/devices/': typeof AuthenticatedDevicesIndexRoute
+  '/menu-items/': typeof AuthenticatedMenuItemsIndexRoute
+  '/modifiers/': typeof AuthenticatedModifiersIndexRoute
+  '/reservations/': typeof AuthenticatedReservationsIndexRoute
   '/shifts/': typeof AuthenticatedShiftsIndexRoute
   '/tables/': typeof AuthenticatedTablesIndexRoute
   '/users/': typeof AuthenticatedUsersIndexRoute
@@ -114,13 +170,20 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/': typeof AuthenticatedIndexRoute
+  '/customers/$customerId': typeof AuthenticatedCustomersCustomerIdRoute
+  '/menu-items/$itemId': typeof AuthenticatedMenuItemsItemIdRoute
+  '/menu-items/create': typeof AuthenticatedMenuItemsCreateRoute
   '/shifts/$shiftId': typeof AuthenticatedShiftsShiftIdRoute
   '/users/$userId': typeof AuthenticatedUsersUserIdRoute
   '/users/create': typeof AuthenticatedUsersCreateRoute
   '/branches': typeof AuthenticatedBranchesIndexRoute
   '/categories': typeof AuthenticatedCategoriesIndexRoute
+  '/customers': typeof AuthenticatedCustomersIndexRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
   '/devices': typeof AuthenticatedDevicesIndexRoute
+  '/menu-items': typeof AuthenticatedMenuItemsIndexRoute
+  '/modifiers': typeof AuthenticatedModifiersIndexRoute
+  '/reservations': typeof AuthenticatedReservationsIndexRoute
   '/shifts': typeof AuthenticatedShiftsIndexRoute
   '/tables': typeof AuthenticatedTablesIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
@@ -130,13 +193,20 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/customers/$customerId': typeof AuthenticatedCustomersCustomerIdRoute
+  '/_authenticated/menu-items/$itemId': typeof AuthenticatedMenuItemsItemIdRoute
+  '/_authenticated/menu-items/create': typeof AuthenticatedMenuItemsCreateRoute
   '/_authenticated/shifts/$shiftId': typeof AuthenticatedShiftsShiftIdRoute
   '/_authenticated/users/$userId': typeof AuthenticatedUsersUserIdRoute
   '/_authenticated/users/create': typeof AuthenticatedUsersCreateRoute
   '/_authenticated/branches/': typeof AuthenticatedBranchesIndexRoute
   '/_authenticated/categories/': typeof AuthenticatedCategoriesIndexRoute
+  '/_authenticated/customers/': typeof AuthenticatedCustomersIndexRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
   '/_authenticated/devices/': typeof AuthenticatedDevicesIndexRoute
+  '/_authenticated/menu-items/': typeof AuthenticatedMenuItemsIndexRoute
+  '/_authenticated/modifiers/': typeof AuthenticatedModifiersIndexRoute
+  '/_authenticated/reservations/': typeof AuthenticatedReservationsIndexRoute
   '/_authenticated/shifts/': typeof AuthenticatedShiftsIndexRoute
   '/_authenticated/tables/': typeof AuthenticatedTablesIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
@@ -146,13 +216,20 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/customers/$customerId'
+    | '/menu-items/$itemId'
+    | '/menu-items/create'
     | '/shifts/$shiftId'
     | '/users/$userId'
     | '/users/create'
     | '/branches/'
     | '/categories/'
+    | '/customers/'
     | '/dashboard/'
     | '/devices/'
+    | '/menu-items/'
+    | '/modifiers/'
+    | '/reservations/'
     | '/shifts/'
     | '/tables/'
     | '/users/'
@@ -160,13 +237,20 @@ export interface FileRouteTypes {
   to:
     | '/login'
     | '/'
+    | '/customers/$customerId'
+    | '/menu-items/$itemId'
+    | '/menu-items/create'
     | '/shifts/$shiftId'
     | '/users/$userId'
     | '/users/create'
     | '/branches'
     | '/categories'
+    | '/customers'
     | '/dashboard'
     | '/devices'
+    | '/menu-items'
+    | '/modifiers'
+    | '/reservations'
     | '/shifts'
     | '/tables'
     | '/users'
@@ -175,13 +259,20 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/login'
     | '/_authenticated/'
+    | '/_authenticated/customers/$customerId'
+    | '/_authenticated/menu-items/$itemId'
+    | '/_authenticated/menu-items/create'
     | '/_authenticated/shifts/$shiftId'
     | '/_authenticated/users/$userId'
     | '/_authenticated/users/create'
     | '/_authenticated/branches/'
     | '/_authenticated/categories/'
+    | '/_authenticated/customers/'
     | '/_authenticated/dashboard/'
     | '/_authenticated/devices/'
+    | '/_authenticated/menu-items/'
+    | '/_authenticated/modifiers/'
+    | '/_authenticated/reservations/'
     | '/_authenticated/shifts/'
     | '/_authenticated/tables/'
     | '/_authenticated/users/'
@@ -236,6 +327,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShiftsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/reservations/': {
+      id: '/_authenticated/reservations/'
+      path: '/reservations'
+      fullPath: '/reservations/'
+      preLoaderRoute: typeof AuthenticatedReservationsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/modifiers/': {
+      id: '/_authenticated/modifiers/'
+      path: '/modifiers'
+      fullPath: '/modifiers/'
+      preLoaderRoute: typeof AuthenticatedModifiersIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/menu-items/': {
+      id: '/_authenticated/menu-items/'
+      path: '/menu-items'
+      fullPath: '/menu-items/'
+      preLoaderRoute: typeof AuthenticatedMenuItemsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/devices/': {
       id: '/_authenticated/devices/'
       path: '/devices'
@@ -248,6 +360,13 @@ declare module '@tanstack/react-router' {
       path: '/dashboard'
       fullPath: '/dashboard/'
       preLoaderRoute: typeof AuthenticatedDashboardIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/customers/': {
+      id: '/_authenticated/customers/'
+      path: '/customers'
+      fullPath: '/customers/'
+      preLoaderRoute: typeof AuthenticatedCustomersIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/categories/': {
@@ -285,18 +404,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedShiftsShiftIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/menu-items/create': {
+      id: '/_authenticated/menu-items/create'
+      path: '/menu-items/create'
+      fullPath: '/menu-items/create'
+      preLoaderRoute: typeof AuthenticatedMenuItemsCreateRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/menu-items/$itemId': {
+      id: '/_authenticated/menu-items/$itemId'
+      path: '/menu-items/$itemId'
+      fullPath: '/menu-items/$itemId'
+      preLoaderRoute: typeof AuthenticatedMenuItemsItemIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/customers/$customerId': {
+      id: '/_authenticated/customers/$customerId'
+      path: '/customers/$customerId'
+      fullPath: '/customers/$customerId'
+      preLoaderRoute: typeof AuthenticatedCustomersCustomerIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
   }
 }
 
 interface AuthenticatedRouteChildren {
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedCustomersCustomerIdRoute: typeof AuthenticatedCustomersCustomerIdRoute
+  AuthenticatedMenuItemsItemIdRoute: typeof AuthenticatedMenuItemsItemIdRoute
+  AuthenticatedMenuItemsCreateRoute: typeof AuthenticatedMenuItemsCreateRoute
   AuthenticatedShiftsShiftIdRoute: typeof AuthenticatedShiftsShiftIdRoute
   AuthenticatedUsersUserIdRoute: typeof AuthenticatedUsersUserIdRoute
   AuthenticatedUsersCreateRoute: typeof AuthenticatedUsersCreateRoute
   AuthenticatedBranchesIndexRoute: typeof AuthenticatedBranchesIndexRoute
   AuthenticatedCategoriesIndexRoute: typeof AuthenticatedCategoriesIndexRoute
+  AuthenticatedCustomersIndexRoute: typeof AuthenticatedCustomersIndexRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
   AuthenticatedDevicesIndexRoute: typeof AuthenticatedDevicesIndexRoute
+  AuthenticatedMenuItemsIndexRoute: typeof AuthenticatedMenuItemsIndexRoute
+  AuthenticatedModifiersIndexRoute: typeof AuthenticatedModifiersIndexRoute
+  AuthenticatedReservationsIndexRoute: typeof AuthenticatedReservationsIndexRoute
   AuthenticatedShiftsIndexRoute: typeof AuthenticatedShiftsIndexRoute
   AuthenticatedTablesIndexRoute: typeof AuthenticatedTablesIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
@@ -304,13 +451,20 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedCustomersCustomerIdRoute: AuthenticatedCustomersCustomerIdRoute,
+  AuthenticatedMenuItemsItemIdRoute: AuthenticatedMenuItemsItemIdRoute,
+  AuthenticatedMenuItemsCreateRoute: AuthenticatedMenuItemsCreateRoute,
   AuthenticatedShiftsShiftIdRoute: AuthenticatedShiftsShiftIdRoute,
   AuthenticatedUsersUserIdRoute: AuthenticatedUsersUserIdRoute,
   AuthenticatedUsersCreateRoute: AuthenticatedUsersCreateRoute,
   AuthenticatedBranchesIndexRoute: AuthenticatedBranchesIndexRoute,
   AuthenticatedCategoriesIndexRoute: AuthenticatedCategoriesIndexRoute,
+  AuthenticatedCustomersIndexRoute: AuthenticatedCustomersIndexRoute,
   AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,
   AuthenticatedDevicesIndexRoute: AuthenticatedDevicesIndexRoute,
+  AuthenticatedMenuItemsIndexRoute: AuthenticatedMenuItemsIndexRoute,
+  AuthenticatedModifiersIndexRoute: AuthenticatedModifiersIndexRoute,
+  AuthenticatedReservationsIndexRoute: AuthenticatedReservationsIndexRoute,
   AuthenticatedShiftsIndexRoute: AuthenticatedShiftsIndexRoute,
   AuthenticatedTablesIndexRoute: AuthenticatedTablesIndexRoute,
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,

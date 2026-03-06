@@ -271,6 +271,27 @@ function CategoryTreeNode({
           <FolderIcon className="size-4 shrink-0 text-amber-500/80" />
         )}
 
+        {/* Button color swatch */}
+        <div
+          className={cn(
+            'relative size-4 shrink-0 rounded-sm border border-input',
+            !node.button_color && 'bg-muted',
+          )}
+          style={node.button_color ? { backgroundColor: node.button_color } : undefined}
+          title={node.button_color ? `Button color: ${node.button_color}` : 'No color set'}
+        >
+          {!node.button_color && (
+            <svg
+              className="absolute inset-0 size-full text-muted-foreground/30"
+              viewBox="0 0 100 100"
+              preserveAspectRatio="none"
+              aria-hidden="true"
+            >
+              <line x1="0" y1="100" x2="100" y2="0" stroke="currentColor" strokeWidth="12" />
+            </svg>
+          )}
+        </div>
+
         {/* Name + meta */}
         <div className="flex min-w-0 flex-1 items-center gap-2">
           <span className="truncate text-sm font-medium">{node.name}</span>
@@ -399,6 +420,7 @@ function CategoryForm({
       name: category?.name ?? '',
       description: category?.description ?? '',
       sort_order: category?.sort_order ?? 0,
+      button_color: (category?.button_color ?? null) as string | null,
       is_active: category?.is_active ?? true,
     },
     onSubmit: async ({ value }) => {
@@ -413,6 +435,7 @@ function CategoryForm({
           name: value.name,
           description: value.description || undefined,
           sort_order: value.sort_order,
+          button_color: value.button_color || null,
           is_active: value.is_active,
         }
         updateMutation.mutate(
@@ -425,6 +448,7 @@ function CategoryForm({
           name: value.name,
           description: value.description || undefined,
           sort_order: value.sort_order,
+          button_color: value.button_color || null,
         }
         createMutation.mutate(payload, { onSuccess })
       }
@@ -489,6 +513,26 @@ function CategoryForm({
             description="Lower numbers appear first."
             min={0}
             step={1}
+          />
+        )}
+      </form.AppField>
+
+      {/* Button Color */}
+      <form.AppField
+        name="button_color"
+        validators={{
+          onBlur: ({ value }) => {
+            if (value && !/^#[0-9a-fA-F]{6}$/.test(value)) {
+              return 'Must be a valid hex color (e.g. #f4a261)'
+            }
+            return undefined
+          },
+        }}
+      >
+        {(field) => (
+          <field.ColorPickerField
+            label="Button Color"
+            description="Color used for this category's button in the POS app. Leave blank for no color."
           />
         )}
       </form.AppField>

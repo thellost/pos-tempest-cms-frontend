@@ -5,6 +5,8 @@ import { AppSidebar } from '@/components/layout/sidebar'
 import { TopBar } from '@/components/layout/top-bar'
 import { LayoutSkeleton } from '@/components/layout/layout-skeleton'
 import { useAuth } from '@/hooks/use-auth'
+import { fetchMe } from '@/lib/fetch-me'
+import { setAuthBootstrap } from '@/lib/auth-store'
 
 // --- Route -------------------------------------------------------------------
 //
@@ -32,6 +34,11 @@ export const Route = createFileRoute('/_authenticated')({
         },
       })
     }
+
+    // Fetch /me HERE, before any component renders, so AuthProvider can
+    // initialize with real data instead of null (no post-mount gap).
+    const user = await fetchMe(session)
+    setAuthBootstrap(user, session)
   },
   pendingComponent: LayoutSkeleton,
   pendingMs: 0,

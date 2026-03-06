@@ -1,6 +1,7 @@
 import { createFormHook } from '@tanstack/react-form'
 
 import { CheckboxField } from '@/components/form-fields/checkbox-field'
+import { ColorPickerField } from '@/components/form-fields/color-picker-field'
 import { ComboboxField } from '@/components/form-fields/combobox-field'
 import { DatePickerField } from '@/components/form-fields/date-picker-field'
 import { DateRangePickerField } from '@/components/form-fields/date-range-picker-field'
@@ -28,6 +29,7 @@ export const { useAppForm } = createFormHook({
     SwitchField,
     // New fields
     NumberField,
+    ColorPickerField,
     DatePickerField,
     DateRangePickerField,
     ComboboxField,

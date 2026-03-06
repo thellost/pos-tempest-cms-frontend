@@ -75,6 +75,14 @@ export function useDeleteCategory() {
       queryClient.invalidateQueries({ queryKey: queryKeys.categories.all })
       toast.success('Category deleted successfully')
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error) => {
+      if (err.message.toLowerCase().includes('reassign')) {
+        toast.error(
+          'Move or delete this category\'s menu items before deleting the category.',
+        )
+      } else {
+        toast.error(err.message)
+      }
+    },
   })
 }

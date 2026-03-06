@@ -9,6 +9,8 @@ interface TextFieldProps {
   description?: string
   type?: React.HTMLInputTypeAttribute
   disabled?: boolean
+  /** Renders a red asterisk next to the label */
+  required?: boolean
 }
 
 export function TextField({
@@ -17,13 +19,17 @@ export function TextField({
   description,
   type = 'text',
   disabled,
+  required,
 }: TextFieldProps) {
   const field = useFieldContext<string>()
   const errors = field.state.meta.errors
 
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor={field.name}>{label}</Label>
+      <Label htmlFor={field.name}>
+        {label}
+        {required && <span className="ml-0.5 text-destructive">*</span>}
+      </Label>
       <Input
         id={field.name}
         name={field.name}

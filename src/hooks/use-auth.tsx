@@ -3,10 +3,12 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from 'react'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
+import { getAuthBootstrap } from '@/lib/auth-store'
 
 
 export interface User {
@@ -46,9 +48,14 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = useState<Session | null>(null)
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
+  // Read once — populated by _authenticated beforeLoad before React renders.
+  // If present, useState initializers get real data and isLoading starts false.
+  const bootstrapRef = useRef(getAuthBootstrap())
+  const bootstrap = bootstrapRef.current
+
+  const [session, setSession] = useState<Session | null>(bootstrap?.session ?? null)
+  const [user, setUser] = useState<User | null>(bootstrap?.user ?? null)
+  const [isLoading, setIsLoading] = useState(bootstrap === null)
 
   const loadUserProfile = useCallback(
     async (currentSession: Session | null) => {
@@ -83,7 +90,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   )
 
   useEffect(() => {
-    // Restore existing session on mount
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
+      setSession(newSession)
+      await loadUserProfile(newSession)
+    })
+
+    if (bootstrapRef.current) {
+      // Router already fetched session + /me before this component mounted.
+      // Skip the redundant getSession + fetchMe round-trip; just keep the
+      // subscription alive for token refresh / sign-out events.
+      return () => subscription.unsubscribe()
+    }
+
+    // Non-bootstrapped path (login page, direct /me-less routes).
     supabase.auth
       .getSession()
       .then(({ data: { session: existingSession } }) => {
@@ -91,14 +112,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return loadUserProfile(existingSession)
       })
       .finally(() => setIsLoading(false))
-
-    // Subscribe to auth state changes (login, logout, token refresh)
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
-      setSession(newSession)
-      await loadUserProfile(newSession)
-    })
 
     return () => {
       subscription.unsubscribe()

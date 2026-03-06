@@ -1297,6 +1297,7 @@ Flat list of all categories.
       "parent_id": null,
       "name": "Food",
       "description": "All food items",
+      "button_color": "#f4a261",
       "sort_order": 0,
       "is_active": true,
       "created_at": "2026-01-15T08:00:00Z",
@@ -1307,6 +1308,7 @@ Flat list of all categories.
       "parent_id": 1,
       "name": "Appetizers",
       "description": null,
+      "button_color": null,
       "sort_order": 1,
       "is_active": true,
       "created_at": "2026-01-15T08:00:00Z",
@@ -1317,6 +1319,7 @@ Flat list of all categories.
       "parent_id": 1,
       "name": "Main Course",
       "description": null,
+      "button_color": null,
       "sort_order": 2,
       "is_active": true,
       "created_at": "2026-01-15T08:00:00Z",
@@ -1327,6 +1330,7 @@ Flat list of all categories.
       "parent_id": null,
       "name": "Beverages",
       "description": "All drinks",
+      "button_color": "#c2dbe9",
       "sort_order": 1,
       "is_active": true,
       "created_at": "2026-01-15T08:00:00Z",
@@ -1360,6 +1364,7 @@ Nested tree structure with children.
       "parent_id": null,
       "name": "Food",
       "description": "All food items",
+      "button_color": "#f4a261",
       "sort_order": 0,
       "is_active": true,
       "created_at": "2026-01-15T08:00:00Z",
@@ -1370,6 +1375,7 @@ Nested tree structure with children.
           "parent_id": 1,
           "name": "Appetizers",
           "description": null,
+          "button_color": null,
           "sort_order": 1,
           "is_active": true,
           "created_at": "2026-01-15T08:00:00Z",
@@ -1381,6 +1387,7 @@ Nested tree structure with children.
           "parent_id": 1,
           "name": "Main Course",
           "description": null,
+          "button_color": null,
           "sort_order": 2,
           "is_active": true,
           "created_at": "2026-01-15T08:00:00Z",
@@ -1394,6 +1401,7 @@ Nested tree structure with children.
       "parent_id": null,
       "name": "Beverages",
       "description": "All drinks",
+      "button_color": "#c2dbe9",
       "sort_order": 1,
       "is_active": true,
       "created_at": "2026-01-15T08:00:00Z",
@@ -1424,6 +1432,7 @@ Nested tree structure with children.
   "parent_id": 1,
   "name": "Desserts",
   "description": "Sweet treats",
+  "button_color": "#e76f51",
   "sort_order": 3
 }
 ```
@@ -1433,6 +1442,7 @@ Nested tree structure with children.
 | `parent_id` | int | ❌ | null for root category, or an existing category ID |
 | `name` | string | ✅ | max 100 chars |
 | `description` | string | ❌ | — |
+| `button_color` | string | ❌ | must be `#RRGGBB` hex format (e.g. `#c2dbe9`), or null |
 | `sort_order` | int | ❌ | defaults to 0 |
 
 **Response `201 Created`:** Returns the created category object.
@@ -1447,6 +1457,7 @@ Nested tree structure with children.
 ```json
 {
   "name": "Desserts & Sweets",
+  "button_color": "#e9c46a",
   "sort_order": 5
 }
 ```
@@ -1456,6 +1467,7 @@ Nested tree structure with children.
 | `parent_id` | int | ❌ | cannot be self or descendant |
 | `name` | string | ❌ | max 100 chars |
 | `description` | string | ❌ | — |
+| `button_color` | string | ❌ | must be `#RRGGBB` hex format, or null to clear |
 | `sort_order` | int | ❌ | — |
 | `is_active` | bool | ❌ | — |
 

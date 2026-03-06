@@ -662,31 +662,70 @@ interface DataTableProps<TData, TValue> {
 ### Step 3.6 — Category Management
 
 **Routes:**
-- `_authenticated/categories/index.tsx` — Category tree view
+- `_authenticated/categories/index.tsx` — Category tree view (single page; create/edit via dialog)
 
 **API endpoints consumed:**
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| GET | `/api/v1/categories` | Flat list |
-| GET | `/api/v1/categories/tree` | Nested tree structure |
-| GET | `/api/v1/categories/:id` | Get single category |
+| GET | `/api/v1/categories` | Flat list (paginated) |
+| GET | `/api/v1/categories/tree` | Nested tree structure (for rendering the tree view) |
+| GET | `/api/v1/categories/:id` | Get single category (pre-fill edit form) |
 | POST | `/api/v1/categories` | Create category |
 | PUT | `/api/v1/categories/:id` | Update category |
-| DELETE | `/api/v1/categories/:id` | Soft-delete |
+| DELETE | `/api/v1/categories/:id` | Soft-delete (fails if category has active menu items) |
+
+**Category object shape (from API):**
+```ts
+interface Category {
+  id: number
+  parent_id: number | null
+  name: string
+  description: string | null
+  button_color: string | null   // #RRGGBB hex, e.g. "#f4a261", or null
+  sort_order: number
+  is_active: boolean
+  created_at: string
+  updated_at: string
+  children?: Category[]         // present only in /tree response
+}
+```
 
 **Page features:**
-- **Tree view** using nested collapsible sections — each category row shows name, description, sort order, status, child count
+- **Tree view** fetched from `GET /api/v1/categories/tree` — renders nested collapsible sections
+- Each category row shows: expand/collapse arrow, **Button Color swatch** (small rounded square filled with `button_color`, or a gray "–" placeholder if `null`), Name, Description (truncated), Sort Order, Status (`StatusBadge`), child count badge
 - Indentation indicates parent → child hierarchy (up to N levels deep)
-- Click expand/collapse arrow to show/hide children
-- Row actions: Edit, Add Sub-Category, Delete (with `ConfirmDialog`)
-- "Add Category" button for root-level categories
+- Click expand/collapse arrow to show/hide children; all root categories expanded by default
+- Row actions dropdown: **Edit**, **Add Sub-Category** (opens create dialog with `parent_id` pre-set), **Delete** (with `ConfirmDialog` — shows warning if category has children)
+- "Add Category" button in `PageHeader` for new root-level categories
 
-**Create/edit form:**
-- Parent Category (combobox, optional — `null` for root-level)
-- Name (required, max 100)
-- Description (textarea)
-- Sort Order (number)
-- Is Active (switch, edit only)
+**Create/edit form (Dialog):**
+
+| Field | Component | Notes |
+|-------|-----------|-------|
+| Parent Category | `ComboboxField` | Optional — `null` for root-level. Loads options from flat list; excludes self + descendants on edit |
+| Name | `TextField` | Required, max 100 chars |
+| Description | `TextareaField` | Optional |
+| Sort Order | `NumberField` | Optional, integer, defaults to `0` |
+| Button Color | `ColorPickerField` | Optional — `#RRGGBB` hex string or `null`. Used by POS app to color the category button on the order screen |
+| Is Active | `SwitchField` | Edit mode only |
+
+**`ColorPickerField` — new component to build:**
+
+> **File:** `src/components/form-fields/color-picker-field.tsx`
+> **Export:** add to `src/components/form-fields/index.ts`
+
+Layout (left → right): `[■ color swatch] [native color picker trigger] [#_______ hex input] [✕ clear button]`
+
+Implementation details:
+- The **color swatch** is a small (24×24px) rounded square with `background-color` set to the current field value; shows a muted border + diagonal slash pattern when value is `null`
+- The **native color picker** uses `<input type="color" />` — clicking it opens the OS color wheel. Its value is always a 7-char lowercase hex string (`#rrggbb`). Sync bidirectionally with the hex text input
+- The **hex text input** is a standard `<input type="text" />` placeholder `#rrggbb` — lets the user type a color directly. Accept 3-char shorthand (#rgb) and auto-expand to 6-char on blur
+- The **clear button** (`X` icon) sets the field value to `null` and is only visible when a color is set
+- **Validation (Zod / field-level):** if value is non-null it must match `/^#[0-9a-fA-F]{6}$/`; show inline error from `field.state.meta.errors` if invalid
+- On change, call `field.handleChange(hexString | null)`
+- Uses `useFieldContext()` following the existing form-field pattern
+
+**DELETE behavior note:** The API returns `400 "reassign menu items first"` if the category has active menu items. Catch this specific error in the `useMutation` `onError` handler and show a descriptive toast: *"Move or delete this category's menu items before deleting the category."*
 
 **Access:** Admin + Manager.
 

@@ -8,6 +8,8 @@ export interface Category {
   parent_id: number | null
   name: string
   description: string | null
+  /** Hex color string e.g. "#f4a261", or null if not set */
+  button_color: string | null
   sort_order: number
   is_active: boolean
   created_at: string
@@ -22,6 +24,8 @@ export interface CreateCategoryPayload {
   parent_id?: number | null
   name: string
   description?: string
+  /** Hex color string e.g. "#f4a261", or null */
+  button_color?: string | null
   sort_order?: number
 }
 
@@ -29,6 +33,8 @@ export interface UpdateCategoryPayload {
   parent_id?: number | null
   name?: string
   description?: string
+  /** Hex color string e.g. "#f4a261", or null to clear */
+  button_color?: string | null
   sort_order?: number
   is_active?: boolean
 }
