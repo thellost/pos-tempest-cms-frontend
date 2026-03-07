@@ -235,7 +235,9 @@ export function AppSidebar() {
 
   async function handleSignOut() {
     await signOut()
-    navigate({ to: '/login' })
+    // replace: true removes the authenticated pages from history so the
+    // browser back button cannot return to them after logout.
+    navigate({ to: '/login', replace: true })
   }
 
   return (

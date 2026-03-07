@@ -6,9 +6,10 @@ import {
   useRef,
   useState,
 } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
-import { getAuthBootstrap } from '@/lib/auth-store'
+import { clearAuthBootstrap, getAuthBootstrap } from '@/lib/auth-store'
 
 
 export interface User {
@@ -48,6 +49,8 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const queryClient = useQueryClient()
+
   // Read once — populated by _authenticated beforeLoad before React renders.
   // If present, useState initializers get real data and isLoading starts false.
   const bootstrapRef = useRef(getAuthBootstrap())
@@ -128,9 +131,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut()
+    // Clear all in-memory auth state so no stale data lingers after logout
+    clearAuthBootstrap()
+    queryClient.removeQueries({ queryKey: ['users', 'me'] })
     setUser(null)
     setSession(null)
-  }, [])
+  }, [queryClient])
 
   return (
     <AuthContext.Provider

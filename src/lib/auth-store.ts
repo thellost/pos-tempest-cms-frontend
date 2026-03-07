@@ -27,3 +27,8 @@ export function setAuthBootstrap(
 export function getAuthBootstrap(): AuthBootstrap | null {
   return _bootstrap
 }
+
+/** Clears the bootstrap — call this on sign-out so stale data isn't reused. */
+export function clearAuthBootstrap(): void {
+  _bootstrap = null
+}

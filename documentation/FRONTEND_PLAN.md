@@ -606,7 +606,7 @@ interface DataTableProps<TData, TValue> {
 **Detail page (`$shiftId.tsx`):**
 - Shift info card: User, Device, Branch, Status, Opened/Closed At, Opening/Closing Cash
 - **Financial Summary** section (from `GET /shifts/:id/summary`):
-  - Total Orders count
+  - Total / count
   - Total Revenue
   - Payment Breakdown — **Pie chart** (using shadcn `chart` / recharts) showing cash vs card vs e-wallet distribution
   - Expected Cash vs Actual Cash vs Difference (highlighted)
@@ -733,7 +733,7 @@ Implementation details:
 
 ### Step 3.7 — Menu Item (Product) Management ⭐
 
-> **This is the most complex CRUD screen** — many fields, nested relations (modifiers), and the primary entity of the POS system.
+> **This is the most complex CRUD screen** — many fields, nested relations (modifiers + ingredients/recipe), and the primary entity of the POS system.
 
 **Routes:**
 - `_authenticated/menu-items/index.tsx` — Product list
@@ -744,13 +744,14 @@ Implementation details:
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
 | GET | `/api/v1/menu-items` | List (filter: category_id, pricing_type, is_available, search) |
-| GET | `/api/v1/menu-items/:id` | Get one (with modifier_groups nested) |
-| POST | `/api/v1/menu-items` | Create (auto-creates inventory per branch) |
-| PUT | `/api/v1/menu-items/:id` | Update |
+| GET | `/api/v1/menu-items/:id` | Get one (with modifier_groups + ingredients nested) |
+| POST | `/api/v1/menu-items` | Create — optionally include `ingredients` array to link inventory items (recipe) |
+| PUT | `/api/v1/menu-items/:id` | Update — optionally include `ingredients` array to **replace all** existing ingredients |
 | PATCH | `/api/v1/menu-items/:id/availability` | Toggle availability |
 | DELETE | `/api/v1/menu-items/:id` | Soft-delete |
 | POST | `/api/v1/menu-items/:id/modifier-groups` | Assign modifier group |
 | DELETE | `/api/v1/menu-items/:id/modifier-groups/:groupId` | Unassign modifier group |
+| GET | `/api/v1/inventory` | Used to populate ingredient picker (inventory item list) |
 
 **List page features:**
 - DataTable columns: Image (thumbnail), Name, SKU, Barcode, Category, Pricing Type (`Badge`), Price, Cost, Available (`Switch` toggle — instant PATCH), Active (`StatusBadge`), Actions
@@ -787,7 +788,79 @@ Implementation details:
 | Is Available | `SwitchField` | Default true |
 | Is Active | `SwitchField` | Default true (edit only) |
 
-**Tab 4 — Modifiers (edit only):**
+**Tab 4 — Ingredients / Recipe (create + edit):**
+
+> **New feature: links menu items to inventory items as a recipe.** The `ingredients` array is sent inline with POST (create) and PUT (update) payloads — no separate endpoints needed.
+
+**API behaviour:**
+- **Create:** Include `ingredients: [{ inventory_id, quantity_needed }]` in the POST body. Omit or send `[]` to skip.
+- **Update:** Include `ingredients` to **replace the entire list**. Omit the field to leave ingredients unchanged. Send `[]` to clear all ingredients.
+- **Read:** `GET /api/v1/menu-items/:id` returns `ingredients` array with enriched fields: `id`, `menu_item_id`, `inventory_id`, `quantity_needed`, `inventory_name`, `unit_of_measure`, `branch_name`, `stock_quantity`.
+
+**UI design — Ingredients tab:**
+- Header: "Recipe / Ingredients" with description "Define which inventory items are consumed when this product is ordered."
+- "Add Ingredient" button to append a new row
+- Each ingredient row is a card/row with:
+  - **Inventory Item** — `ComboboxField` that searches inventory items (fetched from `GET /api/v1/inventory` with large `page_size`). Display format: `"{inventory_name} ({unit_of_measure}) — {branch_name}"`. Value: `inventory_id`.
+  - **Quantity Needed** — `NumberField`, min 0.001, step 0.001. Shows the unit of measure from the selected inventory item as a suffix.
+  - **Remove** button (trash icon) to delete the row
+- Empty state: "No ingredients defined. This product has no recipe — stock will not be auto-deducted on sale."
+- Validation:
+  - Each row must have `inventory_id` selected and `quantity_needed > 0`
+  - Duplicate `inventory_id` entries are not allowed (show inline error "This item is already added")
+  - The array is optional — the form can be submitted with zero ingredients
+
+**Data flow — form state:**
+- Add `ingredients` to the form's `defaultValues` as `Array<{ inventory_id: number | null; quantity_needed: number }>`, defaulting to `[]` on create
+- On edit, populate from `item.ingredients` mapping each to `{ inventory_id: item.inventory_id, quantity_needed: item.quantity_needed }`
+- On submit, filter out any incomplete rows (no `inventory_id`) and include in the payload as `ingredients: [{ inventory_id, quantity_needed }]`
+
+**Changes required across existing files (implementation checklist):**
+
+1. **Types — `src/lib/services/menu-items.ts`:**
+   - Add `Ingredient` interface: `{ id: number; menu_item_id: number; inventory_id: number; quantity_needed: number; created_at: string; updated_at: string; inventory_name: string; unit_of_measure: string; branch_name: string; stock_quantity: number }`
+   - Add `ingredients?: Ingredient[]` to `MenuItemDetail` interface (alongside `modifier_groups`)
+   - Add `ingredients?: Array<{ inventory_id: number; quantity_needed: number }>` to `CreateMenuItemPayload`
+   - Add `ingredients?: Array<{ inventory_id: number; quantity_needed: number }>` to `UpdateMenuItemPayload`
+
+2. **Inventory service — `src/lib/services/inventory.ts`:**
+   - No changes needed — the existing `inventoryService.list()` already supports fetching inventory items which we'll reuse for the ingredient picker combobox
+
+3. **Hook — `src/hooks/use-menu-items.ts`:**
+   - No new hooks needed — the existing `useCreateMenuItem` and `useUpdateMenuItem` already pass the full payload through. The `ingredients` field will be included automatically when added to the payload types
+   - Ensure `useCreateMenuItem` invalidates `queryKeys.inventory.all` on success (creating a menu item may auto-create inventory records)
+
+4. **Create page — `src/routes/_authenticated/menu-items/create.tsx`:**
+   - Add `ingredients` to form `defaultValues`: `ingredients: [] as Array<{ inventory_id: number | null; quantity_needed: number }>`
+   - Add a 4th tab: "Ingredients" (between Classification and submit)
+   - Update `onSubmit` to include `ingredients` in the payload (filter out rows with null `inventory_id`)
+   - Import and render the new `IngredientsFieldArray` component (see below)
+   - Fetch inventory items using `useInventory({ pageSize: 200 })` for the ingredient picker
+
+5. **Edit page — `src/routes/_authenticated/menu-items/$itemId.tsx`:**
+   - Add `ingredients` to `defaultValues` populated from `item.ingredients` → mapped to `{ inventory_id, quantity_needed }`
+   - Add "Ingredients" tab (before the existing "Modifiers" tab, making it Tab 4, Modifiers becomes Tab 5)
+   - Update `onSubmit` to include `ingredients` in the payload
+   - Show a badge count on the "Ingredients" tab trigger (like the existing Modifiers tab)
+   - Import and render the same `IngredientsFieldArray` component
+
+6. **New component — `src/components/menu-items/ingredients-field-array.tsx`:**
+   - A reusable component used by both create and edit forms
+   - Props: `form` (the TanStack Form instance), `inventoryItems` (array of inventory items for the combobox)
+   - Uses TanStack Form's field array API (`form.useField({ name: 'ingredients' })`) to manage dynamic rows
+   - Renders each row as a card with ComboboxField + NumberField + Remove button
+   - "Add Ingredient" button at the bottom
+   - Handles duplicate detection and shows inline error
+   - Empty state with icon and descriptive text
+
+7. **Query keys — `src/lib/query-keys.ts`:**
+   - No changes needed — inventory query keys already exist
+
+8. **Cache invalidation:**
+   - `useCreateMenuItem`: also invalidate `queryKeys.inventory.all` (new menu items auto-create inventory records)
+   - `useUpdateMenuItem`: no additional invalidation needed beyond what's already there
+
+**Tab 5 — Modifiers (edit only):**
 - Lists currently assigned modifier groups with their nested modifiers
 - Each group shows: name, required/optional badge, min/max selections, list of modifier options (name + extra price)
 - "Assign Modifier Group" button → opens combobox to search and select from existing modifier groups

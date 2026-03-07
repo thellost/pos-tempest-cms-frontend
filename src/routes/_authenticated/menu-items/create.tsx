@@ -10,6 +10,10 @@ import {
   UNIT_OPTIONS,
   type CreateMenuItemPayload,
 } from '@/lib/services/menu-items'
+import {
+  IngredientsFieldArray,
+  type IngredientRow,
+} from '@/components/menu-items/ingredients-field-array'
 import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -57,6 +61,7 @@ interface MenuItemFormProps {
 
 export function MenuItemForm({ onSuccess }: MenuItemFormProps) {
   const [activeTab, setActiveTab] = useState('basic')
+  const [ingredients, setIngredients] = useState<IngredientRow[]>([])
   const createMutation = useCreateMenuItem()
   const { data: categoryTreeData } = useCategoryTree()
 
@@ -83,6 +88,9 @@ export function MenuItemForm({ onSuccess }: MenuItemFormProps) {
       is_available: true,
     },
     onSubmit: async ({ value }) => {
+      const validIngredients = ingredients.filter(
+        (r) => r.inventory_id !== null && r.quantity_needed > 0,
+      )
       const payload: CreateMenuItemPayload = {
         name: value.name.trim(),
         description: value.description?.trim() || undefined,
@@ -100,6 +108,10 @@ export function MenuItemForm({ onSuccess }: MenuItemFormProps) {
           value.preparation_time_minutes != null
             ? Number(value.preparation_time_minutes)
             : undefined,
+        ingredients: validIngredients.map((r) => ({
+          inventory_id: r.inventory_id!,
+          quantity_needed: r.quantity_needed,
+        })),
       }
       await createMutation.mutateAsync(payload)
       onSuccess()
@@ -119,6 +131,14 @@ export function MenuItemForm({ onSuccess }: MenuItemFormProps) {
           <TabsTrigger value="basic">Basic Info</TabsTrigger>
           <TabsTrigger value="pricing">Pricing & Units</TabsTrigger>
           <TabsTrigger value="classification">Classification</TabsTrigger>
+          <TabsTrigger value="ingredients">
+            Ingredients
+            {ingredients.length > 0 && (
+              <span className="ml-1.5 rounded-full bg-secondary px-1.5 py-0 text-xs font-medium text-secondary-foreground">
+                {ingredients.length}
+              </span>
+            )}
+          </TabsTrigger>
         </TabsList>
 
         {/* ── Tab 1: Basic Information ────────────────────────────────── */}
@@ -388,12 +408,37 @@ export function MenuItemForm({ onSuccess }: MenuItemFormProps) {
                 >
                   Back
                 </Button>
-                <form.AppForm>
-                  <form.SubscribeButton label="Create Product" />
-                </form.AppForm>
+                <Button
+                  type="button"
+                  onClick={() => setActiveTab('ingredients')}
+                >
+                  Next: Ingredients
+                </Button>
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        {/* ── Tab 4: Ingredients ──────────────────────────────────────── */}
+        <TabsContent value="ingredients">
+          <div className="space-y-4">
+            <IngredientsFieldArray
+              rows={ingredients}
+              onChange={setIngredients}
+            />
+            <div className="flex justify-between">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setActiveTab('classification')}
+              >
+                Back
+              </Button>
+              <form.AppForm>
+                <form.SubscribeButton label="Create Product" />
+              </form.AppForm>
+            </div>
+          </div>
         </TabsContent>
       </Tabs>
     </form>

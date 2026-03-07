@@ -1578,7 +1578,7 @@ List menu items with optional filters.
 
 > **Roles:** admin, manager
 
-Get a single menu item **with modifier groups attached**.
+Get a single menu item **with modifier groups and ingredients attached**.
 
 **Response `200 OK`:**
 ```json
@@ -1683,6 +1683,32 @@ Get a single menu item **with modifier groups attached**.
           }
         ]
       }
+    ],
+    "ingredients": [
+      {
+        "id": 1,
+        "menu_item_id": 1,
+        "inventory_id": 5,
+        "quantity_needed": 0.200,
+        "created_at": "2026-01-20T10:00:00Z",
+        "updated_at": "2026-01-20T10:00:00Z",
+        "inventory_name": "Rice",
+        "unit_of_measure": "kg",
+        "branch_name": "Tempest Cafe - Sudirman",
+        "stock_quantity": 50.000
+      },
+      {
+        "id": 2,
+        "menu_item_id": 1,
+        "inventory_id": 8,
+        "quantity_needed": 0.150,
+        "created_at": "2026-01-20T10:00:00Z",
+        "updated_at": "2026-01-20T10:00:00Z",
+        "inventory_name": "Chicken Breast",
+        "unit_of_measure": "kg",
+        "branch_name": "Tempest Cafe - Sudirman",
+        "stock_quantity": 25.000
+      }
     ]
   }
 }
@@ -1694,7 +1720,7 @@ Get a single menu item **with modifier groups attached**.
 
 > **Roles:** admin, manager
 
-Create a menu item. Automatically creates inventory records for all active branches.
+Create a menu item. Optionally include `ingredients` to link inventory items (recipe).
 
 **Request Body:**
 ```json
@@ -1711,7 +1737,11 @@ Create a menu item. Automatically creates inventory records for all active branc
   "cost": 12000.00,
   "min_order_qty": 1,
   "preparation_time_minutes": 12,
-  "sort_order": 2
+  "sort_order": 2,
+  "ingredients": [
+    { "inventory_id": 5, "quantity_needed": 0.180 },
+    { "inventory_id": 12, "quantity_needed": 0.050 }
+  ]
 }
 ```
 
@@ -1730,8 +1760,9 @@ Create a menu item. Automatically creates inventory records for all active branc
 | `min_order_qty` | float | ✅ | > 0 |
 | `preparation_time_minutes` | int | ❌ | >= 0 |
 | `sort_order` | int | ❌ | defaults to 0 |
+| `ingredients` | array | ❌ | Array of `{ inventory_id: int, quantity_needed: float }`. Links menu item to inventory items (recipe). |
 
-**Response `201 Created`:** Returns the created menu item object.
+**Response `201 Created`:** Returns the created menu item object (with `ingredients` if provided).
 
 ---
 
@@ -1739,17 +1770,41 @@ Create a menu item. Automatically creates inventory records for all active branc
 
 > **Roles:** admin, manager
 
-Update a menu item. Only send fields you want to change.
+Update a menu item. Only send fields you want to change. Include `ingredients` to **replace** the entire ingredient list.
 
 **Request Body:**
 ```json
 {
   "price": 38000.00,
-  "description": "Stir-fried noodles with egg and vegetables"
+  "description": "Stir-fried noodles with egg and vegetables",
+  "ingredients": [
+    { "inventory_id": 5, "quantity_needed": 0.200 },
+    { "inventory_id": 8, "quantity_needed": 0.180 },
+    { "inventory_id": 12, "quantity_needed": 0.050 }
+  ]
 }
 ```
 
-**Response `200 OK`:** Returns the updated menu item object.
+| Field | Type | Required | Validation |
+|-------|------|----------|------------|
+| `category_id` | int | ❌ | — |
+| `name` | string | ❌ | max 150 chars |
+| `description` | string | ❌ | — |
+| `sku` | string | ❌ | max 50, unique |
+| `barcode` | string | ❌ | max 50 |
+| `image_url` | string | ❌ | max 500 |
+| `pricing_type` | string | ❌ | `fixed` or `weight_based` |
+| `unit_of_measure` | string | ❌ | `piece`, `kg`, `gram`, `ons`, `liter`, `ml`, `portion` |
+| `price` | float | ❌ | > 0 |
+| `cost` | float | ❌ | >= 0 |
+| `min_order_qty` | float | ❌ | > 0 |
+| `preparation_time_minutes` | int | ❌ | >= 0 |
+| `is_available` | bool | ❌ | — |
+| `is_active` | bool | ❌ | — |
+| `sort_order` | int | ❌ | — |
+| `ingredients` | array | ❌ | If provided, **replaces all** existing ingredients. Array of `{ inventory_id: int, quantity_needed: float }`. Send `[]` to clear. If omitted, ingredients are left unchanged. |
+
+**Response `200 OK`:** Returns the updated menu item object (with `ingredients`).
 
 ---
 

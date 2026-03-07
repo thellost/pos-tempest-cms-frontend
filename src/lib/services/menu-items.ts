@@ -55,9 +55,29 @@ export interface MenuItem {
   category_name: string | null
 }
 
-/** Shape returned by detail endpoint (includes modifier_groups) */
+export interface Ingredient {
+  id: number
+  menu_item_id: number
+  inventory_id: number
+  quantity_needed: number
+  created_at: string
+  updated_at: string
+  /** Denormalised fields from the inventory/menu-item join */
+  inventory_name: string
+  unit_of_measure: string
+  branch_name: string
+  stock_quantity: number
+}
+
+/** Shape returned by detail endpoint (includes modifier_groups + ingredients) */
 export interface MenuItemDetail extends MenuItem {
   modifier_groups: ModifierGroup[]
+  ingredients: Ingredient[]
+}
+
+export interface IngredientPayload {
+  inventory_id: number
+  quantity_needed: number
 }
 
 export interface CreateMenuItemPayload {
@@ -74,11 +94,18 @@ export interface CreateMenuItemPayload {
   min_order_qty?: number
   preparation_time_minutes?: number | null
   sort_order?: number
+  /** Ingredient links (recipe). Omit to skip, send [] to clear. */
+  ingredients?: IngredientPayload[]
 }
 
 export type UpdateMenuItemPayload = Partial<CreateMenuItemPayload> & {
   is_available?: boolean
   is_active?: boolean
+  /**
+   * If provided, replaces ALL existing ingredients.
+   * Omit to leave unchanged. Send [] to clear.
+   */
+  ingredients?: IngredientPayload[]
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────

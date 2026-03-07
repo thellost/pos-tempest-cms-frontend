@@ -23,6 +23,11 @@ import {
   type UpdateMenuItemPayload,
   type ModifierGroup,
 } from '@/lib/services/menu-items'
+import {
+  IngredientsFieldArray,
+  type IngredientRow,
+  createIngredientRow,
+} from '@/components/menu-items/ingredients-field-array'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { PageHeader } from '@/components/page-header'
 import { Badge } from '@/components/ui/badge'
@@ -109,6 +114,13 @@ function EditMenuItemPage() {
               is_available: item.is_available,
               is_active: item.is_active,
             }}
+            initialIngredients={(
+              item.ingredients ?? []
+            ).map((ing) => ({
+              ...createIngredientRow(),
+              inventory_id: ing.inventory_id,
+              quantity_needed: ing.quantity_needed,
+            }))}
             modifierGroups={item.modifier_groups ?? []}
             onSuccess={() => navigate({ to: '/menu-items' })}
           />
@@ -145,6 +157,7 @@ interface EditMenuItemFormProps {
     is_available: boolean
     is_active: boolean
   }
+  initialIngredients: IngredientRow[]
   modifierGroups: ModifierGroup[]
   onSuccess: () => void
 }
@@ -152,9 +165,12 @@ interface EditMenuItemFormProps {
 function EditMenuItemForm({
   itemId,
   defaultValues,
+  initialIngredients,
   modifierGroups,
   onSuccess,
 }: EditMenuItemFormProps) {
+  const [ingredients, setIngredients] =
+    useState<IngredientRow[]>(initialIngredients)
   const updateMutation = useUpdateMenuItem()
   const { data: categoryTreeData } = useCategoryTree()
   const categoryOptions = buildCategoryOptions(categoryTreeData?.data)
@@ -162,6 +178,9 @@ function EditMenuItemForm({
   const form = useAppForm({
     defaultValues,
     onSubmit: async ({ value }) => {
+      const validIngredients = ingredients.filter(
+        (r) => r.inventory_id !== null && r.quantity_needed > 0,
+      )
       const payload: UpdateMenuItemPayload = {
         name: value.name.trim(),
         description: value.description?.trim() || undefined,
@@ -181,6 +200,10 @@ function EditMenuItemForm({
             : undefined,
         is_available: value.is_available,
         is_active: value.is_active,
+        ingredients: validIngredients.map((r) => ({
+          inventory_id: r.inventory_id!,
+          quantity_needed: r.quantity_needed,
+        })),
       }
       await updateMutation.mutateAsync({ id: itemId, payload })
       onSuccess()
@@ -200,6 +223,14 @@ function EditMenuItemForm({
           <TabsTrigger value="basic">Basic Info</TabsTrigger>
           <TabsTrigger value="pricing">Pricing & Units</TabsTrigger>
           <TabsTrigger value="classification">Classification</TabsTrigger>
+          <TabsTrigger value="ingredients">
+            Ingredients
+            {ingredients.length > 0 && (
+              <Badge variant="secondary" className="ml-1.5 px-1.5 py-0 text-xs">
+                {ingredients.length}
+              </Badge>
+            )}
+          </TabsTrigger>
           <TabsTrigger value="modifiers">
             Modifiers
             {modifierGroups.length > 0 && (
@@ -476,7 +507,22 @@ function EditMenuItemForm({
           </Card>
         </TabsContent>
 
-        {/* ── Tab 4: Modifiers ─────────────────────────────────────────── */}
+        {/* ── Tab 4: Ingredients ──────────────────────────────────────── */}
+        <TabsContent value="ingredients">
+          <div className="space-y-4">
+            <IngredientsFieldArray
+              rows={ingredients}
+              onChange={setIngredients}
+            />
+            <div className="flex justify-end">
+              <form.AppForm>
+                <form.SubscribeButton label="Save Changes" />
+              </form.AppForm>
+            </div>
+          </div>
+        </TabsContent>
+
+        {/* ── Tab 5: Modifiers ───────────────────────────────────────── */}
         <TabsContent value="modifiers">
           <ModifiersTab itemId={itemId} assignedGroups={modifierGroups} />
         </TabsContent>

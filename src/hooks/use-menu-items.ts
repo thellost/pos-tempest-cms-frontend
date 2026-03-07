@@ -33,6 +33,8 @@ export function useCreateMenuItem() {
       menuItemsService.create(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.menuItems.all })
+      // Creating a menu item may auto-create inventory records, so invalidate inventory too
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
       toast.success('Menu item created successfully')
     },
     onError: (err: Error) => toast.error(err.message),

@@ -55,6 +55,7 @@ pos-tempest-cms-backend/
 │   │   ├── table.go                      # Table entity + DTOs + filters
 │   │   ├── category.go                   # Category entity + DTOs + tree node
 │   │   ├── menu_item.go                  # MenuItem entity + DTOs + filters
+│   │   ├── menu_item_ingredient.go       # MenuItemIngredient entity + DTOs (recipe / BOM)
 │   │   ├── modifier.go                   # ModifierGroup + Modifier + link table + DTOs
 │   │   ├── customer.go                   # Customer entity + DTOs + filters
 │   │   ├── reservation.go               # Reservation entity + DTOs + filters
@@ -78,6 +79,7 @@ pos-tempest-cms-backend/
 │   │   ├── table_repo.go
 │   │   ├── category_repo.go
 │   │   ├── menu_item_repo.go
+│   │   ├── menu_item_ingredient_repo.go
 │   │   ├── modifier_repo.go
 │   │   ├── customer_repo.go
 │   │   ├── reservation_repo.go
@@ -887,6 +889,7 @@ type MenuItem struct {
     // Joined
     CategoryName   string          `json:"category_name,omitempty"`
     ModifierGroups []ModifierGroup `json:"modifier_groups,omitempty"`
+    Ingredients    []MenuItemIngredient `json:"ingredients,omitempty"` // recipe / BOM
 }
 ```
 
@@ -906,6 +909,7 @@ type CreateMenuItemRequest struct {
     MinOrderQty            float64  `json:"min_order_qty" binding:"gt=0"`
     PreparationTimeMinutes *int     `json:"preparation_time_minutes" binding:"omitempty,gte=0"`
     SortOrder              int      `json:"sort_order"`
+    Ingredients            []IngredientInput `json:"ingredients"` // optional: set recipe on create
 }
 
 type UpdateMenuItemRequest struct {
@@ -924,6 +928,13 @@ type UpdateMenuItemRequest struct {
     IsAvailable            *bool    `json:"is_available"`
     IsActive               *bool    `json:"is_active"`
     SortOrder              *int     `json:"sort_order"`
+    Ingredients            *[]IngredientInput `json:"ingredients"` // if provided, replaces all; nil = no change; [] = clear
+}
+
+// IngredientInput is the input DTO for linking an inventory item to a menu item
+type IngredientInput struct {
+    InventoryID    int     `json:"inventory_id" binding:"required"`
+    QuantityNeeded float64 `json:"quantity_needed" binding:"required,gt=0"`
 }
 
 type MenuItemFilter struct {
@@ -934,6 +945,64 @@ type MenuItemFilter struct {
     Search      string  `form:"search"`       // searches name, sku, barcode
 }
 ```
+
+---
+
+### Step 2.10b — `domain/menu_item_ingredient.go` (Recipe / Bill of Materials)
+
+> **New table: `menu_item_ingredients`** — maps each menu item to the inventory items it requires
+> (ingredients / raw materials) and the quantity consumed per serving.
+
+**SQL Migration:**
+```sql
+CREATE TABLE IF NOT EXISTS menu_item_ingredients (
+    id              SERIAL PRIMARY KEY,
+    menu_item_id    INT NOT NULL REFERENCES menu_items(id) ON DELETE CASCADE,
+    inventory_id    INT NOT NULL REFERENCES inventories(id) ON DELETE RESTRICT,
+    quantity_needed DECIMAL(12,3) NOT NULL CHECK (quantity_needed > 0),
+    created_at      TIMESTAMPTZ DEFAULT now(),
+    updated_at      TIMESTAMPTZ DEFAULT now(),
+    UNIQUE(menu_item_id, inventory_id)
+);
+```
+
+**Entity:**
+```go
+type MenuItemIngredient struct {
+    ID             int       `json:"id"`
+    MenuItemID     int       `json:"menu_item_id"`     // FK → menu_items.id
+    InventoryID    int       `json:"inventory_id"`     // FK → inventories.id
+    QuantityNeeded float64   `json:"quantity_needed"`  // decimal(12,3) — amount consumed per serving
+    CreatedAt      time.Time `json:"created_at"`
+    UpdatedAt      time.Time `json:"updated_at"`
+
+    // Joined
+    InventoryName  string   `json:"inventory_name,omitempty"`  // from inventories → menu_items.name
+    UnitOfMeasure  string   `json:"unit_of_measure,omitempty"` // from menu_items.unit_of_measure
+    BranchName     string   `json:"branch_name,omitempty"`     // from branches.name
+    StockQuantity  float64  `json:"stock_quantity,omitempty"`  // current stock for context
+}
+```
+
+**DTOs:**
+```go
+type CreateMenuItemIngredientRequest struct {
+    InventoryID    int     `json:"inventory_id" binding:"required"`
+    QuantityNeeded float64 `json:"quantity_needed" binding:"required,gt=0"`
+}
+```
+
+**Constraint:** UNIQUE(menu_item_id, inventory_id) — a menu item cannot link the same inventory item twice.
+
+**Business rules:**
+- Ingredients are managed **inline** via `POST /menu-items` (create) and `PUT /menu-items/:id` (update).
+- On **create**: if `ingredients` array is provided, insert all ingredient links after the menu item is created.
+- On **update**: if `ingredients` field is present in the payload, **delete all existing** ingredient links and **re-insert** the new list (full replace). If `ingredients` is omitted (nil/absent), existing ingredients are left untouched. Sending `[]` clears all ingredients.
+- On **GET single** (`/menu-items/:id`): ingredients are returned alongside modifier groups.
+- No separate CRUD endpoints for ingredients — they are always part of the menu item lifecycle.
+- When the POS places an order, the system reads the recipe from this table and deducts from each inventory item accordingly.
+- Deleting a menu item cascades to delete its ingredient links.
+- Deleting an inventory item is **restricted** if any menu item still references it.
 
 ---
 
