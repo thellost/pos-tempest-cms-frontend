@@ -136,3 +136,10 @@ code {
     @apply bg-background text-foreground;
   }
 }
+
+/* ─── Router progress bar ─────────────────────────────────────────────────── */
+@keyframes router-progress {
+  0%   { transform: translateX(-100%); width: 45%; }
+  50%  { width: 35%; }
+  100% { transform: translateX(280%); width: 45%; }
+}

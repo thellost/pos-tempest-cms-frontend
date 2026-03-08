@@ -4,8 +4,10 @@ import {
   devicesService,
   type CreateDevicePayload,
   type UpdateDevicePayload,
+  type Device,
 } from '@/lib/services/devices'
 import { queryKeys, type DeviceFilters } from '@/lib/query-keys'
+import type { ApiResult } from '@/lib/api-client'
 
 // ─── Read ──────────────────────────────────────────────────────────────────────
 
@@ -69,12 +71,40 @@ export function useUpdateDeviceStatus() {
       id: number
       status: 'active' | 'inactive'
     }) => devicesService.updateStatus(id, status),
+    onMutate: async ({ id, status }) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.devices.all })
+      const previousData = queryClient.getQueriesData<ApiResult<Device[]>>({
+        queryKey: queryKeys.devices.all,
+      })
+      queryClient.setQueriesData<ApiResult<Device[]>>(
+        { queryKey: queryKeys.devices.all },
+        (old) => {
+          if (!old?.data) return old
+          return {
+            ...old,
+            data: old.data.map((device) =>
+              device.id === id ? { ...device, status } : device,
+            ),
+          }
+        },
+      )
+      return { previousData }
+    },
     onSuccess: (_, { status }) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.devices.all })
       toast.success(
         status === 'active' ? 'Device activated' : 'Device deactivated',
       )
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error, _variables, context) => {
+      if (context?.previousData) {
+        for (const [key, value] of context.previousData) {
+          queryClient.setQueryData(key, value)
+        }
+      }
+      toast.error(err.message)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.devices.all })
+    },
   })
 }

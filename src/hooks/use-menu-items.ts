@@ -4,8 +4,10 @@ import {
   menuItemsService,
   type CreateMenuItemPayload,
   type UpdateMenuItemPayload,
+  type MenuItem,
 } from '@/lib/services/menu-items'
 import { queryKeys, type MenuItemFilters } from '@/lib/query-keys'
+import type { ApiResult } from '@/lib/api-client'
 
 // ─── Read ──────────────────────────────────────────────────────────────────────
 
@@ -72,13 +74,45 @@ export function useUpdateMenuItemAvailability() {
       id: number
       isAvailable: boolean
     }) => menuItemsService.updateAvailability(id, isAvailable),
+    onMutate: async ({ id, isAvailable }) => {
+      // Cancel any outgoing refetches so they don't overwrite our optimistic update
+      await queryClient.cancelQueries({ queryKey: queryKeys.menuItems.all })
+      // Snapshot all currently cached list queries for rollback
+      const previousData = queryClient.getQueriesData<ApiResult<MenuItem[]>>({
+        queryKey: queryKeys.menuItems.all,
+      })
+      // Optimistically flip is_available in every cached page
+      queryClient.setQueriesData<ApiResult<MenuItem[]>>(
+        { queryKey: queryKeys.menuItems.all },
+        (old) => {
+          if (!old?.data) return old
+          return {
+            ...old,
+            data: old.data.map((item) =>
+              item.id === id ? { ...item, is_available: isAvailable } : item,
+            ),
+          }
+        },
+      )
+      return { previousData }
+    },
     onSuccess: (_, { isAvailable }) => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.menuItems.all })
       toast.success(
         isAvailable ? 'Item marked as available' : 'Item marked as unavailable',
       )
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error, _variables, context) => {
+      // Roll back on failure
+      if (context?.previousData) {
+        for (const [key, value] of context.previousData) {
+          queryClient.setQueryData(key, value)
+        }
+      }
+      toast.error(err.message)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.menuItems.all })
+    },
   })
 }
 

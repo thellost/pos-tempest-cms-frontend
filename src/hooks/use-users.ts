@@ -3,8 +3,10 @@ import { toast } from 'sonner'
 import {
   usersService,
   type UpdateUserPayload,
+  type User,
 } from '@/lib/services/users'
 import { queryKeys, type UserFilters } from '@/lib/query-keys'
+import type { ApiResult } from '@/lib/api-client'
 
 // ─── Read ──────────────────────────────────────────────────────────────────────
 
@@ -60,10 +62,38 @@ export function useDeactivateUser() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: usersService.deactivate,
+    onMutate: async (id: number) => {
+      await queryClient.cancelQueries({ queryKey: queryKeys.users.all })
+      const previousData = queryClient.getQueriesData<ApiResult<User[]>>({
+        queryKey: queryKeys.users.all,
+      })
+      queryClient.setQueriesData<ApiResult<User[]>>(
+        { queryKey: queryKeys.users.all },
+        (old) => {
+          if (!old?.data) return old
+          return {
+            ...old,
+            data: old.data.map((user) =>
+              user.id === id ? { ...user, is_active: false } : user,
+            ),
+          }
+        },
+      )
+      return { previousData }
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: queryKeys.users.all })
       toast.success('User deactivated')
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error, _variables, context) => {
+      if (context?.previousData) {
+        for (const [key, value] of context.previousData) {
+          queryClient.setQueryData(key, value)
+        }
+      }
+      toast.error(err.message)
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.all })
+    },
   })
 }

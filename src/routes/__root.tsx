@@ -8,6 +8,8 @@ import {
 import type { QueryClient } from '@tanstack/react-query'
 import * as TanstackQuery from '@/integrations/tanstack-query/root-provider'
 import { AuthProvider } from '@/hooks/use-auth'
+import { ErrorBoundary } from '@/components/error-boundary'
+import { RouterProgressBar } from '@/components/layout/router-progress-bar'
 import appCss from '@/styles.css?url'
 import { Toaster } from '@/components/ui/sonner'
 
@@ -43,11 +45,14 @@ function RootDocument() {
         <HeadContent />
       </head>
       <body>
-        <TanstackQuery.Provider queryClient={queryClient}>
-          <AuthProvider>
-            <Outlet />
-          </AuthProvider>
-        </TanstackQuery.Provider>
+        <RouterProgressBar />
+        <ErrorBoundary>
+          <TanstackQuery.Provider queryClient={queryClient}>
+            <AuthProvider>
+              <Outlet />
+            </AuthProvider>
+          </TanstackQuery.Provider>
+        </ErrorBoundary>
         <Scripts />
         <Toaster />
       </body>
