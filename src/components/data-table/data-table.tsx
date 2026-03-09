@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import {
   flexRender,
   getCoreRowModel,
@@ -57,6 +57,8 @@ interface DataTableProps<TData, TValue> {
   hideToolbar?: boolean
   /** Hide the pagination bar (e.g. for small embedded tables) */
   hidePagination?: boolean
+  /** Initial column visibility state (e.g. for hiding columns on mobile) */
+  initialColumnVisibility?: Record<string, boolean>
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -100,10 +102,20 @@ export function DataTable<TData, TValue>({
   emptyMessage = 'No results found.',
   hideToolbar = false,
   hidePagination = false,
+  initialColumnVisibility,
 }: DataTableProps<TData, TValue>) {
   // Local state for sorting (used when caller doesn't provide server-side sorting)
   const [localSorting, setLocalSorting] = useState<SortingState>([])
-  const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>({})
+  const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>(initialColumnVisibility ?? {})
+
+  // Sync column visibility when responsive breakpoint changes
+  const initialVisibilityKey = JSON.stringify(initialColumnVisibility)
+  useEffect(() => {
+    if (initialColumnVisibility) {
+      setColumnVisibility(initialColumnVisibility)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialVisibilityKey])
 
   const isServerSideSorting = externalSorting !== undefined && onSortingChange !== undefined
   const sorting = isServerSideSorting ? externalSorting : localSorting

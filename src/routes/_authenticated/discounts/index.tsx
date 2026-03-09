@@ -18,6 +18,7 @@ import type {
 import { getDiscountColumns } from '@/components/discounts/columns'
 import { PageHeader } from '@/components/page-header'
 import { DataTable } from '@/components/data-table/data-table'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Button } from '@/components/ui/button'
 import {
@@ -39,6 +40,7 @@ export const Route = createFileRoute('/_authenticated/discounts/')({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 function DiscountsPage() {
+  const isMobile = useIsMobile()
   // Pagination (all discounts tab)
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
@@ -106,6 +108,7 @@ function DiscountsPage() {
               setPage(p)
               setPageSize(ps)
             }}
+            initialColumnVisibility={isMobile ? { min_order_amount: false, max_discount_amount: false, valid_from: false, valid_until: false } : {}}
             emptyMessage="No discounts found. Click 'Add Discount' to create one."
           />
         </TabsContent>
@@ -379,7 +382,7 @@ function DiscountForm({ discount, onSuccess }: DiscountFormProps) {
       </form.Subscribe>
 
       {/* Valid From / Until */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <form.AppField name="valid_from">
           {(field) => (
             <field.DatePickerField label="Valid From" placeholder="No start date" />

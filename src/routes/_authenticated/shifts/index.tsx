@@ -11,6 +11,7 @@ import { getShiftColumns } from '@/components/shifts/columns'
 import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page-header'
 import { DataTable } from '@/components/data-table/data-table'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -38,6 +39,7 @@ export const Route = createFileRoute('/_authenticated/shifts/')({
 
 function ShiftsPage() {
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
   const { branchId: userBranchId } = useAuth()
 
   // Pagination
@@ -230,6 +232,7 @@ function ShiftsPage() {
           setPage(p)
           setPageSize(ps)
         }}
+        initialColumnVisibility={isMobile ? { device_name: false, branch_name: false, opening_cash: false, closing_cash: false, closed_at: false } : {}}
         emptyMessage="No shifts found."
       />
 

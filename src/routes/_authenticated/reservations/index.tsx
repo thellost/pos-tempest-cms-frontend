@@ -32,6 +32,7 @@ import {
 import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page-header'
 import { DataTable } from '@/components/data-table/data-table'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { StatusBadge } from '@/components/status-badge'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Button } from '@/components/ui/button'
@@ -83,6 +84,7 @@ function localDatetimeValue(isoStr: string): string {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 function ReservationsPage() {
+  const isMobile = useIsMobile()
   const { branchId: userBranchId } = useAuth()
 
   // ── View mode ────────────────────────────────────────────────────────────────
@@ -397,6 +399,7 @@ function ReservationsPage() {
             setPage(p)
             setPageSize(ps)
           }}
+          initialColumnVisibility={isMobile ? { branch_name: false, duration_minutes: false } : {}}
           emptyMessage="No reservations found."
         />
       )}

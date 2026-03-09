@@ -171,7 +171,7 @@ export function MenuItemForm({ onSuccess }: MenuItemFormProps) {
                 )}
               </form.AppField>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <form.AppField
                   name="sku"
                   validators={{
@@ -263,7 +263,7 @@ export function MenuItemForm({ onSuccess }: MenuItemFormProps) {
                 )}
               </form.AppField>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <form.AppField
                   name="price"
                   validators={{
@@ -365,7 +365,7 @@ export function MenuItemForm({ onSuccess }: MenuItemFormProps) {
                 )}
               </form.AppField>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <form.AppField name="sort_order">
                   {(field) => (
                     <field.NumberField

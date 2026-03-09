@@ -8,10 +8,12 @@ import { useRouterState } from '@tanstack/react-router'
  * completes.
  */
 export function RouterProgressBar() {
-  const isPending = useRouterState({ select: (s) => s.status === 'pending' })
+  const isPending = useRouterState({ select: (s) => s.status === 'pending'})
 
-  if (!isPending) return null
-
+  if (!isPending) {
+    //Empty div because null somehow didnt replace the progress bar when the transition completed, but this does. No idea why.
+    return <div></div>
+  }
   return (
     <div
       aria-hidden="true"

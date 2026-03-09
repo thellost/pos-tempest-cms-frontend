@@ -9,6 +9,7 @@ import type { CreateCustomerPayload } from '@/lib/services/customers'
 import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page-header'
 import { DataTable } from '@/components/data-table/data-table'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -42,6 +43,7 @@ const SORT_DIR_OPTIONS = [
 
 function CustomersPage() {
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
   const { role } = useAuth()
   const canManage = role === 'admin' || role === 'manager'
 
@@ -166,6 +168,7 @@ function CustomersPage() {
           setPage(p)
           setPageSize(ps)
         }}
+        initialColumnVisibility={isMobile ? { total_visits: false, total_spent: false } : {}}
         emptyMessage="No customers found."
       />
 

@@ -15,6 +15,7 @@ import { getInventoryColumns } from '@/components/inventory/columns'
 import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page-header'
 import { DataTable } from '@/components/data-table/data-table'
+import { useIsMobile } from '@/hooks/use-mobile'
 import {
   Dialog,
   DialogContent,
@@ -35,6 +36,7 @@ export const Route = createFileRoute('/_authenticated/inventory/')({
 
 function InventoryPage() {
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
   const { branchId: userBranchId } = useAuth()
 
   // Pagination
@@ -201,6 +203,7 @@ function InventoryPage() {
               setPage(p)
               setPageSize(ps)
             }}
+            initialColumnVisibility={isMobile ? { branch_name: false, low_stock_threshold: false, updated_at: false } : {}}
             emptyMessage="No inventory records found."
           />
         </TabsContent>

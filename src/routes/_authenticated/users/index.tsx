@@ -12,6 +12,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog'
 import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page-header'
 import { DataTable } from '@/components/data-table/data-table'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { Button } from '@/components/ui/button'
 
 // ─── Route ────────────────────────────────────────────────────────────────────
@@ -25,6 +26,7 @@ export const Route = createFileRoute('/_authenticated/users/')({
 
 function UsersPage() {
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
   const { role } = useAuth()
   const canManage = role === 'admin' || role === 'manager'
 
@@ -165,6 +167,7 @@ function UsersPage() {
           setPage(p)
           setPageSize(ps)
         }}
+        initialColumnVisibility={isMobile ? { phone: false, branch_name: false, last_login_at: false } : {}}
         emptyMessage="No users found."
       />
 

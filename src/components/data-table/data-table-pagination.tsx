@@ -39,7 +39,7 @@ export function DataTablePagination({
   const total = meta?.total ?? 0
 
   return (
-    <div className="flex items-center justify-between gap-4 px-2 py-4">
+    <div className="flex flex-col items-center gap-3 px-2 py-4 sm:flex-row sm:justify-between sm:gap-4">
       {/* Total count */}
       <p className="hidden text-sm text-muted-foreground sm:block">
         {total === 0
@@ -47,7 +47,7 @@ export function DataTablePagination({
           : `${total.toLocaleString()} result${total !== 1 ? 's' : ''}`}
       </p>
 
-      <div className="flex items-center gap-6 lg:gap-8">
+      <div className="flex items-center gap-4 sm:gap-6 lg:gap-8">
         {/* Rows per page */}
         <div className="flex items-center gap-2">
           <p className="hidden text-sm font-medium lg:block">Rows per page</p>
@@ -71,7 +71,7 @@ export function DataTablePagination({
         </div>
 
         {/* Page indicator */}
-        <div className="flex w-[100px] items-center justify-center text-sm font-medium">
+        <div className="flex w-auto min-w-[80px] items-center justify-center text-sm font-medium">
           Page {page} of {totalPages}
         </div>
 

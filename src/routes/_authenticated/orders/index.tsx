@@ -12,6 +12,7 @@ import type { Order } from '@/lib/services/orders'
 import { getOrderColumns } from '@/components/orders/columns'
 import { PageHeader } from '@/components/page-header'
 import { DataTable } from '@/components/data-table/data-table'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -61,6 +62,7 @@ const ORDER_TYPE_OPTIONS = [
 
 function OrdersPage() {
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
   const { branchId: userBranchId } = useAuth()
 
   // Pagination
@@ -506,6 +508,7 @@ function OrdersPage() {
         isLoading={isLoading}
          meta={data?.meta}
         pagination={{ page, pageSize }}
+        initialColumnVisibility={isMobile ? { branch_name: false, cashier_name: false, customer_name: false, created_at: false } : {}}
         onPaginationChange={({ page: p, pageSize: ps }) => {
           setPage(p)
           setPageSize(ps)

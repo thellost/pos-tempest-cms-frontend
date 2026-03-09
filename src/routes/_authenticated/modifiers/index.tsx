@@ -632,7 +632,7 @@ function ModifierGroupForm({ group, onSuccess }: ModifierGroupFormProps) {
         )}
       </form.AppField>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {/* Min Selections */}
         <form.AppField
           name="min_selections"

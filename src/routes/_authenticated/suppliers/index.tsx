@@ -16,6 +16,7 @@ import type {
 import { getSupplierColumns } from '@/components/suppliers/columns'
 import { PageHeader } from '@/components/page-header'
 import { DataTable } from '@/components/data-table/data-table'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -35,6 +36,7 @@ export const Route = createFileRoute('/_authenticated/suppliers/')({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 function SuppliersPage() {
+  const isMobile = useIsMobile()
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -81,6 +83,7 @@ function SuppliersPage() {
           setPage(p)
           setPageSize(ps)
         }}
+        initialColumnVisibility={isMobile ? { contact_person: false, email: false, address: false } : {}}
         emptyMessage="No suppliers found. Click 'Add Supplier' to create one."
       />
 

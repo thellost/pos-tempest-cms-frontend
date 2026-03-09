@@ -10,6 +10,7 @@ import { getPurchaseColumns } from '@/components/purchases/columns'
 import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page-header'
 import { DataTable } from '@/components/data-table/data-table'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -27,6 +28,7 @@ export const Route = createFileRoute('/_authenticated/purchases/')({
 
 function PurchasesPage() {
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
   const { branchId: userBranchId } = useAuth()
 
   // Pagination
@@ -211,6 +213,7 @@ function PurchasesPage() {
           setPage(p)
           setPageSize(ps)
         }}
+        initialColumnVisibility={isMobile ? { branch_name: false, ordered_by_name: false, subtotal: false, tax_amount: false } : {}}
         emptyMessage="No purchase orders found."
       />
 

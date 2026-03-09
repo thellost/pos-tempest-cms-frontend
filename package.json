@@ -4,10 +4,10 @@
   "type": "module",
   "scripts": {
     "dev": "dotenv -e .env.local -- cross-env NODE_OPTIONS=\"--import ./instrument.server.mjs\" vite dev --port 3000",
-    "build": "vite build && cp instrument.server.mjs .output/server",
+    "build": "vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "start": "node --import ./.output/server/instrument.server.mjs .output/server/index.mjs",
+    "start": "node serve.mjs",
     "lint": "eslint",
     "format": "prettier",
     "check": "prettier --write . && eslint --fix"
@@ -61,7 +61,7 @@
     "jsdom": "^27.0.0",
     "prettier": "^3.5.3",
     "typescript": "^5.7.2",
-    "vite": "^7.1.7",
+    "vite": "^7.3.1",
     "vitest": "^3.0.5",
     "web-vitals": "^5.1.0"
   }

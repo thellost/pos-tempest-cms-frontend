@@ -68,7 +68,7 @@ export function FilterBar({
       {filters.map((filter) => {
         if (filter.type === 'search') {
           return (
-            <div key={filter.key} className="relative min-w-[200px] flex-1">
+            <div key={filter.key} className="relative min-w-0 w-full sm:min-w-[200px] sm:w-auto sm:flex-1">
               <Input
                 placeholder={filter.placeholder ?? 'Search…'}
                 value={values[filter.key] ?? ''}
@@ -98,7 +98,7 @@ export function FilterBar({
                 onChange(filter.key, value === '__all__' ? '' : value)
               }
             >
-              <SelectTrigger className="h-9 w-[160px]">
+              <SelectTrigger className="h-9 w-full sm:w-[160px]">
                 <SelectValue placeholder={filter.label} />
               </SelectTrigger>
               <SelectContent>

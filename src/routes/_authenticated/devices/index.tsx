@@ -21,6 +21,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog'
 import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page-header'
 import { DataTable } from '@/components/data-table/data-table'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -39,6 +40,7 @@ export const Route = createFileRoute('/_authenticated/devices/')({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 function DevicesPage() {
+  const isMobile = useIsMobile()
   const { role, branchId: userBranchId } = useAuth()
   const canManage = role === 'admin' || role === 'manager'
 
@@ -158,6 +160,7 @@ function DevicesPage() {
           setPage(p)
           setPageSize(ps)
         }}
+        initialColumnVisibility={isMobile ? { device_uid: false, branch_name: false, registered_at: false } : {}}
         emptyMessage="No devices registered yet."
       />
 

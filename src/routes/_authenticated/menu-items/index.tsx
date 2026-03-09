@@ -15,6 +15,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog'
 import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page-header'
 import { DataTable } from '@/components/data-table/data-table'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { Button } from '@/components/ui/button'
 
 // ─── Route ────────────────────────────────────────────────────────────────────
@@ -28,6 +29,7 @@ export const Route = createFileRoute('/_authenticated/menu-items/')({
 
 function MenuItemsPage() {
   const navigate = useNavigate()
+  const isMobile = useIsMobile()
 
   // Pagination
   const [page, setPage] = useState(1)
@@ -152,6 +154,7 @@ function MenuItemsPage() {
           setPage(p)
           setPageSize(ps)
         }}
+        initialColumnVisibility={isMobile ? { sku: false, barcode: false, category_name: false, cost: false } : {}}
         toolbar={
           <FilterBar
             filters={[

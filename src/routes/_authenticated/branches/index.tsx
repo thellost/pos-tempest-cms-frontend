@@ -15,6 +15,7 @@ import { getBranchColumns } from '@/components/branches/columns'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { PageHeader } from '@/components/page-header'
 import { DataTable } from '@/components/data-table/data-table'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -61,6 +62,7 @@ const TIMEZONE_OPTIONS = [
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 function BranchesPage() {
+  const isMobile = useIsMobile()
   const { role } = useAuth()
   const isAdmin = role === 'admin'
 
@@ -125,6 +127,7 @@ function BranchesPage() {
           setPage(p)
           setPageSize(ps)
         }}
+        initialColumnVisibility={isMobile ? { address: false, phone: false, tax_rate: false, service_charge_rate: false, timezone: false } : {}}
         emptyMessage="No branches found."
       />
 
@@ -284,7 +287,7 @@ function BranchForm({ branch, onSuccess }: BranchFormProps) {
       </form.AppField>
 
       {/* Tax Rate + Service Charge */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <form.AppField
           name="tax_rate"
           validators={{
@@ -329,7 +332,7 @@ function BranchForm({ branch, onSuccess }: BranchFormProps) {
       </div>
 
       {/* Currency + Timezone */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <form.AppField name="currency">
           {(field) => (
             <field.SelectField
