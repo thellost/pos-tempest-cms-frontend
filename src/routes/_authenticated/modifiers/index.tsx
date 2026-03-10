@@ -315,21 +315,19 @@ function ModifierGroupRow({
   return (
     <>
       {/* ── Group row ──────────────────────────────────────────────────── */}
-      <div className="group flex items-center gap-2 px-4 py-3 hover:bg-muted/40 transition-colors">
-        {/* Expand / collapse */}
-        <button
-          type="button"
-          className="flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground"
-          onClick={() => onToggle(group.id)}
-          aria-label={isExpanded ? 'Collapse' : 'Expand'}
-        >
+      <div
+        className="group flex cursor-pointer items-center gap-2 px-4 py-3 hover:bg-muted/40 transition-colors"
+        onClick={() => onToggle(group.id)}
+      >
+        {/* Expand / collapse indicator */}
+        <div className="flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground">
           <ChevronRightIcon
             className={cn(
               'size-3.5 transition-transform duration-150',
               isExpanded && 'rotate-90',
             )}
           />
-        </button>
+        </div>
 
         {/* Name */}
         <span className="min-w-0 flex-1 truncate text-sm font-medium">
@@ -379,7 +377,7 @@ function ModifierGroupRow({
             size="icon"
             className="size-7"
             title="Add modifier option"
-            onClick={() => onAddModifier(group)}
+            onClick={(e) => { e.stopPropagation(); onAddModifier(group) }}
           >
             <PlusIcon className="size-3.5" />
           </Button>
@@ -388,7 +386,7 @@ function ModifierGroupRow({
             size="icon"
             className="size-7"
             title="Edit group"
-            onClick={() => onEdit(group)}
+            onClick={(e) => { e.stopPropagation(); onEdit(group) }}
           >
             <PencilIcon className="size-3.5" />
           </Button>
@@ -397,7 +395,7 @@ function ModifierGroupRow({
             size="icon"
             className="size-7 text-destructive hover:text-destructive"
             title="Delete group"
-            onClick={() => onDelete(group)}
+            onClick={(e) => { e.stopPropagation(); onDelete(group) }}
           >
             <Trash2Icon className="size-3.5" />
           </Button>

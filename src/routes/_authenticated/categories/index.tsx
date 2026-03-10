@@ -243,18 +243,17 @@ function CategoryTreeNode({
         className={cn(
           'group flex items-center gap-2 px-4 py-3 hover:bg-muted/40 transition-colors',
           depth > 0 && 'bg-muted/20',
+          hasChildren && 'cursor-pointer',
         )}
         style={{ paddingLeft: `${16 + depth * 24}px` }}
+        onClick={() => hasChildren && onToggle(node.id)}
       >
-        {/* Expand / Collapse toggle */}
-        <button
-          type="button"
+        {/* Expand / Collapse indicator */}
+        <div
           className={cn(
-            'flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground transition-colors hover:text-foreground',
+            'flex size-5 shrink-0 items-center justify-center rounded text-muted-foreground',
             !hasChildren && 'invisible',
           )}
-          onClick={() => onToggle(node.id)}
-          aria-label={isExpanded ? 'Collapse' : 'Expand'}
         >
           <ChevronRightIcon
             className={cn(
@@ -262,7 +261,7 @@ function CategoryTreeNode({
               isExpanded && 'rotate-90',
             )}
           />
-        </button>
+        </div>
 
         {/* Folder icon */}
         {isExpanded ? (
@@ -322,7 +321,7 @@ function CategoryTreeNode({
             size="icon"
             className="size-7"
             title="Add sub-category"
-            onClick={() => onAddChild(node.id)}
+            onClick={(e) => { e.stopPropagation(); onAddChild(node.id) }}
           >
             <FolderPlusIcon className="size-3.5" />
           </Button>
@@ -331,7 +330,7 @@ function CategoryTreeNode({
             size="icon"
             className="size-7"
             title="Edit"
-            onClick={() => onEdit(node)}
+            onClick={(e) => { e.stopPropagation(); onEdit(node) }}
           >
             <PencilIcon className="size-3.5" />
           </Button>
@@ -340,7 +339,7 @@ function CategoryTreeNode({
             size="icon"
             className="size-7 text-destructive hover:text-destructive"
             title="Delete"
-            onClick={() => onDelete(node)}
+            onClick={(e) => { e.stopPropagation(); onDelete(node) }}
           >
             <Trash2Icon className="size-3.5" />
           </Button>

@@ -4,6 +4,7 @@ import { PlusIcon } from 'lucide-react'
 import { requireRole } from '@/lib/auth-guards'
 import { useAuth } from '@/hooks/use-auth'
 import { useAppForm } from '@/hooks/use-form'
+import { phoneValidators } from '@/components/form-fields'
 import {
   useBranches,
   useCreateBranch,
@@ -268,22 +269,8 @@ function BranchForm({ branch, onSuccess }: BranchFormProps) {
       </form.AppField>
 
       {/* Phone */}
-      <form.AppField
-        name="phone"
-        validators={{
-          onChange: ({ value }) => {
-            if (value && value.length > 20) return 'Max 20 characters'
-            return undefined
-          },
-        }}
-      >
-        {(field) => (
-          <field.TextField
-            label="Phone"
-            placeholder="+62 21 555 0100 (optional)"
-            type="tel"
-          />
-        )}
+      <form.AppField name="phone" validators={phoneValidators}>
+        {(field) => <field.PhoneField placeholder="+62 21 555 0100 (optional)" />}
       </form.AppField>
 
       {/* Tax Rate + Service Charge */}

@@ -1,17 +1,31 @@
+import { useMemo } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
+import { format, subDays, parseISO } from 'date-fns'
 import {
   AlertTriangleIcon,
+  ArrowRightIcon,
   CalendarIcon,
   ClockIcon,
   DollarSignIcon,
   LayoutGridIcon,
   ShoppingCartIcon,
+  TrendingDownIcon,
+  TrendingUpIcon,
+  WalletIcon,
 } from 'lucide-react'
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { useAuth } from '@/hooks/use-auth'
-import { useDashboardStats } from '@/hooks/use-statistics'
+import { useDashboardStats, useSalesStats, useCashFlowStats } from '@/hooks/use-statistics'
 import { PageHeader } from '@/components/page-header'
 import { StatCard } from '@/components/stat-card'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from '@/components/ui/chart'
 import { cn } from '@/lib/utils'
 
 // ─── Route ────────────────────────────────────────────────────────────────────
@@ -20,25 +34,229 @@ export const Route = createFileRoute('/_authenticated/dashboard/')({
   component: DashboardPage,
 })
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Helpers ──────────────────────────────────────────────────────────────────
 
-/**
- * Compute percentage trend between two periods.
- * Returns `undefined` when there is no baseline to compare against.
- */
 function computeTrend(today: number, yesterday: number): number | undefined {
   if (yesterday === 0) return today > 0 ? 100 : undefined
   return ((today - yesterday) / yesterday) * 100
 }
 
-/** Format a number as IDR currency — e.g. "Rp 4.200.000". */
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency',
-    currency: 'IDR',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount)
+function formatIDR(value: number | null | undefined): string {
+  if (value == null || isNaN(value)) return '—'
+  return `Rp ${new Intl.NumberFormat('id-ID').format(Math.round(value))}`
+}
+
+function formatShortIDR(value: number): string {
+  const abs = Math.abs(value)
+  const sign = value < 0 ? '-' : ''
+  if (abs >= 1_000_000_000) return `${sign}Rp ${(abs / 1_000_000_000).toFixed(1)}B`
+  if (abs >= 1_000_000) return `${sign}Rp ${(abs / 1_000_000).toFixed(1)}M`
+  if (abs >= 1_000) return `${sign}Rp ${(abs / 1_000).toFixed(0)}K`
+  return `${sign}Rp ${abs}`
+}
+
+function getLast7DayRange() {
+  const today = new Date()
+  return {
+    dateFrom: format(subDays(today, 6), 'yyyy-MM-dd'),
+    dateTo: format(today, 'yyyy-MM-dd'),
+  }
+}
+
+// ─── Revenue Chart Card ───────────────────────────────────────────────────────
+
+const revenueChartConfig: ChartConfig = {
+  total_revenue: { label: 'Revenue', color: '#3b82f6' },
+}
+
+function RevenueChartCard({ branchId }: { branchId?: number }) {
+  const { dateFrom, dateTo } = getLast7DayRange()
+  const { data, isLoading } = useSalesStats({ branchId, dateFrom, dateTo, groupBy: 'day' })
+  const points = data?.data ?? []
+
+  return (
+    <Card className="flex h-full flex-col">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div className="flex items-center gap-2">
+          <DollarSignIcon className="size-5 text-muted-foreground" />
+          <CardTitle>Revenue — Last 7 Days</CardTitle>
+        </div>
+        <Link
+          to="/reports/cash-flow"
+          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          More <ArrowRightIcon className="size-3" />
+        </Link>
+      </CardHeader>
+      <CardContent className="flex-1">
+        {isLoading ? (
+          <Skeleton className="h-64 w-full" />
+        ) : points.length === 0 ? (
+          <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
+            No revenue data for the last 7 days.
+          </div>
+        ) : (
+          <ChartContainer config={revenueChartConfig} className="h-64 w-full">
+            <AreaChart data={points} margin={{ top: 8, right: 8, bottom: 4, left: 0 }}>
+              <defs>
+                <linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+              <XAxis
+                dataKey="period"
+                tick={{ fontSize: 11 }}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(v: string) => {
+                  try {
+                    return format(parseISO(v), 'EEE d')
+                  } catch {
+                    return v
+                  }
+                }}
+              />
+              <YAxis
+                tick={{ fontSize: 11 }}
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={formatShortIDR}
+                width={72}
+              />
+              <ChartTooltip
+                content={
+                  <ChartTooltipContent
+                    formatter={(value) => [formatIDR(value as number), 'Revenue']}
+                    labelFormatter={(label) => {
+                      try {
+                        return format(parseISO(label as string), 'EEE, d MMM yyyy')
+                      } catch {
+                        return String(label)
+                      }
+                    }}
+                  />
+                }
+              />
+              <Area
+                type="monotone"
+                dataKey="total_revenue"
+                name="total_revenue"
+                stroke="#3b82f6"
+                strokeWidth={2.5}
+                fill="url(#revenueFill)"
+                dot={{ r: 4, fill: '#3b82f6', strokeWidth: 0 }}
+                activeDot={{ r: 6 }}
+              />
+            </AreaChart>
+          </ChartContainer>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+// ─── Cash Flow Summary Card ───────────────────────────────────────────────────
+
+function CashFlowSummaryCard({ branchId }: { branchId?: number }) {
+  const { dateFrom, dateTo } = getLast7DayRange()
+  const { data, isLoading } = useCashFlowStats({ branchId, dateFrom, dateTo })
+  const points = data?.data ?? []
+
+  const { totalIncome, totalExpense } = useMemo(
+    () =>
+      points.reduce(
+        (acc, p) => ({
+          totalIncome: acc.totalIncome + (p.total_revenue ?? 0),
+          totalExpense: acc.totalExpense + (p.cash_out ?? 0),
+        }),
+        { totalIncome: 0, totalExpense: 0 },
+      ),
+    [points],
+  )
+
+  const net = totalIncome - totalExpense
+  const incomeRatio =
+    totalIncome + totalExpense > 0
+      ? (totalIncome / (totalIncome + totalExpense)) * 100
+      : 50
+
+  return (
+    <Card className="flex h-full flex-col">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div className="flex items-center gap-2">
+          <WalletIcon className="size-5 text-muted-foreground" />
+          <CardTitle>Cash Flow</CardTitle>
+        </div>
+        <Link
+          to="/reports/cash-flow"
+          className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+        >
+          More <ArrowRightIcon className="size-3" />
+        </Link>
+      </CardHeader>
+      <CardContent className="flex flex-1 flex-col gap-3">
+        {isLoading ? (
+          <div className="space-y-3">
+            <Skeleton className="h-4 w-20" />
+            <Skeleton className="h-[4.5rem] w-full rounded-lg" />
+            <Skeleton className="h-[4.5rem] w-full rounded-lg" />
+            <Skeleton className="h-2 w-full rounded-full" />
+            <Skeleton className="h-[4.5rem] w-full rounded-lg" />
+          </div>
+        ) : (
+          <>
+            <p className="text-xs text-muted-foreground">Last 7 days</p>
+
+            {/* Income */}
+            <div className="rounded-lg bg-emerald-50 px-4 py-3 dark:bg-emerald-950/30">
+              <div className="mb-1 flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
+                <TrendingUpIcon className="size-3.5" />
+                Income
+              </div>
+              <div className="text-xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+                {formatIDR(totalIncome)}
+              </div>
+            </div>
+
+            {/* Spending */}
+            <div className="rounded-lg bg-red-50 px-4 py-3 dark:bg-red-950/30">
+              <div className="mb-1 flex items-center gap-1.5 text-xs text-red-500">
+                <TrendingDownIcon className="size-3.5" />
+                Spending
+              </div>
+              <div className="text-xl font-bold tabular-nums text-red-500">
+                {formatIDR(totalExpense)}
+              </div>
+            </div>
+
+            {/* Income/expense ratio bar */}
+            <div className="overflow-hidden rounded-full bg-red-200 h-2 dark:bg-red-900/50">
+              <div
+                className="h-full rounded-full bg-emerald-500 transition-all duration-500"
+                style={{ width: `${Math.min(Math.max(incomeRatio, 0), 100)}%` }}
+              />
+            </div>
+
+            {/* Net */}
+            <div className="rounded-lg border px-4 py-3">
+              <div className="mb-1 text-xs text-muted-foreground">Net</div>
+              <div
+                className={cn(
+                  'text-xl font-bold tabular-nums',
+                  net >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500',
+                )}
+              >
+                {net >= 0 ? '+' : ''}
+                {formatIDR(net)}
+              </div>
+            </div>
+          </>
+        )}
+      </CardContent>
+    </Card>
+  )
 }
 
 // ─── Dashboard Page ───────────────────────────────────────────────────────────
@@ -63,15 +281,24 @@ function DashboardPage() {
         description={`Welcome back, ${user?.name ?? 'there'}. Here's what's happening today.`}
       />
 
+      {/* ── Top row: Revenue chart + Cash flow ───────────────────────────── */}
+      <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-3">
+        <div className="flex h-full flex-col lg:col-span-2">
+          <RevenueChartCard branchId={branchId ?? undefined} />
+        </div>
+        <CashFlowSummaryCard branchId={branchId ?? undefined} />
+      </div>
+
+      {/* ── Bottom row: 6 KPI stat cards ─────────────────────────────────── */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {/* 1 — Today's Revenue */}
+        {/* Today's Revenue */}
         <CardLink to="/orders">
           {isLoading || !stats ? (
             <StatCardSkeleton />
           ) : (
             <StatCard
               label="Today's Revenue"
-              value={formatCurrency(stats.today_revenue)}
+              value={formatIDR(stats.today_revenue)}
               icon={<DollarSignIcon className="size-5" />}
               trend={revenueTrend}
               trendLabel="vs yesterday"
@@ -79,7 +306,7 @@ function DashboardPage() {
           )}
         </CardLink>
 
-        {/* 2 — Today's Orders */}
+        {/* Today's Orders */}
         <CardLink to="/orders">
           {isLoading || !stats ? (
             <StatCardSkeleton />
@@ -94,7 +321,7 @@ function DashboardPage() {
           )}
         </CardLink>
 
-        {/* 3 — Active Tables */}
+        {/* Active Tables */}
         <CardLink to="/tables">
           {isLoading || !stats ? (
             <StatCardSkeleton />
@@ -107,7 +334,7 @@ function DashboardPage() {
           )}
         </CardLink>
 
-        {/* 4 — Open Shifts */}
+        {/* Open Shifts */}
         <CardLink to="/shifts">
           {isLoading || !stats ? (
             <StatCardSkeleton />
@@ -120,7 +347,7 @@ function DashboardPage() {
           )}
         </CardLink>
 
-        {/* 5 — Low Stock Alerts  (linked to inventory; highlighted red when > 0) */}
+        {/* Low Stock Alerts */}
         <CardLink to="/inventory">
           {isLoading || !stats ? (
             <StatCardSkeleton />
@@ -132,22 +359,18 @@ function DashboardPage() {
                 <AlertTriangleIcon
                   className={cn(
                     'size-5',
-                    stats.low_stock_items > 0
-                      ? 'text-red-500'
-                      : 'text-muted-foreground',
+                    stats.low_stock_items > 0 ? 'text-red-500' : 'text-muted-foreground',
                   )}
                 />
               }
               className={
-                stats.low_stock_items > 0
-                  ? 'border-red-200 dark:border-red-900'
-                  : undefined
+                stats.low_stock_items > 0 ? 'border-red-200 dark:border-red-900' : undefined
               }
             />
           )}
         </CardLink>
 
-        {/* 6 — Pending Reservations */}
+        {/* Pending Reservations */}
         <CardLink to="/reservations">
           {isLoading || !stats ? (
             <StatCardSkeleton />
@@ -166,14 +389,7 @@ function DashboardPage() {
 
 // ─── Sub-Components ───────────────────────────────────────────────────────────
 
-/** Wraps children in a TanStack Router Link with hover styling. */
-function CardLink({
-  to,
-  children,
-}: {
-  to: string
-  children: React.ReactNode
-}) {
+function CardLink({ to, children }: { to: string; children: React.ReactNode }) {
   return (
     <Link
       to={to}
@@ -184,7 +400,6 @@ function CardLink({
   )
 }
 
-/** Skeleton placeholder that matches a StatCard's dimensions while loading. */
 function StatCardSkeleton() {
   return (
     <div className="rounded-xl border bg-card p-5">

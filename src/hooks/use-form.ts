@@ -8,6 +8,7 @@ import { DateRangePickerField } from '@/components/form-fields/date-range-picker
 import { ImageUploadField } from '@/components/form-fields/image-upload-field'
 import { NumberField } from '@/components/form-fields/number-field'
 import { PasswordField } from '@/components/form-fields/password-field'
+import { PhoneField } from '@/components/form-fields/phone-field'
 import { PinCodeField } from '@/components/form-fields/pin-code-field'
 import { RadioGroupField } from '@/components/form-fields/radio-group-field'
 import { SelectField } from '@/components/form-fields/select-field'
@@ -37,6 +38,7 @@ export const { useAppForm } = createFormHook({
     CheckboxField,
     RadioGroupField,
     PasswordField,
+    PhoneField,
     PinCodeField,
   },
   formComponents: {

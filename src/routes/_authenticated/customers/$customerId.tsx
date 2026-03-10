@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useAppForm } from '@/hooks/use-form'
+import { phoneValidators } from '@/components/form-fields'
 import { useCustomer, useUpdateCustomer } from '@/hooks/use-customers'
 import type { UpdateCustomerPayload } from '@/lib/services/customers'
 import { PageHeader } from '@/components/page-header'
@@ -250,21 +251,9 @@ function EditCustomerForm({
       {/* Phone */}
       <form.AppField
         name="phone"
-        validators={{
-          onChange: ({ value }) => {
-            if (value && value.length > 20) return 'Max 20 characters'
-            return undefined
-          },
-        }}
+        validators={phoneValidators}
       >
-        {(field) => (
-          <field.TextField
-            label="Phone"
-            placeholder="e.g. 081234567890 (optional)"
-            type="tel"
-            disabled={!canManage}
-          />
-        )}
+        {(field) => <field.PhoneField disabled={!canManage} />}
       </form.AppField>
 
       {/* Email */}

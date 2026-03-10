@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/use-auth'
 import { useCreateUser } from '@/hooks/use-users'
 import { useBranches } from '@/hooks/use-branches'
 import { useAppForm } from '@/hooks/use-form'
+import { phoneValidators } from '@/components/form-fields'
 import {
   ROLE_OPTIONS,
   STAFF_ROLE_OPTIONS,
@@ -172,22 +173,8 @@ function CreateUserForm({ availableRoleOptions, onSuccess }: CreateUserFormProps
       </form.AppField>
 
       {/* Phone */}
-      <form.AppField
-        name="phone"
-        validators={{
-          onChange: ({ value }) => {
-            if (value && value.length > 20) return 'Max 20 characters'
-            return undefined
-          },
-        }}
-      >
-        {(field) => (
-          <field.TextField
-            label="Phone"
-            placeholder="+62 812 3456 7890 (optional)"
-            type="tel"
-          />
-        )}
+      <form.AppField name="phone" validators={phoneValidators}>
+        {(field) => <field.PhoneField placeholder="+62 812 3456 7890 (optional)" />}
       </form.AppField>
 
       {/* Role + Branch */}

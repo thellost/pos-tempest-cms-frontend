@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { PlusIcon } from 'lucide-react'
 import { requireRole } from '@/lib/auth-guards'
 import { useAppForm } from '@/hooks/use-form'
+import { phoneValidators } from '@/components/form-fields'
 import {
   useSuppliers,
   useCreateSupplier,
@@ -207,13 +208,8 @@ function SupplierForm({ supplier, onSuccess }: SupplierFormProps) {
       </form.AppField>
 
       {/* Phone */}
-      <form.AppField name="phone">
-        {(field) => (
-          <field.TextField
-            label="Phone"
-            placeholder="e.g. 021-5551111 (optional)"
-          />
-        )}
+      <form.AppField name="phone" validators={phoneValidators}>
+        {(field) => <field.PhoneField placeholder="e.g. 021-5551111 (optional)" />}
       </form.AppField>
 
       {/* Email */}

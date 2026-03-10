@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { PlusIcon } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useAppForm } from '@/hooks/use-form'
+import { phoneValidators } from '@/components/form-fields'
 import { useCustomers, useCreateCustomer } from '@/hooks/use-customers'
 import { getCustomerColumns } from '@/components/customers/columns'
 import type { CreateCustomerPayload } from '@/lib/services/customers'
@@ -235,10 +236,8 @@ function CreateCustomerForm({ onSuccess }: CreateCustomerFormProps) {
         )}
       </form.AppField>
 
-      <form.AppField name="phone">
-        {(field) => (
-          <field.TextField label="Phone" placeholder="e.g. 081234567890" />
-        )}
+      <form.AppField name="phone" validators={phoneValidators}>
+        {(field) => <field.PhoneField />}
       </form.AppField>
 
       <form.AppField name="email">

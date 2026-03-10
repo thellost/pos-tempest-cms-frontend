@@ -32,11 +32,19 @@ export function getBranchColumns({
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Address" />
       ),
-      cell: ({ row }) => (
-        <span className="text-muted-foreground">
-          {row.original.address ?? '—'}
-        </span>
-      ),
+      cell: ({ row }) => {
+        const address = row.original.address
+        return address ? (
+          <span
+            className="block max-w-[200px] truncate text-muted-foreground"
+            title={address}
+          >
+            {address}
+          </span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        )
+      },
     },
     {
       accessorKey: 'phone',

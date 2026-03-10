@@ -1,6 +1,3 @@
-// Must be imported first for Sentry instrumentation
-import './instrument.server.mjs'
-
 import { createServer } from 'node:http'
 import { createReadStream, existsSync, statSync } from 'node:fs'
 import { join, extname } from 'node:path'
