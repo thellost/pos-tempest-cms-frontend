@@ -1,4 +1,5 @@
-import { createFileRoute, Outlet, redirect, useRouter } from '@tanstack/react-router'
+import { createFileRoute, Outlet, redirect, useNavigate } from '@tanstack/react-router'
+import { useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar'
 import { AppSidebar } from '@/components/layout/sidebar'
@@ -7,8 +8,6 @@ import { LayoutSkeleton } from '@/components/layout/layout-skeleton'
 import { useAuth } from '@/hooks/use-auth'
 import { fetchMe } from '@/lib/fetch-me'
 import { setAuthBootstrap } from '@/lib/auth-store'
-import { Button } from '@/components/ui/button'
-import { AlertCircle, RefreshCw } from 'lucide-react'
 
 // --- Route -------------------------------------------------------------------
 //
@@ -21,12 +20,17 @@ import { AlertCircle, RefreshCw } from 'lucide-react'
 
 export const Route = createFileRoute('/_authenticated')({
   beforeLoad: async ({ location }) => {
-    // Skip on SSR — session lives in localStorage
-    if (typeof window === 'undefined') return
+    // Use the server client (cookie-based) on SSR, the browser client
+    // (localStorage + cookie) on the client — both read from cookies so the
+    // check now runs on every request, server-side included.
+    const client =
+      typeof window === 'undefined'
+        ? (await import('@/lib/supabase-server')).createSupabaseServerClient()
+        : supabase
 
     const {
       data: { session },
-    } = await supabase.auth.getSession()
+    } = await client.auth.getSession()
 
     if (!session) {
       throw redirect({
@@ -50,17 +54,27 @@ export const Route = createFileRoute('/_authenticated')({
 // --- Layout ------------------------------------------------------------------
 
 function AuthenticatedLayout() {
-  const { isLoading, user } = useAuth()
-  const router = useRouter()
+  const { isLoading, isAuthenticated, user, signOut } = useAuth()
+  const navigate = useNavigate()
 
-  // Keep the skeleton showing until the /me fetch resolves so there's no
-  // flash of the sidebar with null user/role data.
-  if (isLoading) return <LayoutSkeleton />
+  // Component-level fallback: catches the edge case where a session expires
+  // or is revoked after the initial render (e.g. token invalidated elsewhere).
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      navigate({ to: '/login' })
+    }
+  }, [isLoading, isAuthenticated, navigate])
 
-  // If the session is valid but the profile fetch failed (server timeout /
-  // error), block rendering and let the user retry rather than showing the
-  // shell with unknown role data.
-  if (!user) return <ProfileFetchError onRetry={() => router.invalidate()} />
+  // Show skeleton while session/profile is resolving.
+  if (isLoading || !isAuthenticated) return <LayoutSkeleton />
+
+  // If the session is valid but the backend /me fetch failed, sign out and
+  // send the user to login — no point showing an error screen they can't
+  // recover from without re-authenticating.
+  if (!user) {
+    signOut().then(() => navigate({ to: '/login' }))
+    return <LayoutSkeleton />
+  }
 
   return (
     <SidebarProvider>
@@ -72,25 +86,5 @@ function AuthenticatedLayout() {
         </main>
       </SidebarInset>
     </SidebarProvider>
-  )
-}
-
-// --- Profile fetch error screen ----------------------------------------------
-
-function ProfileFetchError({ onRetry }: { onRetry: () => void }) {
-  return (
-    <div className="flex h-screen w-full flex-col items-center justify-center gap-4 bg-background">
-      <AlertCircle className="size-10 text-destructive" />
-      <div className="text-center space-y-1">
-        <p className="text-lg font-semibold">Could not load your profile</p>
-        <p className="text-sm text-muted-foreground">
-          The server took too long to respond or returned an error.
-        </p>
-      </div>
-      <Button variant="outline" onClick={onRetry}>
-        <RefreshCw className="mr-2 size-4" />
-        Retry
-      </Button>
-    </div>
   )
 }

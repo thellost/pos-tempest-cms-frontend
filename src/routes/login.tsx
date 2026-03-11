@@ -26,11 +26,15 @@ export const Route = createFileRoute('/login')({
       typeof search.redirect === 'string' ? search.redirect : undefined,
   }),
   beforeLoad: async () => {
-    // Skip on SSR — session lives in localStorage
-    if (typeof window === 'undefined') return
+    const client =
+      typeof window === 'undefined'
+        ? (await import('@/lib/supabase-server')).createSupabaseServerClient()
+        : supabase
+
     const {
       data: { session },
-    } = await supabase.auth.getSession()
+    } = await client.auth.getSession()
+
     // Already authenticated → skip login page
     if (session) {
       throw redirect({ to: '/dashboard' as string })
