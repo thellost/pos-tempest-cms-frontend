@@ -12,6 +12,8 @@ import {
   MonitorIcon,
   BuildingIcon,
   SearchIcon,
+  ArrowDownCircleIcon,
+  ArrowUpCircleIcon,
 } from 'lucide-react'
 import { PieChart, Pie, Cell } from 'recharts'
 import { useShiftReport } from '@/hooks/use-statistics'
@@ -90,6 +92,17 @@ function labelForPaymentMethod(method: string): string {
     bank_transfer: 'Bank Transfer',
   }
   return labels[method] ?? method.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
+const CASH_TX_REASON_LABELS: Record<string, string> = {
+  owner_withdrawal: 'Owner Withdrawal',
+  supply_purchase: 'Supply Purchase',
+  staff_advance: 'Staff Advance',
+  petty_cash: 'Petty Cash',
+  tip_out: 'Tip Out',
+  cash_deposit: 'Cash Deposit',
+  change_refill: 'Change Refill',
+  other: 'Other',
 }
 
 function formatDateTime(iso: string | null | undefined): string {
@@ -262,17 +275,88 @@ function ShiftReportContent({ shiftId }: ShiftReportContentProps) {
             <InfoRow label="Opening Cash" value={formatIDR(shift.opening_cash)} />
             <Separator className="my-1" />
             <InfoRow
-              label="Closing Cash"
+              label="Cash Sales"
+              value={
+                <span className="text-emerald-600">
+                  +{formatIDR(
+                    payment_breakdown.find((p) => p.payment_method === 'cash')?.total_amount ?? 0,
+                  )}
+                </span>
+              }
+            />
+
+            {/* Individual cash transactions */}
+            {report.cash_transactions?.length > 0 && (
+              <>
+                <Separator className="my-2" />
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
+                  Cash Transactions
+                </p>
+                {report.cash_transactions.map((tx) => {
+                  const isCashIn = tx.type === 'cash_in'
+                  return (
+                    <div key={tx.id}>
+                      <InfoRow
+                        label={
+                          <span className="flex items-center gap-1.5">
+                            {isCashIn ? (
+                              <ArrowDownCircleIcon className="size-3.5 text-emerald-500" />
+                            ) : (
+                              <ArrowUpCircleIcon className="size-3.5 text-destructive" />
+                            )}
+                            {CASH_TX_REASON_LABELS[tx.reason] ?? tx.reason}
+                          </span>
+                        }
+                        value={
+                          <span className={isCashIn ? 'text-emerald-600' : 'text-destructive'}>
+                            {isCashIn ? '+' : '-'}{formatIDR(tx.amount)}
+                          </span>
+                        }
+                      />
+                      <Separator className="my-1" />
+                    </div>
+                  )
+                })}
+                {report.total_cash_in > 0 && (
+                  <InfoRow
+                    label="Total Cash In"
+                    value={
+                      <span className="font-medium text-emerald-600">
+                        +{formatIDR(report.total_cash_in)}
+                      </span>
+                    }
+                  />
+                )}
+                {report.total_cash_out > 0 && (
+                  <InfoRow
+                    label="Total Cash Out"
+                    value={
+                      <span className="font-medium text-destructive">
+                        -{formatIDR(report.total_cash_out)}
+                      </span>
+                    }
+                  />
+                )}
+              </>
+            )}
+
+            <Separator className="my-2 border-foreground/20" />
+            <InfoRow
+              label="Expected Cash"
+              value={
+                <span className="font-semibold">
+                  {shift.expected_cash != null ? formatIDR(shift.expected_cash) : '—'}
+                </span>
+              }
+            />
+            <Separator className="my-1" />
+            <InfoRow
+              label="Actual Cash"
               value={shift.closing_cash != null ? formatIDR(shift.closing_cash) : <span className="text-muted-foreground">Not closed</span>}
             />
             <Separator className="my-1" />
             <InfoRow
-              label="Expected Cash"
-              value={shift.expected_cash != null ? formatIDR(shift.expected_cash) : '—'}
-            />
-            <Separator className="my-1" />
-            <InfoRow
-              label="Cash Difference"
+              label="Difference"
               value={
                 shift.cash_difference != null ? (
                   <span className={cn('font-semibold', diffPositive ? 'text-emerald-600' : 'text-destructive')}>

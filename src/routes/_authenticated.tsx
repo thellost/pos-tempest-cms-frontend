@@ -28,9 +28,14 @@ export const Route = createFileRoute('/_authenticated')({
         ? (await import('@/lib/supabase-server')).createSupabaseServerClient()
         : supabase
 
-    const {
-      data: { session },
-    } = await client.auth.getSession()
+    let session
+    try {
+      const { data } = await client.auth.getSession()
+      session = data.session
+    } catch {
+      // Stale / invalid refresh token in storage — clear it and redirect.
+      await client.auth.signOut()
+    }
 
     if (!session) {
       throw redirect({

@@ -131,12 +131,23 @@ interface CashFlowSectionProps {
 
 function CashFlowSection({ branchId, dateFrom, dateTo }: CashFlowSectionProps) {
   const { data, isLoading } = useCashFlowStats({ branchId, dateFrom, dateTo })
-  const points = data?.data ?? []
+  const rawPoints = data?.data ?? []
+
+  // Enrich each point with effective totals that include shift cash movements
+  const points = useMemo(
+    () =>
+      rawPoints.map((p) => ({
+        ...p,
+        effective_cash_in: (p.cash_in ?? 0) + (p.shift_cash_in ?? 0),
+        effective_cash_out: (p.cash_out ?? 0) + (p.shift_cash_out ?? 0),
+      })),
+    [rawPoints],
+  )
 
   const chartConfig: ChartConfig = {
-    cash_in: { label: 'Cash In', color: '#10b981' },
+    effective_cash_in: { label: 'Cash In', color: '#10b981' },
     non_cash_in: { label: 'Non-Cash In', color: '#3b82f6' },
-    cash_out: { label: 'Cash Out', color: '#ef4444' },
+    effective_cash_out: { label: 'Cash Out', color: '#ef4444' },
     net_cash: { label: 'Net Cash', color: '#8b5cf6' },
   }
 
@@ -145,9 +156,9 @@ function CashFlowSection({ branchId, dateFrom, dateTo }: CashFlowSectionProps) {
     () =>
       points.reduce(
         (acc, p) => ({
-          cash_in: acc.cash_in + (p.cash_in ?? 0),
+          cash_in: acc.cash_in + p.effective_cash_in,
           non_cash_in: acc.non_cash_in + (p.non_cash_in ?? 0),
-          cash_out: acc.cash_out + (p.cash_out ?? 0),
+          cash_out: acc.cash_out + p.effective_cash_out,
           total_revenue: acc.total_revenue + (p.total_revenue ?? 0),
           net_cash: acc.net_cash + (p.net_cash ?? 0),
         }),
@@ -197,9 +208,9 @@ function CashFlowSection({ branchId, dateFrom, dateTo }: CashFlowSectionProps) {
                   <ChartTooltipContent
                     formatter={(value, name) => {
                       const labels: Record<string, string> = {
-                        cash_in: 'Cash In',
+                        effective_cash_in: 'Cash In',
                         non_cash_in: 'Non-Cash In',
-                        cash_out: 'Cash Out',
+                        effective_cash_out: 'Cash Out',
                         net_cash: 'Net Cash',
                       }
                       return [formatIDR(value as number), labels[name as string] ?? String(name)]
@@ -211,10 +222,10 @@ function CashFlowSection({ branchId, dateFrom, dateTo }: CashFlowSectionProps) {
               {/* Stacked bars: Cash In + Non-Cash In */}
               <Bar
                 yAxisId="amount"
-                dataKey="cash_in"
-                name="cash_in"
+                dataKey="effective_cash_in"
+                name="effective_cash_in"
                 stackId="income"
-                fill="var(--color-cash_in)"
+                fill="var(--color-effective_cash_in)"
                 fillOpacity={0.85}
                 radius={[0, 0, 0, 0]}
                 maxBarSize={24}
@@ -229,12 +240,12 @@ function CashFlowSection({ branchId, dateFrom, dateTo }: CashFlowSectionProps) {
                 radius={[3, 3, 0, 0]}
                 maxBarSize={24}
               />
-              {/* Cash Out as negative-direction bar */}
+              {/* Cash Out as negative-direction bar (includes shift cash-outs) */}
               <Bar
                 yAxisId="amount"
-                dataKey="cash_out"
-                name="cash_out"
-                fill="var(--color-cash_out)"
+                dataKey="effective_cash_out"
+                name="effective_cash_out"
+                fill="var(--color-effective_cash_out)"
                 fillOpacity={0.75}
                 radius={[3, 3, 0, 0]}
                 maxBarSize={24}
@@ -279,7 +290,7 @@ function CashFlowSection({ branchId, dateFrom, dateTo }: CashFlowSectionProps) {
                       {(() => { try { return format(parseISO(p.date), 'EEE, d MMM yyyy') } catch { return p.date } })()}
                     </td>
                     <td className="py-1.5 pr-4 text-right tabular-nums text-emerald-600">
-                      {formatIDR(p.cash_in)}
+                      {formatIDR(p.effective_cash_in)}
                     </td>
                     <td className="py-1.5 pr-4 text-right tabular-nums text-blue-600">
                       {formatIDR(p.non_cash_in)}
@@ -288,7 +299,7 @@ function CashFlowSection({ branchId, dateFrom, dateTo }: CashFlowSectionProps) {
                       {formatIDR(p.total_revenue)}
                     </td>
                     <td className="py-1.5 pr-4 text-right tabular-nums text-red-500">
-                      {formatIDR(p.cash_out)}
+                      {formatIDR(p.effective_cash_out)}
                     </td>
                     <td
                       className={cn(
@@ -502,13 +513,13 @@ function SummarySection({ branchId, dateFrom, dateTo }: SummarySectionProps) {
   const { data: cashFlowData, isLoading } = useCashFlowStats({ branchId, dateFrom, dateTo })
   const points = cashFlowData?.data ?? []
 
-  // Aggregate totals from cash flow data
+  // Aggregate totals from cash flow data (expenses include shift cash-outs)
   const { totalIncome, totalExpense } = useMemo(
     () =>
       points.reduce(
         (acc, p) => ({
           totalIncome: acc.totalIncome + (p.total_revenue ?? 0),
-          totalExpense: acc.totalExpense + (p.cash_out ?? 0),
+          totalExpense: acc.totalExpense + (p.cash_out ?? 0) + (p.shift_cash_out ?? 0),
         }),
         { totalIncome: 0, totalExpense: 0 },
       ),
@@ -531,7 +542,7 @@ function SummarySection({ branchId, dateFrom, dateTo }: SummarySectionProps) {
         const label = format(startOfMonth(d), 'MMM yyyy')
         if (!months[key]) months[key] = { label, income: 0, expense: 0 }
         months[key].income += p.total_revenue ?? 0
-        months[key].expense += p.cash_out ?? 0
+        months[key].expense += (p.cash_out ?? 0) + (p.shift_cash_out ?? 0)
       } catch {
         /* skip unparseable dates */
       }

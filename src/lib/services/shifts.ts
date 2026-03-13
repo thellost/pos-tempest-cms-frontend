@@ -62,19 +62,19 @@ export interface CreateCashTransactionPayload {
 }
 
 export interface ShiftSummary {
-  shift_id: number
+  shift: Shift
   total_orders: number
-  total_revenue: number
-  total_discount: number
+  completed_orders: number
+  cancelled_orders: number
+  voided_orders: number
+  gross_revenue: number
+  total_discounts: number
   total_tax: number
-  total_service: number
+  total_service_charge: number
   net_revenue: number
-  opening_cash: number
-  closing_cash: number | null
-  expected_cash: number | null
-  cash_difference: number | null
   total_cash_in: number
   total_cash_out: number
+  net_cash_movement: number
   payment_breakdown: PaymentBreakdown[]
   cash_transactions: CashTransaction[]
 }

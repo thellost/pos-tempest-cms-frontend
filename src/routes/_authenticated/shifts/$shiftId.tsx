@@ -9,15 +9,11 @@ import {
 import { PieChart, Pie, Cell } from 'recharts'
 import {
   useShift,
-  useShiftSummary,
   useCloseShift,
 } from '@/hooks/use-shifts'
+import { useShiftReport } from '@/hooks/use-statistics'
 import { useAppForm } from '@/hooks/use-form'
-import type {
-  CloseShiftPayload,
-  CashTransaction,
-  CashTransactionReason,
-} from '@/lib/services/shifts'
+import type { CloseShiftPayload } from '@/lib/services/shifts'
 import { PageHeader } from '@/components/page-header'
 import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
@@ -68,7 +64,7 @@ const PAYMENT_LABELS: Record<string, string> = {
   bank_transfer: 'Bank Transfer',
 }
 
-const CASH_TX_REASON_LABELS: Record<CashTransactionReason, string> = {
+const CASH_TX_REASON_LABELS: Record<string, string> = {
   owner_withdrawal: 'Owner Withdrawal',
   supply_purchase: 'Supply Purchase',
   staff_advance: 'Staff Advance',
@@ -96,12 +92,13 @@ function ShiftDetailPage() {
   const [closeDialogOpen, setCloseDialogOpen] = useState(false)
 
   const { data: shiftResult, isLoading: shiftLoading } = useShift(id)
-  const { data: summaryResult, isLoading: summaryLoading } = useShiftSummary(id)
+  const { data: reportResult, isLoading: reportLoading } = useShiftReport(id)
 
-  const shift = shiftResult?.data
-  const summary = summaryResult?.data
+  const report = reportResult?.data
+  const shift = shiftResult?.data ?? report?.shift
+  const cashTransactions = report?.cash_transactions ?? []
 
-  const isLoading = shiftLoading || summaryLoading
+  const isLoading = shiftLoading || reportLoading
 
   // ── Pie chart data ──────────────────────────────────────────────────────────
 
@@ -112,7 +109,7 @@ function ShiftDetailPage() {
     percentage: number
     fill: string
   }[] =
-    summary?.payment_breakdown?.map((item, i) => ({
+    report?.payment_breakdown?.map((item, i) => ({
       name: item.payment_method,
       value: item.total_amount,
       count: item.count,
@@ -121,7 +118,7 @@ function ShiftDetailPage() {
     })) ?? []
 
   const chartConfig: ChartConfig = Object.fromEntries(
-    (summary?.payment_breakdown ?? []).map((item, i) => [
+    (report?.payment_breakdown ?? []).map((item, i) => [
       item.payment_method,
       {
         label: PAYMENT_LABELS[item.payment_method] ?? item.payment_method,
@@ -144,7 +141,7 @@ function ShiftDetailPage() {
     )
   }
 
-  const cashDiff = summary?.cash_difference ?? null
+  const cashDiff = shift?.cash_difference ?? null
 
   const cashDiffPositive = cashDiff !== null && cashDiff >= 0
 
@@ -210,36 +207,65 @@ function ShiftDetailPage() {
           </CardContent>
         </Card>
 
-        {/* Financial Summary */}
-        {summary && (
+        {/* Order Summary */}
+        {report && (
           <Card>
             <CardHeader>
-              <CardTitle>Financial Summary</CardTitle>
+              <CardTitle>Order Summary</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <InfoRow
                 label="Total Orders"
-                value={summary.total_orders.toLocaleString('id-ID')}
+                value={report.total_orders.toLocaleString('id-ID')}
               />
               <InfoRow
-                label="Total Revenue"
-                value={formatIDR(summary.total_revenue)}
+                label="Completed"
+                value={
+                  <span className="text-emerald-600 dark:text-emerald-400">
+                    {report.completed_orders.toLocaleString('id-ID')}
+                  </span>
+                }
+              />
+              {report.cancelled_orders > 0 && (
+                <InfoRow
+                  label="Cancelled"
+                  value={
+                    <span className="text-destructive">
+                      {report.cancelled_orders.toLocaleString('id-ID')}
+                    </span>
+                  }
+                />
+              )}
+              {report.voided_orders > 0 && (
+                <InfoRow
+                  label="Voided"
+                  value={
+                    <span className="text-destructive">
+                      {report.voided_orders.toLocaleString('id-ID')}
+                    </span>
+                  }
+                />
+              )}
+              <Separator />
+              <InfoRow
+                label="Gross Revenue"
+                value={formatIDR(report.gross_revenue)}
               />
               <InfoRow
-                label="Discount"
-                value={formatIDR(summary.total_discount)}
+                label="Discounts"
+                value={formatIDR(report.total_discounts)}
               />
-              <InfoRow label="Tax" value={formatIDR(summary.total_tax)} />
+              <InfoRow label="Tax" value={formatIDR(report.total_tax)} />
               <InfoRow
                 label="Service Charge"
-                value={formatIDR(summary.total_service)}
+                value={formatIDR(report.total_service_charge)}
               />
               <Separator />
               <InfoRow
                 label="Net Revenue"
                 value={
                   <span className="font-semibold">
-                    {formatIDR(summary.net_revenue)}
+                    {formatIDR(report.net_revenue)}
                   </span>
                 }
               />
@@ -247,72 +273,141 @@ function ShiftDetailPage() {
           </Card>
         )}
 
-        {/* Cash Reconciliation */}
-        {summary && (
+        {/* Cash Drawer Summary */}
+        {report && (
           <Card>
             <CardHeader>
-              <CardTitle>Cash Reconciliation</CardTitle>
+              <CardTitle>Cash Drawer</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm">
               <InfoRow
                 label="Opening Cash"
-                value={formatIDR(summary.opening_cash)}
+                value={formatIDR(shift?.opening_cash)}
               />
-              {(summary.total_cash_in > 0 || summary.total_cash_out > 0) && (
+              <Separator />
+              <InfoRow
+                label="Cash Sales"
+                value={
+                  <span className="text-emerald-600 dark:text-emerald-400">
+                    +{formatIDR(
+                      report.payment_breakdown.find(
+                        (p) => p.payment_method === 'cash',
+                      )?.total_amount ?? 0,
+                    )}
+                  </span>
+                }
+              />
+
+              {/* Individual cash transactions */}
+              {cashTransactions.length > 0 && (
+                <>
+                  <Separator />
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                    Cash Transactions
+                  </p>
+                  {cashTransactions.map((tx) => {
+                    const isCashIn = tx.type === 'cash_in'
+                    return (
+                      <InfoRow
+                        key={tx.id}
+                        label={
+                          <span className="flex items-center gap-1.5">
+                            {isCashIn ? (
+                              <ArrowDownCircleIcon className="size-3.5 text-emerald-500" />
+                            ) : (
+                              <ArrowUpCircleIcon className="size-3.5 text-destructive" />
+                            )}
+                            {CASH_TX_REASON_LABELS[tx.reason] ?? tx.reason}
+                          </span>
+                        }
+                        value={
+                          <span
+                            className={
+                              isCashIn
+                                ? 'text-emerald-600 dark:text-emerald-400'
+                                : 'text-destructive'
+                            }
+                          >
+                            {isCashIn ? '+' : '-'}
+                            {formatIDR(tx.amount)}
+                          </span>
+                        }
+                      />
+                    )
+                  })}
+                </>
+              )}
+
+              {/* Totals */}
+              {(report.total_cash_in > 0 || report.total_cash_out > 0) && (
+                <>
+                  <Separator />
+                  {report.total_cash_in > 0 && (
+                    <InfoRow
+                      label="Total Cash In"
+                      value={
+                        <span className="font-medium text-emerald-600 dark:text-emerald-400">
+                          +{formatIDR(report.total_cash_in)}
+                        </span>
+                      }
+                    />
+                  )}
+                  {report.total_cash_out > 0 && (
+                    <InfoRow
+                      label="Total Cash Out"
+                      value={
+                        <span className="font-medium text-destructive">
+                          -{formatIDR(report.total_cash_out)}
+                        </span>
+                      }
+                    />
+                  )}
+                </>
+              )}
+
+              <Separator />
+              <InfoRow
+                label="Expected Cash"
+                value={
+                  <span className="font-semibold">
+                    {formatIDR(shift?.expected_cash)}
+                  </span>
+                }
+              />
+              {shift?.closing_cash != null && (
                 <>
                   <InfoRow
-                    label="Cash In"
-                    value={
-                      <span className="text-emerald-600 dark:text-emerald-400">
-                        +{formatIDR(summary.total_cash_in)}
-                      </span>
-                    }
+                    label="Actual Cash"
+                    value={formatIDR(shift.closing_cash)}
                   />
                   <InfoRow
-                    label="Cash Out"
+                    label="Difference"
                     value={
-                      <span className="text-destructive">
-                        -{formatIDR(summary.total_cash_out)}
+                      <span
+                        className={cn(
+                          'font-semibold',
+                          cashDiff === null
+                            ? 'text-muted-foreground'
+                            : cashDiffPositive
+                              ? 'text-emerald-600 dark:text-emerald-400'
+                              : 'text-destructive',
+                        )}
+                      >
+                        {cashDiff !== null
+                          ? `${cashDiff >= 0 ? '+' : ''}${formatIDR(cashDiff)}`
+                          : '—'}
                       </span>
                     }
                   />
                 </>
               )}
-              <InfoRow
-                label="Expected Cash"
-                value={formatIDR(summary.expected_cash)}
-              />
-              <InfoRow
-                label="Actual Cash"
-                value={formatIDR(summary.closing_cash)}
-              />
-              <Separator />
-              <InfoRow
-                label="Difference"
-                value={
-                  <span
-                    className={cn(
-                      'font-semibold',
-                      cashDiff === null
-                        ? 'text-muted-foreground'
-                        : cashDiffPositive
-                          ? 'text-emerald-600 dark:text-emerald-400'
-                          : 'text-destructive',
-                    )}
-                  >
-                    {cashDiff !== null
-                      ? `${cashDiff >= 0 ? '+' : ''}${formatIDR(cashDiff)}`
-                      : '—'}
-                  </span>
-                }
-              />
             </CardContent>
           </Card>
         )}
       </div>
 
       {/* ── Payment Breakdown Pie Chart ─────────────────────────────────── */}
-      {summary && chartData.length > 0 && (
+      {report && chartData.length > 0 && (
         <Card>
           <CardHeader>
             <CardTitle>Payment Breakdown</CardTitle>
@@ -354,7 +449,7 @@ function ShiftDetailPage() {
 
               {/* Legend table */}
               <div className="w-full space-y-2 text-sm">
-                {summary.payment_breakdown.map((item, i) => (
+                {report.payment_breakdown.map((item, i) => (
                   <div
                     key={item.payment_method}
                     className="flex items-center justify-between gap-4 rounded-md px-3 py-2 odd:bg-muted/40"
@@ -394,13 +489,13 @@ function ShiftDetailPage() {
           <CardTitle>Cash Transactions</CardTitle>
         </CardHeader>
         <CardContent>
-          {!summary?.cash_transactions?.length ? (
+          {!cashTransactions.length ? (
             <p className="py-6 text-center text-sm text-muted-foreground">
               No cash transactions recorded for this shift.
             </p>
           ) : (
             <div className="space-y-2">
-              {summary.cash_transactions.map((tx) => (
+              {cashTransactions.map((tx) => (
                 <CashTransactionRow key={tx.id} tx={tx} />
               ))}
             </div>
@@ -428,7 +523,7 @@ function ShiftDetailPage() {
 
 // ─── Cash Transaction Row ─────────────────────────────────────────────────────
 
-function CashTransactionRow({ tx }: { tx: CashTransaction }) {
+function CashTransactionRow({ tx }: { tx: { id: number; type: string; reason: string; amount: number; note: string | null; created_at: string; user_name: string } }) {
   const isCashIn = tx.type === 'cash_in'
   return (
     <div className="flex items-start justify-between gap-3 rounded-md border px-3 py-2.5 text-sm">
@@ -481,7 +576,7 @@ function InfoRow({
   label,
   value,
 }: {
-  label: string
+  label: React.ReactNode
   value: React.ReactNode
 }) {
   return (

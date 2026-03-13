@@ -81,6 +81,12 @@ export interface CashFlowDataPoint {
   non_cash_in: number
   /** Total order revenue for the day (cash_in + non_cash_in). */
   total_revenue: number
+  /** Cash added to the shift drawer (float top-ups, etc.). */
+  shift_cash_in: number
+  /** Cash removed from the shift drawer (withdrawals, petty cash, etc.). */
+  shift_cash_out: number
+  /** Total expenses including purchase orders and shift cash-outs. */
+  total_expenses: number
 }
 
 // ─── Payment Method Breakdown ─────────────────────────────────────────────────
@@ -126,11 +132,25 @@ export interface ShiftReport {
   total_tax: number
   total_service_charge: number
   net_revenue: number
+  total_cash_in: number
+  total_cash_out: number
+  net_cash_movement: number
   payment_breakdown: Array<{
     payment_method: string
     count: number
     total_amount: number
     percentage: number
+  }>
+  cash_transactions: Array<{
+    id: number
+    shift_id: number
+    user_id: number
+    type: 'cash_in' | 'cash_out'
+    reason: string
+    amount: number
+    note: string | null
+    created_at: string
+    user_name: string
   }>
 }
 

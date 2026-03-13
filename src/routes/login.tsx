@@ -31,9 +31,14 @@ export const Route = createFileRoute('/login')({
         ? (await import('@/lib/supabase-server')).createSupabaseServerClient()
         : supabase
 
-    const {
-      data: { session },
-    } = await client.auth.getSession()
+    let session
+    try {
+      const { data } = await client.auth.getSession()
+      session = data.session
+    } catch {
+      // Stale refresh token — clear it so the user can log in fresh.
+      await client.auth.signOut()
+    }
 
     // Already authenticated → skip login page
     if (session) {
