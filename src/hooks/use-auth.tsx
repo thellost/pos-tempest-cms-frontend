@@ -11,7 +11,6 @@ import type { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { clearAuthBootstrap, getAuthBootstrap } from '@/lib/auth-store'
 
-
 export interface User {
   id: string
   name: string
@@ -32,7 +31,7 @@ interface AuthContextValue {
   user: User | null
   /** Raw Supabase session (contains access_token) */
   session: Session | null
-  /** True while the initial session check is in progress */
+  /** True while session or profile is loading */
   isLoading: boolean
   /** Shorthand for session !== null */
   isAuthenticated: boolean
@@ -44,9 +43,7 @@ interface AuthContextValue {
   branchId: number | null
 }
 
-
 const AuthContext = createContext<AuthContextValue | null>(null)
-
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const queryClient = useQueryClient()
@@ -58,80 +55,70 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const [session, setSession] = useState<Session | null>(bootstrap?.session ?? null)
   const [user, setUser] = useState<User | null>(bootstrap?.user ?? null)
-  const [isLoading, setIsLoading] = useState(bootstrap === null)
+  const [isSessionLoading, setIsSessionLoading] = useState(bootstrap === null)
+  const [isProfileLoading, setIsProfileLoading] = useState(false)
 
-  const loadUserProfile = useCallback(
-    async (currentSession: Session | null) => {
-      if (!currentSession?.access_token) {
+  const loadUserProfile = useCallback(async (currentSession: Session | null) => {
+    if (!currentSession?.access_token) {
+      setUser(null)
+      return
+    }
+    setIsProfileLoading(true)
+    try {
+      const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
+      const response = await fetch(`${apiBaseUrl}/api/v1/users/me`, {
+        headers: {
+          Authorization: `Bearer ${currentSession.access_token}`,
+          'Content-Type': 'application/json',
+        },
+      })
+      if (!response.ok) {
         setUser(null)
         return
       }
-      // Use raw fetch here (not the api client) so that a 401 or network error
-      // from the backend never triggers the api-client’s signOut+redirect chain
-      // during auth initialisation.
-      try {
-        const apiBaseUrl =
-          import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
-        const response = await fetch(`${apiBaseUrl}/api/v1/users/me`, {
-          headers: {
-            Authorization: `Bearer ${currentSession.access_token}`,
-            'Content-Type': 'application/json',
-          },
-        })
-        if (!response.ok) {
-          setUser(null)
-          return
-        }
-        const json = await response.json()
-        setUser((json.data as User) ?? null)
-      } catch {
-        // Network error (backend offline) — keep session alive, just no profile
-        setUser(null)
-      }
-    },
-    [],
-  )
+      const json = await response.json()
+      setUser((json.data as User) ?? null)
+    } catch {
+      // Network error (backend offline) — keep session alive, just no profile
+      setUser(null)
+    } finally {
+      setIsProfileLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
-      setSession(newSession)
-      await loadUserProfile(newSession)
-    })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (_event, newSession) => {
+        setSession(newSession)
+        await loadUserProfile(newSession)
+      },
+    )
 
     if (bootstrapRef.current) {
       // Router already fetched session + /me before this component mounted.
-      // Skip the redundant getSession + fetchMe round-trip; just keep the
-      // subscription alive for token refresh / sign-out events.
+      // Skip the redundant round-trip; keep subscription alive for token refresh.
       return () => subscription.unsubscribe()
     }
 
-    // Non-bootstrapped path (login page, direct /me-less routes).
+    // Non-bootstrapped path (login page, public routes).
     supabase.auth
       .getSession()
       .then(({ data: { session: existingSession } }) => {
         setSession(existingSession)
         return loadUserProfile(existingSession)
       })
-      .finally(() => setIsLoading(false))
+      .finally(() => setIsSessionLoading(false))
 
-    return () => {
-      subscription.unsubscribe()
-    }
+    return () => subscription.unsubscribe()
   }, [loadUserProfile])
 
   const signIn = useCallback(async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    })
+    const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
   }, [])
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut()
-    // Clear all in-memory auth state so no stale data lingers after logout
     clearAuthBootstrap()
     queryClient.removeQueries({ queryKey: ['users', 'me'] })
     setUser(null)
@@ -143,7 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         user,
         session,
-        isLoading,
+        isLoading: isSessionLoading || isProfileLoading,
         isAuthenticated: !!session,
         signIn,
         signOut,
@@ -158,8 +145,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth(): AuthContextValue {
   const ctx = useContext(AuthContext)
-  if (!ctx) {
-    throw new Error('useAuth must be used within an <AuthProvider>')
-  }
+  if (!ctx) throw new Error('useAuth must be used within an <AuthProvider>')
   return ctx
 }

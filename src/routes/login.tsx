@@ -5,6 +5,7 @@ import {
   useNavigate,
 } from '@tanstack/react-router'
 import { supabase } from '@/lib/supabase'
+import { getServerSession } from '@/lib/supabase-server'
 import { useAuth } from '@/hooks/use-auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -26,18 +27,17 @@ export const Route = createFileRoute('/login')({
       typeof search.redirect === 'string' ? search.redirect : undefined,
   }),
   beforeLoad: async () => {
-    const client =
-      typeof window === 'undefined'
-        ? (await import('@/lib/supabase-server')).createSupabaseServerClient()
-        : supabase
-
     let session
     try {
-      const { data } = await client.auth.getSession()
-      session = data.session
+      if (typeof window === 'undefined') {
+        session = await getServerSession()
+      } else {
+        const { data } = await supabase.auth.getSession()
+        session = data.session
+      }
     } catch {
       // Stale refresh token — clear it so the user can log in fresh.
-      await client.auth.signOut()
+      if (typeof window !== 'undefined') await supabase.auth.signOut()
     }
 
     // Already authenticated → skip login page
