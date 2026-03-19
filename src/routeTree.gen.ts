@@ -9,9 +9,11 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as RecoveryPasswordRouteImport } from './routes/recovery-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
 import { Route as AuthenticatedTablesIndexRouteImport } from './routes/_authenticated/tables/index'
 import { Route as AuthenticatedSuppliersIndexRouteImport } from './routes/_authenticated/suppliers/index'
@@ -44,6 +46,11 @@ import { Route as AuthenticatedMenuItemsItemIdRouteImport } from './routes/_auth
 import { Route as AuthenticatedCustomersCustomerIdRouteImport } from './routes/_authenticated/customers/$customerId'
 import { Route as AuthenticatedInventoryInventoryIdMovementsRouteImport } from './routes/_authenticated/inventory/$inventoryId/movements'
 
+const RecoveryPasswordRoute = RecoveryPasswordRouteImport.update({
+  id: '/recovery-password',
+  path: '/recovery-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
@@ -57,6 +64,11 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexRouteImport.update({
   id: '/users/',
@@ -247,6 +259,8 @@ const AuthenticatedInventoryInventoryIdMovementsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/login': typeof LoginRoute
+  '/recovery-password': typeof RecoveryPasswordRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/customers/$customerId': typeof AuthenticatedCustomersCustomerIdRoute
   '/menu-items/$itemId': typeof AuthenticatedMenuItemsItemIdRoute
   '/menu-items/create': typeof AuthenticatedMenuItemsCreateRoute
@@ -281,6 +295,8 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/recovery-password': typeof RecoveryPasswordRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/': typeof AuthenticatedIndexRoute
   '/customers/$customerId': typeof AuthenticatedCustomersCustomerIdRoute
   '/menu-items/$itemId': typeof AuthenticatedMenuItemsItemIdRoute
@@ -318,6 +334,8 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
+  '/recovery-password': typeof RecoveryPasswordRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/customers/$customerId': typeof AuthenticatedCustomersCustomerIdRoute
   '/_authenticated/menu-items/$itemId': typeof AuthenticatedMenuItemsItemIdRoute
@@ -356,6 +374,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/recovery-password'
+    | '/auth/callback'
     | '/customers/$customerId'
     | '/menu-items/$itemId'
     | '/menu-items/create'
@@ -390,6 +410,8 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
+    | '/recovery-password'
+    | '/auth/callback'
     | '/'
     | '/customers/$customerId'
     | '/menu-items/$itemId'
@@ -426,6 +448,8 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_authenticated'
     | '/login'
+    | '/recovery-password'
+    | '/auth/callback'
     | '/_authenticated/'
     | '/_authenticated/customers/$customerId'
     | '/_authenticated/menu-items/$itemId'
@@ -463,10 +487,19 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
+  RecoveryPasswordRoute: typeof RecoveryPasswordRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/recovery-password': {
+      id: '/recovery-password'
+      path: '/recovery-password'
+      fullPath: '/recovery-password'
+      preLoaderRoute: typeof RecoveryPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
@@ -487,6 +520,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/users/': {
       id: '/_authenticated/users/'
@@ -786,6 +826,8 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
+  RecoveryPasswordRoute: RecoveryPasswordRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
