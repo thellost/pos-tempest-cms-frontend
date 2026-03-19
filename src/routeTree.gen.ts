@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthRecoveryCallbackRouteImport } from './routes/auth/recovery-callback'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
 import { Route as AuthenticatedTablesIndexRouteImport } from './routes/_authenticated/tables/index'
@@ -70,6 +71,11 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthRecoveryCallbackRoute = AuthRecoveryCallbackRouteImport.update({
+  id: '/auth/recovery-callback',
+  path: '/auth/recovery-callback',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthCallbackRoute = AuthCallbackRouteImport.update({
   id: '/auth/callback',
@@ -268,6 +274,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/recovery-password': typeof RecoveryPasswordRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/recovery-callback': typeof AuthRecoveryCallbackRoute
   '/customers/$customerId': typeof AuthenticatedCustomersCustomerIdRoute
   '/menu-items/$itemId': typeof AuthenticatedMenuItemsItemIdRoute
   '/menu-items/create': typeof AuthenticatedMenuItemsCreateRoute
@@ -305,6 +312,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/recovery-password': typeof RecoveryPasswordRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/recovery-callback': typeof AuthRecoveryCallbackRoute
   '/': typeof AuthenticatedIndexRoute
   '/customers/$customerId': typeof AuthenticatedCustomersCustomerIdRoute
   '/menu-items/$itemId': typeof AuthenticatedMenuItemsItemIdRoute
@@ -345,6 +353,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/recovery-password': typeof RecoveryPasswordRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/auth/recovery-callback': typeof AuthRecoveryCallbackRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/customers/$customerId': typeof AuthenticatedCustomersCustomerIdRoute
   '/_authenticated/menu-items/$itemId': typeof AuthenticatedMenuItemsItemIdRoute
@@ -386,6 +395,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/recovery-password'
     | '/auth/callback'
+    | '/auth/recovery-callback'
     | '/customers/$customerId'
     | '/menu-items/$itemId'
     | '/menu-items/create'
@@ -423,6 +433,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/recovery-password'
     | '/auth/callback'
+    | '/auth/recovery-callback'
     | '/'
     | '/customers/$customerId'
     | '/menu-items/$itemId'
@@ -462,6 +473,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/recovery-password'
     | '/auth/callback'
+    | '/auth/recovery-callback'
     | '/_authenticated/'
     | '/_authenticated/customers/$customerId'
     | '/_authenticated/menu-items/$itemId'
@@ -502,6 +514,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   RecoveryPasswordRoute: typeof RecoveryPasswordRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
+  AuthRecoveryCallbackRoute: typeof AuthRecoveryCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -540,6 +553,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/auth/recovery-callback': {
+      id: '/auth/recovery-callback'
+      path: '/auth/recovery-callback'
+      fullPath: '/auth/recovery-callback'
+      preLoaderRoute: typeof AuthRecoveryCallbackRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/auth/callback': {
       id: '/auth/callback'
@@ -849,6 +869,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   RecoveryPasswordRoute: RecoveryPasswordRoute,
   AuthCallbackRoute: AuthCallbackRoute,
+  AuthRecoveryCallbackRoute: AuthRecoveryCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
