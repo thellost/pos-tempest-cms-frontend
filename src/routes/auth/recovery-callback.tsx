@@ -13,9 +13,6 @@ import {
 // ─── Route ────────────────────────────────────────────────────────────────────
 
 export const Route = createFileRoute('/auth/recovery-callback')({
-  validateSearch: (search: Record<string, unknown>) => ({
-    code: typeof search.code === 'string' ? search.code : undefined,
-  }),
   component: RecoveryCallbackPage,
 })
 
@@ -23,28 +20,46 @@ export const Route = createFileRoute('/auth/recovery-callback')({
 
 function RecoveryCallbackPage() {
   const navigate = useNavigate()
-  const { code } = Route.useSearch()
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!code) {
-      setError('Invalid or missing recovery link. Please request a new one.')
-      return
-    }
+    // createBrowserClient auto-exchanges the PKCE code from the URL.
+    // We listen for the resulting auth event instead of calling
+    // exchangeCodeForSession manually (which would fail — code already used).
+    console.log('[recovery-callback] URL:', window.location.href)
 
-    supabase.auth.exchangeCodeForSession(code).then(({ error: exchangeError }) => {
-      if (exchangeError) {
-        // Most likely cause: the link was opened in a different browser than
-        // where the reset was requested (PKCE verifier not found in storage).
-        setError(
-          'This link has expired or was opened in a different browser. Please request a new password reset.',
-        )
-        return
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log('[recovery-callback] auth event:', event, 'session:', !!session)
+      if (
+        (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') &&
+        session
+      ) {
+        navigate({ to: '/recovery-password' as string })
       }
-
-      navigate({ to: '/recovery-password' as string })
     })
-  }, [code, navigate])
+
+    // Fallback: session may already exist if the event fired before we subscribed
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log('[recovery-callback] getSession fallback, session:', !!session)
+      if (session) {
+        navigate({ to: '/recovery-password' as string })
+      }
+    })
+
+    // If nothing happens within 8 seconds, show an error
+    const timeout = setTimeout(() => {
+      setError(
+        'This link has expired or was opened in a different browser. Please request a new password reset.',
+      )
+    }, 8000)
+
+    return () => {
+      subscription.unsubscribe()
+      clearTimeout(timeout)
+    }
+  }, [navigate])
 
   if (error) {
     return (
