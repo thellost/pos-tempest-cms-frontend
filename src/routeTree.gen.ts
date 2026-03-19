@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as RecoveryPasswordRouteImport } from './routes/recovery-password'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
@@ -54,6 +55,11 @@ const RecoveryPasswordRoute = RecoveryPasswordRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
@@ -258,6 +264,7 @@ const AuthenticatedInventoryInventoryIdMovementsRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/recovery-password': typeof RecoveryPasswordRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -294,6 +301,7 @@ export interface FileRoutesByFullPath {
   '/inventory/$inventoryId/movements': typeof AuthenticatedInventoryInventoryIdMovementsRoute
 }
 export interface FileRoutesByTo {
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/recovery-password': typeof RecoveryPasswordRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -333,6 +341,7 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/recovery-password': typeof RecoveryPasswordRoute
   '/auth/callback': typeof AuthCallbackRoute
@@ -373,6 +382,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/forgot-password'
     | '/login'
     | '/recovery-password'
     | '/auth/callback'
@@ -409,6 +419,7 @@ export interface FileRouteTypes {
     | '/inventory/$inventoryId/movements'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/forgot-password'
     | '/login'
     | '/recovery-password'
     | '/auth/callback'
@@ -447,6 +458,7 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_authenticated'
+    | '/forgot-password'
     | '/login'
     | '/recovery-password'
     | '/auth/callback'
@@ -486,6 +498,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   RecoveryPasswordRoute: typeof RecoveryPasswordRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
@@ -505,6 +518,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -825,6 +845,7 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   RecoveryPasswordRoute: RecoveryPasswordRoute,
   AuthCallbackRoute: AuthCallbackRoute,
