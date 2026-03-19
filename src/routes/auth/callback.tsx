@@ -1,30 +1,47 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
+import { useEffect } from 'react'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
+import { LoaderCircle } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
+
+// ─── Route ────────────────────────────────────────────────────────────────────
 
 export const Route = createFileRoute('/auth/callback')({
   validateSearch: (search: Record<string, unknown>) => ({
     code: typeof search.code === 'string' ? search.code : undefined,
     type: typeof search.type === 'string' ? search.type : undefined,
   }),
-  beforeLoad: async ({ search }) => {
-    const { code, type } = search
-
-    if (!code) {
-      throw redirect({ to: '/login' })
-    }
-
-    // Exchange the code from the email link for a session
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (error) {
-      throw redirect({ to: '/login' })
-    }
-
-    // If this is a recovery flow, send to the password reset page
-    if (type === 'recovery') {
-      throw redirect({ to: '/recovery-password' as string })
-    }
-
-    // For other callback types (e.g. email confirmation), go to dashboard
-    throw redirect({ to: '/dashboard' as string })
-  },
+  component: AuthCallbackPage,
 })
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+function AuthCallbackPage() {
+  const navigate = useNavigate()
+  const { code, type } = Route.useSearch()
+
+  useEffect(() => {
+    if (!code) {
+      navigate({ to: '/login', search: { redirect: undefined } })
+      return
+    }
+
+    supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
+      if (error) {
+        navigate({ to: '/login', search: { redirect: undefined } })
+        return
+      }
+
+      if (type === 'recovery') {
+        navigate({ to: '/recovery-password' as string })
+      } else {
+        navigate({ to: '/dashboard' as string })
+      }
+    })
+  }, [code, type, navigate])
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <LoaderCircle className="size-6 animate-spin text-muted-foreground" />
+    </div>
+  )
+}
