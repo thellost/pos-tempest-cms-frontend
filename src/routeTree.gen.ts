@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VerifyOtpRouteImport } from './routes/verify-otp'
 import { Route as RecoveryPasswordRouteImport } from './routes/recovery-password'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
@@ -48,6 +49,11 @@ import { Route as AuthenticatedMenuItemsItemIdRouteImport } from './routes/_auth
 import { Route as AuthenticatedCustomersCustomerIdRouteImport } from './routes/_authenticated/customers/$customerId'
 import { Route as AuthenticatedInventoryInventoryIdMovementsRouteImport } from './routes/_authenticated/inventory/$inventoryId/movements'
 
+const VerifyOtpRoute = VerifyOtpRouteImport.update({
+  id: '/verify-otp',
+  path: '/verify-otp',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecoveryPasswordRoute = RecoveryPasswordRouteImport.update({
   id: '/recovery-password',
   path: '/recovery-password',
@@ -273,6 +279,7 @@ export interface FileRoutesByFullPath {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/recovery-password': typeof RecoveryPasswordRoute
+  '/verify-otp': typeof VerifyOtpRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/recovery-callback': typeof AuthRecoveryCallbackRoute
   '/customers/$customerId': typeof AuthenticatedCustomersCustomerIdRoute
@@ -311,6 +318,7 @@ export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/recovery-password': typeof RecoveryPasswordRoute
+  '/verify-otp': typeof VerifyOtpRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/recovery-callback': typeof AuthRecoveryCallbackRoute
   '/': typeof AuthenticatedIndexRoute
@@ -352,6 +360,7 @@ export interface FileRoutesById {
   '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
   '/recovery-password': typeof RecoveryPasswordRoute
+  '/verify-otp': typeof VerifyOtpRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/auth/recovery-callback': typeof AuthRecoveryCallbackRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -394,6 +403,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/recovery-password'
+    | '/verify-otp'
     | '/auth/callback'
     | '/auth/recovery-callback'
     | '/customers/$customerId'
@@ -432,6 +442,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/recovery-password'
+    | '/verify-otp'
     | '/auth/callback'
     | '/auth/recovery-callback'
     | '/'
@@ -472,6 +483,7 @@ export interface FileRouteTypes {
     | '/forgot-password'
     | '/login'
     | '/recovery-password'
+    | '/verify-otp'
     | '/auth/callback'
     | '/auth/recovery-callback'
     | '/_authenticated/'
@@ -513,12 +525,20 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   RecoveryPasswordRoute: typeof RecoveryPasswordRoute
+  VerifyOtpRoute: typeof VerifyOtpRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   AuthRecoveryCallbackRoute: typeof AuthRecoveryCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/verify-otp': {
+      id: '/verify-otp'
+      path: '/verify-otp'
+      fullPath: '/verify-otp'
+      preLoaderRoute: typeof VerifyOtpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/recovery-password': {
       id: '/recovery-password'
       path: '/recovery-password'
@@ -868,6 +888,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   RecoveryPasswordRoute: RecoveryPasswordRoute,
+  VerifyOtpRoute: VerifyOtpRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   AuthRecoveryCallbackRoute: AuthRecoveryCallbackRoute,
 }

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
 import { supabase } from '@/lib/supabase'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -21,30 +21,25 @@ export const Route = createFileRoute('/forgot-password')({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 function ForgotPasswordPage() {
+  const navigate = useNavigate()
   const [email, setEmail] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [sent, setSent] = useState(false)
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
     setError(null)
     setIsSubmitting(true)
 
     try {
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-        email,
-        {
-          redirectTo: `${window.location.origin}/auth/recovery-callback`,
-        },
-      )
+      const { error: resetError } = await supabase.auth.resetPasswordForEmail(email)
 
       if (resetError) {
         setError(resetError.message)
         return
       }
 
-      setSent(true)
+      navigate({ to: '/verify-otp', search: { email } })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Something went wrong.')
     } finally {
@@ -58,50 +53,38 @@ function ForgotPasswordPage() {
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">Forgot Password</CardTitle>
           <CardDescription>
-            {sent
-              ? 'Check your email for a password reset link.'
-              : "Enter your email and we'll send you a reset link."}
+            Enter your email and we'll send you a 6-digit code.
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {sent ? (
-            <div className="space-y-4">
-              <p className="text-center text-sm text-muted-foreground">
-                If an account exists for <strong>{email}</strong>, you'll
-                receive an email shortly.
-              </p>
-              <Button asChild variant="outline" className="w-full">
-                <Link to="/login">Back to Sign In</Link>
-              </Button>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                placeholder="you@example.com"
+                autoComplete="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
             </div>
-          ) : (
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="you@example.com"
-                  autoComplete="email"
-                  required
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
 
-              {error && (
-                <p className="text-sm font-medium text-destructive">{error}</p>
-              )}
+            {error && (
+              <p className="text-sm font-medium text-destructive">{error}</p>
+            )}
 
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? 'Sending…' : 'Send Reset Link'}
-              </Button>
+            <Button type="submit" className="w-full" disabled={isSubmitting}>
+              {isSubmitting ? 'Sending…' : 'Send Code'}
+            </Button>
 
-              <Button asChild variant="ghost" className="w-full">
-                <Link to="/login">Back to Sign In</Link>
-              </Button>
-            </form>
-          )}
+            <Button asChild variant="ghost" className="w-full">
+              <Link to="/login" search={{ redirect: undefined }}>
+                Back to Sign In
+              </Link>
+            </Button>
+          </form>
         </CardContent>
       </Card>
     </div>

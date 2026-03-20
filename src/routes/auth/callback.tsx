@@ -6,10 +6,6 @@ import { supabase } from '@/lib/supabase'
 // ─── Route ────────────────────────────────────────────────────────────────────
 
 export const Route = createFileRoute('/auth/callback')({
-  validateSearch: (search: Record<string, unknown>) => ({
-    code: typeof search.code === 'string' ? search.code : undefined,
-    type: typeof search.type === 'string' ? search.type : undefined,
-  }),
   component: AuthCallbackPage,
 })
 
@@ -17,27 +13,27 @@ export const Route = createFileRoute('/auth/callback')({
 
 function AuthCallbackPage() {
   const navigate = useNavigate()
-  const { code, type } = Route.useSearch()
 
   useEffect(() => {
-    if (!code) {
-      navigate({ to: '/login', search: { redirect: undefined } })
-      return
-    }
-
-    supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
-      if (error) {
-        navigate({ to: '/login', search: { redirect: undefined } })
-        return
-      }
-
-      if (type === 'recovery') {
-        navigate({ to: '/recovery-password' as string })
-      } else {
+    // With implicit flow, Supabase detects the hash tokens automatically and
+    // fires SIGNED_IN. We just wait for the session and redirect to dashboard.
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_IN' && session) {
         navigate({ to: '/dashboard' as string })
       }
     })
-  }, [code, type, navigate])
+
+    // Fallback: session may already be set before we subscribed
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        navigate({ to: '/dashboard' as string })
+      }
+    })
+
+    return () => subscription.unsubscribe()
+  }, [navigate])
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background">
