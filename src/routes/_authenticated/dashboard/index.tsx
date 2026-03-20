@@ -66,7 +66,7 @@ function getLast7DayRange() {
 // ─── Revenue Chart Card ───────────────────────────────────────────────────────
 
 const revenueChartConfig: ChartConfig = {
-  total_revenue: { label: 'Revenue', color: '#3b82f6' },
+  total_revenue: { label: 'Revenue', color: '#8b5cf6' },
 }
 
 function RevenueChartCard({ branchId }: { branchId?: number }) {
@@ -100,8 +100,8 @@ function RevenueChartCard({ branchId }: { branchId?: number }) {
             <AreaChart data={points} margin={{ top: 8, right: 8, bottom: 4, left: 0 }}>
               <defs>
                 <linearGradient id="revenueFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25} />
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                  <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
@@ -143,10 +143,10 @@ function RevenueChartCard({ branchId }: { branchId?: number }) {
                 type="monotone"
                 dataKey="total_revenue"
                 name="total_revenue"
-                stroke="#3b82f6"
+                stroke="#8b5cf6"
                 strokeWidth={2.5}
                 fill="url(#revenueFill)"
-                dot={{ r: 4, fill: '#3b82f6', strokeWidth: 0 }}
+                dot={{ r: 4, fill: '#8b5cf6', strokeWidth: 0 }}
                 activeDot={{ r: 6 }}
               />
             </AreaChart>

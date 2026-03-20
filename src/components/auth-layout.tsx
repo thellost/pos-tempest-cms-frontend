@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { Link } from '@tanstack/react-router'
 
 const BrandIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="none" className={className}>
@@ -69,7 +70,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
         />
 
         {/* Logo */}
-        <div className="relative z-10 flex items-center gap-3">
+        <Link to="/login" className="relative z-10 flex items-center gap-3 w-fit">
           <div className="w-9 h-9 rounded-xl bg-white/10 backdrop-blur-sm flex items-center justify-center border border-white/15 shrink-0">
             <BrandIcon className="w-[18px] h-[18px] text-white" />
           </div>
@@ -79,7 +80,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
           >
             POS Tempest
           </span>
-        </div>
+        </Link>
 
         {/* Tagline */}
         <div className="relative z-10">
