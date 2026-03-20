@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&display=swap');
+
 @import 'tailwindcss';
 
 @import 'tw-animate-css';
@@ -142,4 +144,18 @@ code {
   0%   { transform: translateX(-100%); width: 45%; }
   50%  { width: 35%; }
   100% { transform: translateX(280%); width: 45%; }
+}
+
+/* ─── Auth page decorative animations ────────────────────────────────────── */
+@keyframes auth-float {
+  0%, 100% { transform: translateY(0px) translateX(-50%) translateY(-50%); }
+  50%       { transform: translateY(-16px) translateX(-50%) translateY(-50%); }
+}
+@keyframes auth-pulse-ring {
+  0%, 100% { opacity: 0.06; }
+  50%       { opacity: 0.13; }
+}
+@keyframes auth-spin-slow {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
