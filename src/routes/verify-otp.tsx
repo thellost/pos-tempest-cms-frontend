@@ -1,15 +1,8 @@
 import { useRef, useState } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { ArrowLeftIcon } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { AuthLayout } from '@/components/auth-layout'
 
 // ─── Route ────────────────────────────────────────────────────────────────────
 
@@ -116,77 +109,90 @@ function VerifyOtpPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Check your email</CardTitle>
-          <CardDescription>
-            We sent a 6-digit code to <strong>{email}</strong>.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* 6-box OTP input */}
-            <div className="flex justify-center gap-2">
-              {digits.map((digit, i) => (
-                <Input
-                  key={i}
-                  ref={(el) => { refs.current[i] = el }}
-                  type="text"
-                  inputMode="numeric"
-                  autoComplete="one-time-code"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleChange(i, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(i, e)}
-                  onPaste={handlePaste}
-                  onFocus={(e) => e.target.select()}
-                  className="h-12 w-10 text-center text-lg font-semibold"
-                />
-              ))}
-            </div>
+    <AuthLayout>
+      {/* Back link */}
+      <Link
+        to="/login"
+        search={{ redirect: undefined }}
+        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors mb-8"
+      >
+        <ArrowLeftIcon className="size-3.5" />
+        Back to Sign In
+      </Link>
 
-            {error && (
-              <p className="text-center text-sm font-medium text-destructive">
-                {error}
-              </p>
-            )}
+      {/* Heading */}
+      <div className="mb-8">
+        <h1
+          className="text-[2rem] font-bold text-gray-900 tracking-tight leading-tight"
+          style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }}
+        >
+          Check your email
+        </h1>
+        <p className="mt-2 text-sm text-gray-500 leading-relaxed">
+          We sent a 6-digit code to{' '}
+          <span className="font-medium text-gray-700">{email}</span>.
+        </p>
+      </div>
 
-            {resent && (
-              <p className="text-center text-sm text-muted-foreground">
-                A new code has been sent.
-              </p>
-            )}
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* 6-box OTP input */}
+        <div className="flex justify-between gap-2">
+          {digits.map((digit, i) => (
+            <input
+              key={i}
+              ref={(el) => { refs.current[i] = el }}
+              type="text"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={1}
+              value={digit}
+              onChange={(e) => handleChange(i, e.target.value)}
+              onKeyDown={(e) => handleKeyDown(i, e)}
+              onPaste={handlePaste}
+              onFocus={(e) => e.target.select()}
+              className="h-12 w-full text-center text-lg font-bold rounded-xl border border-gray-200 bg-gray-50/60 text-gray-900 focus:outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-500/15 focus:bg-white transition-all caret-violet-500"
+              style={{ maxWidth: '52px' }}
+            />
+          ))}
+        </div>
 
-            <Button
-              type="submit"
-              className="w-full"
-              disabled={isSubmitting || token.length < 6}
-            >
-              {isSubmitting ? 'Verifying…' : 'Verify Code'}
-            </Button>
+        {/* Feedback messages */}
+        {error && (
+          <p className="text-sm text-red-600 bg-red-50 border border-red-100 px-3.5 py-2.5 rounded-xl text-center">
+            {error}
+          </p>
+        )}
+        {resent && (
+          <p className="text-sm text-green-600 bg-green-50 border border-green-100 px-3.5 py-2.5 rounded-xl text-center">
+            A new code has been sent to your email.
+          </p>
+        )}
 
-            <div className="flex items-center justify-between text-sm">
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                disabled={isResending}
-                onClick={handleResend}
-              >
-                {isResending ? 'Sending…' : 'Resend code'}
-              </Button>
-              <Link
-                to="/login"
-                search={{ redirect: undefined }}
-                className="text-muted-foreground hover:text-foreground"
-              >
-                Back to Sign In
-              </Link>
-            </div>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+        {/* Submit */}
+        <button
+          type="submit"
+          disabled={isSubmitting || token.length < 6}
+          className="w-full py-2.5 rounded-xl font-semibold text-sm text-white transition-all disabled:opacity-60 disabled:cursor-not-allowed hover:opacity-90 active:scale-[0.99]"
+          style={{
+            background: 'linear-gradient(135deg, #6d28d9 0%, #4f46e5 100%)',
+          }}
+        >
+          {isSubmitting ? 'Verifying…' : 'Verify Code'}
+        </button>
+
+        {/* Resend */}
+        <p className="text-center text-sm text-gray-500">
+          Didn't receive a code?{' '}
+          <button
+            type="button"
+            disabled={isResending}
+            onClick={handleResend}
+            className="font-medium text-violet-600 hover:text-violet-700 transition-colors disabled:opacity-50"
+          >
+            {isResending ? 'Sending…' : 'Resend'}
+          </button>
+        </p>
+      </form>
+    </AuthLayout>
   )
 }

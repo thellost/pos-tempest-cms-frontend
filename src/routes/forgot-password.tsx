@@ -1,16 +1,8 @@
 import { useState } from 'react'
 import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { ArrowLeftIcon } from 'lucide-react'
 import { supabase } from '@/lib/supabase'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
+import { AuthLayout } from '@/components/auth-layout'
 
 // ─── Route ────────────────────────────────────────────────────────────────────
 
@@ -48,45 +40,70 @@ function ForgotPasswordPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <Card className="w-full max-w-sm">
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">Forgot Password</CardTitle>
-          <CardDescription>
-            Enter your email and we'll send you a 6-digit code.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                autoComplete="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
-            </div>
+    <AuthLayout>
+      {/* Back link */}
+      <Link
+        to="/login"
+        search={{ redirect: undefined }}
+        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-700 transition-colors mb-8"
+      >
+        <ArrowLeftIcon className="size-3.5" />
+        Back to Sign In
+      </Link>
 
-            {error && (
-              <p className="text-sm font-medium text-destructive">{error}</p>
-            )}
+      {/* Heading */}
+      <div className="mb-8">
+        <h1
+          className="text-[2rem] font-bold text-gray-900 tracking-tight leading-tight"
+          style={{ fontFamily: "'Bricolage Grotesque', sans-serif" }}
+        >
+          Forgot Password?
+        </h1>
+        <p className="mt-2 text-sm text-gray-500 leading-relaxed">
+          Enter your email and we'll send you a 6-digit verification code.
+        </p>
+      </div>
 
-            <Button type="submit" className="w-full" disabled={isSubmitting}>
-              {isSubmitting ? 'Sending…' : 'Send Code'}
-            </Button>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Email */}
+        <div className="space-y-1.5">
+          <label
+            htmlFor="email"
+            className="block text-sm font-medium text-gray-700"
+          >
+            Email address
+          </label>
+          <input
+            id="email"
+            type="email"
+            placeholder="you@example.com"
+            autoComplete="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-gray-50/60 text-sm text-gray-900 placeholder:text-gray-400 focus:outline-none focus:border-violet-400 focus:ring-2 focus:ring-violet-500/15 focus:bg-white transition-all"
+          />
+        </div>
 
-            <Button asChild variant="ghost" className="w-full">
-              <Link to="/login" search={{ redirect: undefined }}>
-                Back to Sign In
-              </Link>
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
-    </div>
+        {/* Error */}
+        {error && (
+          <p className="text-sm text-red-600 bg-red-50 border border-red-100 px-3.5 py-2.5 rounded-xl">
+            {error}
+          </p>
+        )}
+
+        {/* Submit */}
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full py-2.5 rounded-xl font-semibold text-sm text-white transition-all disabled:opacity-60 disabled:cursor-not-allowed hover:opacity-90 active:scale-[0.99]"
+          style={{
+            background: 'linear-gradient(135deg, #6d28d9 0%, #4f46e5 100%)',
+          }}
+        >
+          {isSubmitting ? 'Sending…' : 'Send Code'}
+        </button>
+      </form>
+    </AuthLayout>
   )
 }
