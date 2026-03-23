@@ -70,7 +70,7 @@ export function useDeactivateUser() {
       queryClient.setQueriesData<ApiResult<User[]>>(
         { queryKey: queryKeys.users.all },
         (old) => {
-          if (!old?.data) return old
+          if (!old?.data || !Array.isArray(old.data)) return old
           return {
             ...old,
             data: old.data.map((user) =>
