@@ -893,9 +893,15 @@ Close an open shift. The server computes `expected_cash` and `cash_difference`.
 
 **How `cash_difference` is computed:**
 ```
-expected_cash = opening_cash + cash_payments_received - change_given
+expected_cash = opening_cash + cash_payments_received - change_given + total_cash_in - total_cash_out
 cash_difference = closing_cash - expected_cash
 ```
+
+Where:
+- `cash_payments_received` = sum of cash payment amounts from orders
+- `change_given` = sum of change amounts from cash payments
+- `total_cash_in` = sum of cash_in transactions (deposits, refills)
+- `total_cash_out` = sum of cash_out transactions (withdrawals, expenses)
 
 **Response `200 OK`:** Returns the updated (closed) shift object with computed fields.
 
@@ -3275,6 +3281,9 @@ Get the full change history for a specific record.
     "yesterday_orders": 55,
     "orders_change_pct": 12.73,
     "avg_order_value": 68548.39,
+    "today_expenses": 350000.00,
+    "yesterday_expenses": 280000.00,
+    "today_net_cash": 3900000.00,
     "active_tables": 8,
     "open_shifts": 2,
     "low_stock_items": 3,
@@ -3282,6 +3291,8 @@ Get the full change history for a specific record.
   }
 }
 ```
+
+> **Note:** `today_expenses` and `yesterday_expenses` include both `cash_out` shift transactions **and** purchase orders with `status = "received"` on that date. Only fully received POs are counted — `ordered`, `partial_received`, and `cancelled` are excluded.
 
 ---
 
@@ -3309,7 +3320,9 @@ Get the full change history for a specific record.
       "total_orders": 48,
       "total_tax": 385000.00,
       "total_discount": 125000.00,
-      "net_revenue": 2990000.00
+      "net_revenue": 2990000.00,
+      "total_expenses": 250000.00,
+      "net_profit": 2740000.00
     },
     {
       "period": "2026-03-02",
@@ -3317,7 +3330,9 @@ Get the full change history for a specific record.
       "total_orders": 55,
       "total_tax": 418000.00,
       "total_discount": 150000.00,
-      "net_revenue": 3232000.00
+      "net_revenue": 3232000.00,
+      "total_expenses": 180000.00,
+      "net_profit": 3052000.00
     },
     {
       "period": "2026-03-03",
@@ -3325,11 +3340,15 @@ Get the full change history for a specific record.
       "total_orders": 62,
       "total_tax": 467500.00,
       "total_discount": 200000.00,
-      "net_revenue": 3582500.00
+      "net_revenue": 3582500.00,
+      "total_expenses": 320000.00,
+      "net_profit": 3262500.00
     }
   ]
 }
 ```
+
+> **Note:** `total_expenses` = sum of `cash_out` shift transactions + received purchase orders (`status = "received"`) in the period, grouped by the same period bucket. `net_profit` = `net_revenue - total_expenses`.
 
 ---
 
@@ -3475,6 +3494,75 @@ Get the full change history for a specific record.
 
 ---
 
+### `GET /api/v1/statistics/expense-breakdown`
+
+> **Roles:** admin, manager
+
+**Query Parameters:**
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `branch_id` | int | Filter by branch |
+| `date_from` | string | Start date `YYYY-MM-DD` |
+| `date_to` | string | End date `YYYY-MM-DD` |
+
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "reason": "purchase_order",
+      "total_amount": 1200000.00,
+      "count": 3,
+      "percentage": 40.00
+    },
+    {
+      "reason": "supply_purchase",
+      "total_amount": 850000.00,
+      "count": 12,
+      "percentage": 28.33
+    },
+    {
+      "reason": "owner_withdrawal",
+      "total_amount": 500000.00,
+      "count": 5,
+      "percentage": 16.67
+    },
+    {
+      "reason": "petty_cash",
+      "total_amount": 350000.00,
+      "count": 18,
+      "percentage": 11.67
+    },
+    {
+      "reason": "staff_advance",
+      "total_amount": 100000.00,
+      "count": 2,
+      "percentage": 3.33
+    }
+  ]
+}
+```
+
+**Description:** Returns a breakdown of all expenses grouped by reason. Includes both `cash_out` shift transactions (grouped by their `reason` enum) and received purchase orders (surfaced as `reason = "purchase_order"`). Percentages are relative to the combined total.
+
+**Reason values:**
+
+| Value | Source |
+|-------|--------|
+| `purchase_order` | Purchase orders with `status = "received"` |
+| `supply_purchase` | Manual cash-out: ad-hoc supply buy |
+| `owner_withdrawal` | Manual cash-out: owner withdrawal |
+| `staff_advance` | Manual cash-out: staff advance |
+| `petty_cash` | Manual cash-out: petty cash |
+| `tip_out` | Manual cash-out: tip distribution |
+| `cash_deposit` | Manual cash-out: cash deposit |
+| `change_refill` | Manual cash-out: change refill |
+| `other` | Manual cash-out: other |
+
+---
+
 ### `GET /api/v1/statistics/cash-flow`
 
 > **Roles:** admin, manager
@@ -3496,21 +3584,43 @@ Get the full change history for a specific record.
       "date": "2026-03-01",
       "cash_in": 1800000.00,
       "cash_out": 350000.00,
-      "net_cash": 1450000.00,
+      "shift_cash_in": 100000.00,
+      "shift_cash_out": 250000.00,
+      "po_expenses": 450000.00,
+      "net_cash": 850000.00,
       "non_cash_in": 1700000.00,
-      "total_revenue": 3500000.00
+      "total_revenue": 3500000.00,
+      "total_expenses": 700000.00
     },
     {
       "date": "2026-03-02",
       "cash_in": 2000000.00,
       "cash_out": 420000.00,
-      "net_cash": 1580000.00,
+      "shift_cash_in": 50000.00,
+      "shift_cash_out": 180000.00,
+      "po_expenses": 0.00,
+      "net_cash": 1450000.00,
       "non_cash_in": 1800000.00,
-      "total_revenue": 3800000.00
+      "total_revenue": 3800000.00,
+      "total_expenses": 180000.00
     }
   ]
 }
 ```
+
+**Field Descriptions:**
+
+| Field | Description |
+|-------|-------------|
+| `cash_in` | Cash payments received from orders |
+| `cash_out` | Change given from orders |
+| `shift_cash_in` | Non-order cash deposits (`cash_in` shift transactions) |
+| `shift_cash_out` | Non-order cash withdrawals/expenses (`cash_out` shift transactions) |
+| `po_expenses` | Total of purchase orders with `status = "received"` on this date |
+| `net_cash` | `(cash_in − cash_out) + (shift_cash_in − shift_cash_out) − po_expenses` |
+| `non_cash_in` | Non-cash payments (card, e-wallet, QRIS) |
+| `total_revenue` | Gross revenue from all completed orders |
+| `total_expenses` | `shift_cash_out + po_expenses` |
 
 ---
 
@@ -3551,6 +3661,10 @@ Get a detailed financial report for a specific shift.
     "total_tax": 742500.00,
     "total_service_charge": 337500.00,
     "net_revenue": 5420000.00,
+    "total_cash_in": 150000.00,
+    "total_cash_out": 320000.00,
+    "total_po_expenses": 600000.00,
+    "net_cash_movement": -770000.00,
     "payment_breakdown": [
       {
         "payment_method": "cash",
@@ -3570,10 +3684,80 @@ Get a detailed financial report for a specific shift.
         "total_amount": 1250000.00,
         "percentage": 18.52
       }
+    ],
+    "cash_transactions": [
+      {
+        "id": 1,
+        "shift_id": 1,
+        "user_id": 2,
+        "type": "cash_in",
+        "reason": "change_refill",
+        "amount": 150000.00,
+        "note": "Added coins for change",
+        "created_at": "2026-03-03T09:30:00Z",
+        "user_name": "Sarah Cashier"
+      },
+      {
+        "id": 2,
+        "shift_id": 1,
+        "user_id": 2,
+        "type": "cash_out",
+        "reason": "supply_purchase",
+        "amount": 200000.00,
+        "note": "Bought vegetables from market",
+        "created_at": "2026-03-03T11:00:00Z",
+        "user_name": "Sarah Cashier"
+      },
+      {
+        "id": 3,
+        "shift_id": 1,
+        "user_id": 2,
+        "type": "cash_out",
+        "reason": "petty_cash",
+        "amount": 120000.00,
+        "note": "Office supplies",
+        "created_at": "2026-03-03T13:00:00Z",
+        "user_name": "Sarah Cashier"
+      }
+    ],
+    "po_expenses": [
+      {
+        "id": 7,
+        "purchase_number": "PO-20260303-0007",
+        "supplier_id": 2,
+        "branch_id": 1,
+        "ordered_by": 3,
+        "received_by": 2,
+        "subtotal": 545454.55,
+        "tax_amount": 54545.45,
+        "total": 600000.00,
+        "status": "received",
+        "notes": null,
+        "ordered_at": "2026-03-03T06:00:00Z",
+        "received_at": "2026-03-03T10:15:00Z",
+        "created_at": "2026-03-03T06:00:00Z",
+        "updated_at": "2026-03-03T10:15:00Z",
+        "supplier_name": "CV Sumber Bahan",
+        "ordered_by_name": "Budi Manager",
+        "received_by_name": "Sarah Cashier",
+        "branch_name": "Tempest Cafe - Sudirman"
+      }
     ]
   }
 }
 ```
+
+**Field Descriptions:**
+
+| Field | Description |
+|-------|-------------|
+| `total_cash_in` | Sum of all `cash_in` shift transactions during this shift |
+| `total_cash_out` | Sum of all `cash_out` shift transactions during this shift |
+| `total_po_expenses` | Sum of received POs whose `received_at` falls within the shift window |
+| `net_cash_movement` | `total_cash_in − total_cash_out − total_po_expenses` |
+| `po_expenses` | List of purchase orders received during this shift (omitted if none) |
+
+> **Shift window for POs:** `received_at >= shift.opened_at AND received_at < shift.closed_at` (or `NOW()` for open shifts).
 
 ---
 
