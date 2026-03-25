@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
   inventoryService,
+  type CreateInventoryPayload,
   type AdjustStockPayload,
   type UpdateThresholdPayload,
 } from '@/lib/services/inventory'
@@ -35,6 +36,19 @@ export function useInventoryMovements(
 }
 
 // ─── Mutations ────────────────────────────────────────────────────────────────
+
+export function useCreateInventory() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (payload: CreateInventoryPayload) =>
+      inventoryService.create(payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
+      toast.success('Ingredient added to inventory')
+    },
+    onError: (err: Error) => toast.error(err.message),
+  })
+}
 
 export function useAdjustStock() {
   const queryClient = useQueryClient()

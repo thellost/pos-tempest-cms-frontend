@@ -3,15 +3,25 @@ import type { InventoryFilters, InventoryMovementFilters } from '@/lib/query-key
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+export type UnitOfMeasure =
+  | 'piece'
+  | 'kg'
+  | 'gram'
+  | 'ons'
+  | 'liter'
+  | 'ml'
+  | 'portion'
+
 export interface InventoryItem {
   id: number
   branch_id: number
-  menu_item_id: number
+  name: string
+  unit_of_measure: UnitOfMeasure
+  description: string | null
   stock_quantity: number
   low_stock_threshold: number
+  created_at: string
   updated_at: string
-  menu_item_name: string
-  menu_item_sku: string
   branch_name: string
   is_low_stock: boolean
 }
@@ -40,6 +50,14 @@ export interface InventoryMovement {
 
 export type ManualMovementType = 'adjustment' | 'waste' | 'transfer'
 
+export interface CreateInventoryPayload {
+  branch_id: number
+  name: string
+  unit_of_measure: UnitOfMeasure
+  description?: string
+  low_stock_threshold?: number
+}
+
 export interface AdjustStockPayload {
   inventory_id: number
   quantity_change: number
@@ -54,11 +72,14 @@ export interface UpdateThresholdPayload {
 // ─── Service ──────────────────────────────────────────────────────────────────
 
 export const inventoryService = {
+  create: (payload: CreateInventoryPayload) =>
+    api.post<InventoryItem>('/api/v1/inventory', payload),
+
   list: (filters?: InventoryFilters) => {
-    const { page, pageSize, branchId, menuItemId, lowStockOnly } = filters ?? {}
+    const { page, pageSize, branchId, name, lowStockOnly } = filters ?? {}
     const params: Record<string, unknown> = {}
     if (branchId) params.branch_id = branchId
-    if (menuItemId) params.menu_item_id = menuItemId
+    if (name) params.name = name
     if (lowStockOnly) params.low_stock_only = true
     return api.get<InventoryItem[]>(
       `/api/v1/inventory${buildQueryParams(params, { page: page ?? 1, pageSize: pageSize ?? 20 })}`,

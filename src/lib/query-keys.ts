@@ -119,7 +119,7 @@ export type DiscountFilters = {
 
 export type InventoryFilters = {
   branchId?: number
-  menuItemId?: number
+  name?: string
   lowStockOnly?: boolean
   page?: number
   pageSize?: number

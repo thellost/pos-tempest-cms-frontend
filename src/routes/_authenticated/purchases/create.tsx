@@ -106,7 +106,7 @@ function PurchaseOrderForm({ onSuccess }: PurchaseOrderFormProps) {
     },
     onSubmit: async ({ value }) => {
       // Validate items have a menu item selected
-      const validItems = items.filter((r) => r.menu_item_id !== null)
+      const validItems = items.filter((r) => r.inventory_id !== null)
 
       const payload: CreatePurchasePayload = {
         supplier_id: value.supplier_id!,
@@ -114,7 +114,7 @@ function PurchaseOrderForm({ onSuccess }: PurchaseOrderFormProps) {
         notes: value.notes?.trim() || undefined,
         tax_amount: Number(value.tax_amount) || 0,
         items: validItems.map((r) => ({
-          menu_item_id: r.menu_item_id!,
+          inventory_id: r.inventory_id!,
           quantity: r.quantity,
           unit_of_measure: r.unit_of_measure,
           cost_per_unit: r.cost_per_unit,
@@ -194,7 +194,15 @@ function PurchaseOrderForm({ onSuccess }: PurchaseOrderFormProps) {
       </Card>
 
       {/* ── Line items ── */}
-      <PurchaseItemsFieldArray rows={items} onChange={setItems} />
+      <form.Subscribe selector={(s) => s.values.branch_id}>
+        {(branchId) => (
+          <PurchaseItemsFieldArray
+            rows={items}
+            onChange={setItems}
+            branchId={branchId ?? undefined}
+          />
+        )}
+      </form.Subscribe>
 
       {/* ── Totals ── */}
       <Card>

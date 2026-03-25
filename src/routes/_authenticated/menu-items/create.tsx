@@ -35,7 +35,7 @@ function CreateMenuItemPage() {
     <div className="space-y-6">
       <PageHeader
         title="Add Product"
-        description="Create a new menu item. Inventory records will be automatically created for all active branches."
+        description="Create a new menu item. Link ingredients in the recipe tab to enable automatic stock deduction on sale."
         actions={
           <Button
             variant="outline"

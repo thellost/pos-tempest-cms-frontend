@@ -160,8 +160,8 @@ export function IngredientsFieldArray({
 
 interface InventoryItemShape {
   id: number
-  menu_item_name: string
-  menu_item_sku: string
+  name: string
+  unit_of_measure: string
   branch_name: string
   is_low_stock: boolean
 }
@@ -216,8 +216,8 @@ function IngredientRowItem({
                     {inventoryLoading
                       ? 'Loading…'
                       : selectedItem
-                        ? `${selectedItem.menu_item_name} — ${selectedItem.branch_name}`
-                        : 'Select inventory item…'}
+                        ? `${selectedItem.name} — ${selectedItem.branch_name}`
+                        : 'Select ingredient…'}
                   </span>
                   <ChevronsUpDownIcon className="ml-2 size-4 shrink-0 opacity-50" />
                 </Button>
@@ -231,7 +231,7 @@ function IngredientRowItem({
                       {inventoryItems.map((item) => (
                         <CommandItem
                           key={item.id}
-                          value={`${item.menu_item_name} ${item.branch_name} ${item.menu_item_sku}`}
+                          value={`${item.name} ${item.branch_name} ${item.unit_of_measure}`}
                           onSelect={() => {
                             onChangeInventory(
                               item.id === row.inventory_id ? null : item.id,
@@ -251,13 +251,12 @@ function IngredientRowItem({
                             />
                             <div className="min-w-0 flex-1">
                               <p className="truncate font-medium">
-                                {item.menu_item_name}
+                                {item.name}
                               </p>
                               <p className="text-xs text-muted-foreground">
                                 {item.branch_name}
-                                {item.menu_item_sku
-                                  ? ` · ${item.menu_item_sku}`
-                                  : ''}
+                                {' · '}
+                                {item.unit_of_measure}
                                 {item.is_low_stock && (
                                   <span className="ml-1 text-amber-500">
                                     · Low stock

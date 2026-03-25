@@ -31,20 +31,18 @@ export function getInventoryColumns({
 }: GetInventoryColumnsOptions): ColumnDef<InventoryItem>[] {
   return [
     {
-      accessorKey: 'menu_item_name',
+      accessorKey: 'name',
       header: ({ column }) => (
-        <DataTableColumnHeader column={column} title="Menu Item" />
+        <DataTableColumnHeader column={column} title="Ingredient" />
       ),
       cell: ({ row }) => {
-        const { menu_item_name, menu_item_sku } = row.original
+        const { name, unit_of_measure } = row.original
         return (
           <div className="min-w-0">
-            <p className="truncate font-medium">{menu_item_name}</p>
-            {menu_item_sku && (
-              <p className="truncate text-xs text-muted-foreground">
-                {menu_item_sku}
-              </p>
-            )}
+            <p className="truncate font-medium">{name}</p>
+            <p className="truncate text-xs text-muted-foreground">
+              {unit_of_measure}
+            </p>
           </div>
         )
       },
@@ -64,7 +62,7 @@ export function getInventoryColumns({
         <DataTableColumnHeader column={column} title="Stock Qty" />
       ),
       cell: ({ row }) => {
-        const { stock_quantity, is_low_stock } = row.original
+        const { stock_quantity, is_low_stock, unit_of_measure } = row.original
         return (
           <div className="flex items-center gap-1.5">
             {is_low_stock && (
@@ -75,7 +73,7 @@ export function getInventoryColumns({
                 is_low_stock ? 'font-semibold text-destructive' : 'tabular-nums'
               }
             >
-              {formatQuantity(stock_quantity)}
+              {formatQuantity(stock_quantity)} {unit_of_measure}
             </span>
           </div>
         )

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { AlertTriangleIcon } from 'lucide-react'
+import { AlertTriangleIcon, PlusIcon } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
 import { useAppForm } from '@/hooks/use-form'
 import { useBranches } from '@/hooks/use-branches'
@@ -9,8 +9,9 @@ import {
   useLowStockInventory,
   useAdjustStock,
   useUpdateThreshold,
+  useCreateInventory,
 } from '@/hooks/use-inventory'
-import type { InventoryItem } from '@/lib/services/inventory'
+import type { InventoryItem, UnitOfMeasure } from '@/lib/services/inventory'
 import { getInventoryColumns } from '@/components/inventory/columns'
 import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page-header'
@@ -23,6 +24,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Button } from '@/components/ui/button'
 import { requireRole } from '@/lib/auth-guards'
 
 // ─── Route ────────────────────────────────────────────────────────────────────
@@ -50,6 +52,7 @@ function InventoryPage() {
   })
 
   // Dialog state
+  const [addOpen, setAddOpen] = useState(false)
   const [adjustTarget, setAdjustTarget] = useState<InventoryItem | null>(null)
   const [adjustOpen, setAdjustOpen] = useState(false)
   const [thresholdTarget, setThresholdTarget] = useState<InventoryItem | null>(null)
@@ -66,14 +69,12 @@ function InventoryPage() {
     [branchesData],
   )
 
-  // Menu item search filter (find by name for local filtering)
   const filterBranchId = filterValues.branch_id
     ? parseInt(filterValues.branch_id, 10)
     : undefined
 
   const lowStockBranchId = filterBranchId
 
-  // Build query filters — search is client-side since API doesn't support it
   const queryFilters = useMemo(
     () => ({
       branchId: filterBranchId,
@@ -92,20 +93,16 @@ function InventoryPage() {
   const filteredAll = useMemo(() => {
     const rows = allData?.data ?? []
     if (!searchTerm) return rows
-    return rows.filter(
-      (item) =>
-        item.menu_item_name.toLowerCase().includes(searchTerm) ||
-        item.menu_item_sku.toLowerCase().includes(searchTerm),
+    return rows.filter((item) =>
+      item.name.toLowerCase().includes(searchTerm),
     )
   }, [allData, searchTerm])
 
   const filteredLowStock = useMemo(() => {
     const rows = lowStockData?.data ?? []
     if (!searchTerm) return rows
-    return rows.filter(
-      (item) =>
-        item.menu_item_name.toLowerCase().includes(searchTerm) ||
-        item.menu_item_sku.toLowerCase().includes(searchTerm),
+    return rows.filter((item) =>
+      item.name.toLowerCase().includes(searchTerm),
     )
   }, [lowStockData, searchTerm])
 
@@ -142,7 +139,7 @@ function InventoryPage() {
       {
         type: 'search' as const,
         key: 'search',
-        placeholder: 'Search by item name or SKU…',
+        placeholder: 'Search by ingredient name…',
       },
     ],
     [branchOptions],
@@ -167,7 +164,13 @@ function InventoryPage() {
     <div className="space-y-6">
       <PageHeader
         title="Inventory"
-        description="Monitor stock levels and adjust quantities across all branches."
+        description="Manage raw ingredients and monitor stock levels across all branches."
+        actions={
+          <Button onClick={() => setAddOpen(true)}>
+            <PlusIcon className="mr-2 size-4" />
+            Add Ingredient
+          </Button>
+        }
       />
 
       <FilterBar
@@ -221,6 +224,20 @@ function InventoryPage() {
           />
         </TabsContent>
       </Tabs>
+
+      {/* ── Add Ingredient Dialog ── */}
+      <Dialog open={addOpen} onOpenChange={setAddOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Add Ingredient</DialogTitle>
+          </DialogHeader>
+          <AddIngredientForm
+            branchOptions={(branchesData?.data ?? []).map((b) => ({ value: b.id, label: b.name }))}
+            defaultBranchId={userBranchId ?? undefined}
+            onSuccess={() => setAddOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
 
       {/* ── Adjust Stock Dialog ── */}
       <Dialog
@@ -283,6 +300,142 @@ function InventoryPage() {
   )
 }
 
+// ─── Add Ingredient Form ──────────────────────────────────────────────────────
+
+const UNIT_OPTIONS: { value: UnitOfMeasure; label: string }[] = [
+  { value: 'piece', label: 'Piece' },
+  { value: 'kg', label: 'Kilogram (kg)' },
+  { value: 'gram', label: 'Gram' },
+  { value: 'ons', label: 'Ons' },
+  { value: 'liter', label: 'Liter' },
+  { value: 'ml', label: 'Milliliter (ml)' },
+  { value: 'portion', label: 'Portion' },
+]
+
+interface AddIngredientFormProps {
+  branchOptions: { value: number; label: string }[]
+  defaultBranchId?: number
+  onSuccess: () => void
+}
+
+function AddIngredientForm({ branchOptions, defaultBranchId, onSuccess }: AddIngredientFormProps) {
+  const createMutation = useCreateInventory()
+
+  const form = useAppForm({
+    defaultValues: {
+      branch_id: defaultBranchId ?? (null as number | null),
+      name: '',
+      unit_of_measure: 'piece' as UnitOfMeasure,
+      description: '',
+      low_stock_threshold: 10 as number,
+    },
+    onSubmit: async ({ value }) => {
+      await createMutation.mutateAsync({
+        branch_id: value.branch_id!,
+        name: value.name.trim(),
+        unit_of_measure: value.unit_of_measure,
+        description: value.description?.trim() || undefined,
+        low_stock_threshold: Number(value.low_stock_threshold) || 10,
+      })
+      onSuccess()
+    },
+  })
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        form.handleSubmit()
+      }}
+      className="space-y-4"
+    >
+      <form.AppField
+        name="branch_id"
+        validators={{
+          onChange: ({ value }) => (!value ? 'Branch is required' : undefined),
+        }}
+      >
+        {(field) => (
+          <field.ComboboxField
+            label="Branch"
+            options={branchOptions}
+            placeholder="Select branch…"
+            searchPlaceholder="Search branches…"
+            emptyMessage="No branches found."
+          />
+        )}
+      </form.AppField>
+
+      <form.AppField
+        name="name"
+        validators={{
+          onChange: ({ value }) =>
+            !value?.trim() ? 'Name is required' : undefined,
+        }}
+      >
+        {(field) => (
+          <field.TextField
+            label="Ingredient Name *"
+            placeholder="e.g. Chicken Breast"
+          />
+        )}
+      </form.AppField>
+
+      <form.AppField
+        name="unit_of_measure"
+        validators={{
+          onChange: ({ value }) => (!value ? 'Unit is required' : undefined),
+        }}
+      >
+        {(field) => (
+          <field.SelectField
+            label="Unit of Measure *"
+            options={UNIT_OPTIONS}
+            placeholder="Select unit…"
+          />
+        )}
+      </form.AppField>
+
+      <form.AppField name="description">
+        {(field) => (
+          <field.TextareaField
+            label="Description"
+            placeholder="Optional notes about this ingredient"
+            rows={2}
+          />
+        )}
+      </form.AppField>
+
+      <form.AppField
+        name="low_stock_threshold"
+        validators={{
+          onChange: ({ value }) =>
+            value !== undefined && Number(value) < 0
+              ? 'Threshold must be 0 or greater'
+              : undefined,
+        }}
+      >
+        {(field) => (
+          <field.NumberField
+            label="Low Stock Threshold"
+            min={0}
+            step={1}
+            placeholder="10"
+            description="Alert when stock falls at or below this value"
+          />
+        )}
+      </form.AppField>
+
+      <div className="flex justify-end pt-2">
+        <form.AppForm>
+          <form.SubscribeButton label="Add Ingredient" className="w-auto min-w-[140px]" />
+        </form.AppForm>
+      </div>
+    </form>
+  )
+}
+
 // ─── Adjust Stock Form ────────────────────────────────────────────────────────
 
 const MOVEMENT_TYPE_OPTIONS = [
@@ -328,14 +481,14 @@ function AdjustStockForm({ item, onSuccess }: AdjustStockFormProps) {
       {/* Current Stock Info */}
       <div className="rounded-md bg-muted px-4 py-3 text-sm">
         <p className="text-muted-foreground">
-          <span className="font-medium text-foreground">{item.menu_item_name}</span>
+          <span className="font-medium text-foreground">{item.name}</span>
           {' — '}
           {item.branch_name}
         </p>
         <p className="mt-1 text-muted-foreground">
           Current stock:{' '}
           <span className="font-semibold text-foreground">
-            {item.stock_quantity}
+            {item.stock_quantity} {item.unit_of_measure}
           </span>
         </p>
       </div>
@@ -365,7 +518,7 @@ function AdjustStockForm({ item, onSuccess }: AdjustStockFormProps) {
           <field.NumberField
             label="Quantity Change"
             placeholder="Positive to add, negative to remove"
-            step={1}
+            step={0.001}
           />
         )}
       </form.AppField>
@@ -381,7 +534,7 @@ function AdjustStockForm({ item, onSuccess }: AdjustStockFormProps) {
               <span
                 className={newQty < 0 ? 'font-semibold text-destructive' : 'font-semibold text-foreground'}
               >
-                {newQty < 0 ? `${newQty} (invalid)` : newQty}
+                {newQty < 0 ? `${newQty} (invalid)` : `${newQty} ${item.unit_of_measure}`}
               </span>
             </p>
           )
@@ -446,7 +599,7 @@ function ThresholdForm({ item, onSuccess }: ThresholdFormProps) {
       className="space-y-4"
     >
       <div className="rounded-md bg-muted px-4 py-3 text-sm">
-        <p className="font-medium text-foreground">{item.menu_item_name}</p>
+        <p className="font-medium text-foreground">{item.name}</p>
         <p className="text-muted-foreground">{item.branch_name}</p>
       </div>
 
@@ -464,7 +617,7 @@ function ThresholdForm({ item, onSuccess }: ThresholdFormProps) {
           <field.NumberField
             label="Low Stock Threshold"
             min={0}
-            step={1}
+            step={0.001}
           />
         )}
       </form.AppField>

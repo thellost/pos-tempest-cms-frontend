@@ -21,12 +21,12 @@ export type UnitOfMeasure =
 export interface PurchaseItem {
   id: number
   purchase_id: number
-  menu_item_id: number
+  inventory_id: number
   quantity: number
   unit_of_measure: UnitOfMeasure
   cost_per_unit: number
   total: number
-  menu_item_name: string
+  inventory_name: string
 }
 
 export interface Purchase {
@@ -53,7 +53,7 @@ export interface Purchase {
 }
 
 export interface CreatePurchaseItemPayload {
-  menu_item_id: number
+  inventory_id: number
   quantity: number
   unit_of_measure: UnitOfMeasure
   cost_per_unit: number

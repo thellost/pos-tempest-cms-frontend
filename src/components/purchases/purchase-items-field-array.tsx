@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { CheckIcon, ChevronsUpDownIcon, PlusIcon, Trash2Icon, ShoppingCartIcon } from 'lucide-react'
-import { useMenuItems } from '@/hooks/use-menu-items'
+import { useInventory } from '@/hooks/use-inventory'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -34,8 +34,8 @@ export type { UnitOfMeasure }
 export interface PurchaseItemRow {
   /** Stable React key — not sent to the API */
   key: string
-  menu_item_id: number | null
-  menu_item_name: string
+  inventory_id: number | null
+  inventory_name: string
   quantity: number
   unit_of_measure: UnitOfMeasure
   cost_per_unit: number
@@ -48,8 +48,8 @@ function generateKey() {
 export function createPurchaseItemRow(): PurchaseItemRow {
   return {
     key: generateKey(),
-    menu_item_id: null,
-    menu_item_name: '',
+    inventory_id: null,
+    inventory_name: '',
     quantity: 1,
     unit_of_measure: 'piece',
     cost_per_unit: 0,
@@ -79,14 +79,16 @@ const formatIDR = (value: number) =>
 interface PurchaseItemsFieldArrayProps {
   rows: PurchaseItemRow[]
   onChange: (rows: PurchaseItemRow[]) => void
+  branchId?: number
 }
 
 export function PurchaseItemsFieldArray({
   rows,
   onChange,
+  branchId,
 }: PurchaseItemsFieldArrayProps) {
-  const { data: menuItemsData } = useMenuItems({ pageSize: 200 })
-  const menuItems = menuItemsData?.data ?? []
+  const { data: inventoryData } = useInventory({ branchId, pageSize: 200 })
+  const inventoryItems = inventoryData?.data ?? []
 
   const subtotal = rows.reduce(
     (sum, r) => sum + r.quantity * r.cost_per_unit,
@@ -111,7 +113,7 @@ export function PurchaseItemsFieldArray({
         <div>
           <CardTitle className="text-base">Line Items</CardTitle>
           <p className="mt-0.5 text-sm text-muted-foreground">
-            Add the items you are ordering.
+            Add the ingredients you are ordering.
           </p>
         </div>
         <Button type="button" size="sm" onClick={handleAdd}>
@@ -142,7 +144,7 @@ export function PurchaseItemsFieldArray({
           <div className="space-y-3">
             {/* Column headers */}
             <div className="grid grid-cols-[1fr_80px_100px_120px_100px_36px] items-center gap-2 px-0.5 text-xs font-medium text-muted-foreground">
-              <span>Menu Item</span>
+              <span>Ingredient</span>
               <span>Qty</span>
               <span>Unit</span>
               <span>Cost / Unit</span>
@@ -156,7 +158,7 @@ export function PurchaseItemsFieldArray({
                 <PurchaseItemRowView
                   key={row.key}
                   row={row}
-                  menuItems={menuItems}
+                  inventoryItems={inventoryItems}
                   rowSubtotal={rowSubtotal}
                   onUpdate={(patch) => handleUpdate(row.key, patch)}
                   onRemove={() => handleRemove(row.key)}
@@ -184,7 +186,7 @@ export function PurchaseItemsFieldArray({
 
 interface PurchaseItemRowViewProps {
   row: PurchaseItemRow
-  menuItems: { id: number; name: string }[]
+  inventoryItems: { id: number; name: string; unit_of_measure: string }[]
   rowSubtotal: number
   onUpdate: (patch: Partial<PurchaseItemRow>) => void
   onRemove: () => void
@@ -192,18 +194,18 @@ interface PurchaseItemRowViewProps {
 
 function PurchaseItemRowView({
   row,
-  menuItems,
+  inventoryItems,
   rowSubtotal,
   onUpdate,
   onRemove,
 }: PurchaseItemRowViewProps) {
   const [open, setOpen] = useState(false)
 
-  const selectedItem = menuItems.find((m) => m.id === row.menu_item_id)
+  const selectedItem = inventoryItems.find((i) => i.id === row.inventory_id)
 
   return (
     <div className="grid grid-cols-[1fr_80px_100px_120px_100px_36px] items-center gap-2">
-      {/* Menu Item combobox */}
+      {/* Ingredient combobox */}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -216,35 +218,42 @@ function PurchaseItemRowView({
             )}
           >
             <span className="truncate">
-              {selectedItem ? selectedItem.name : 'Select item…'}
+              {selectedItem ? selectedItem.name : 'Select ingredient…'}
             </span>
             <ChevronsUpDownIcon className="ml-1 size-3.5 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[320px] p-0">
           <Command>
-            <CommandInput placeholder="Search menu items…" />
+            <CommandInput placeholder="Search ingredients…" />
             <CommandList>
-              <CommandEmpty>No items found.</CommandEmpty>
+              <CommandEmpty>No ingredients found.</CommandEmpty>
               <CommandGroup>
-                {menuItems.map((item) => (
+                {inventoryItems.map((item) => (
                   <CommandItem
                     key={item.id}
                     value={item.name}
                     onSelect={() => {
-                      onUpdate({ menu_item_id: item.id, menu_item_name: item.name })
+                      onUpdate({
+                        inventory_id: item.id,
+                        inventory_name: item.name,
+                        unit_of_measure: item.unit_of_measure as UnitOfMeasure,
+                      })
                       setOpen(false)
                     }}
                   >
                     <CheckIcon
                       className={cn(
                         'mr-2 size-4',
-                        row.menu_item_id === item.id
+                        row.inventory_id === item.id
                           ? 'opacity-100'
                           : 'opacity-0',
                       )}
                     />
-                    {item.name}
+                    <span>{item.name}</span>
+                    <span className="ml-auto text-xs text-muted-foreground">
+                      {item.unit_of_measure}
+                    </span>
                   </CommandItem>
                 ))}
               </CommandGroup>

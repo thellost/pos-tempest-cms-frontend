@@ -211,7 +211,7 @@ function PurchaseDetailPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Menu Item</TableHead>
+                  <TableHead>Ingredient</TableHead>
                   <TableHead className="text-right">Quantity</TableHead>
                   <TableHead>Unit</TableHead>
                   <TableHead className="text-right">Cost / Unit</TableHead>
@@ -222,7 +222,7 @@ function PurchaseDetailPage() {
                 {po.items.map((item) => (
                   <TableRow key={item.id}>
                     <TableCell className="font-medium">
-                      {item.menu_item_name}
+                      {item.inventory_name}
                     </TableCell>
                     <TableCell className="text-right">
                       {item.quantity.toLocaleString('id-ID', { maximumFractionDigits: 3 })}
