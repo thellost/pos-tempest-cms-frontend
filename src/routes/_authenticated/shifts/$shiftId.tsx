@@ -5,6 +5,7 @@ import {
   LockIcon,
   ArrowDownCircleIcon,
   ArrowUpCircleIcon,
+  ShoppingBagIcon,
 } from 'lucide-react'
 import { PieChart, Pie, Cell } from 'recharts'
 import {
@@ -76,11 +77,11 @@ const CASH_TX_REASON_LABELS: Record<string, string> = {
 }
 
 const CHART_COLORS = [
-  'hsl(var(--chart-1))',
-  'hsl(var(--chart-2))',
-  'hsl(var(--chart-3))',
-  'hsl(var(--chart-4))',
-  'hsl(var(--chart-5))',
+  '#3b82f6',
+  '#10b981',
+  '#f59e0b',
+  '#ef4444',
+  '#8b5cf6',
 ]
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
@@ -161,6 +162,7 @@ function ShiftDetailPage() {
             shift.status === 'open' ? (
               <Button
                 variant="destructive"
+                className="cursor-pointer"
                 onClick={() => setCloseDialogOpen(true)}
               >
                 <LockIcon className="mr-2 size-4" />
@@ -339,7 +341,7 @@ function ShiftDetailPage() {
               )}
 
               {/* Totals */}
-              {(report.total_cash_in > 0 || report.total_cash_out > 0) && (
+              {(report.total_cash_in > 0 || report.total_cash_out > 0 || report.total_po_expenses > 0) && (
                 <>
                   <Separator />
                   {report.total_cash_in > 0 && (
@@ -362,8 +364,35 @@ function ShiftDetailPage() {
                       }
                     />
                   )}
+                  {report.total_po_expenses > 0 && (
+                    <InfoRow
+                      label="PO Expenses"
+                      value={
+                        <span className="font-medium text-amber-600 dark:text-amber-400">
+                          -{formatIDR(report.total_po_expenses)}
+                        </span>
+                      }
+                    />
+                  )}
                 </>
               )}
+              <Separator />
+              <InfoRow
+                label="Net Cash Movement"
+                value={
+                  <span
+                    className={cn(
+                      'font-semibold',
+                      report.net_cash_movement >= 0
+                        ? 'text-emerald-600 dark:text-emerald-400'
+                        : 'text-destructive',
+                    )}
+                  >
+                    {report.net_cash_movement >= 0 ? '+' : ''}
+                    {formatIDR(report.net_cash_movement)}
+                  </span>
+                }
+              />
 
               <Separator />
               <InfoRow
@@ -502,6 +531,43 @@ function ShiftDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* ── Purchase Orders ─────────────────────────────────────────────── */}
+      {report?.po_expenses && report.po_expenses.length > 0 && (
+        <Card>
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2">
+              <ShoppingBagIcon className="size-4 text-muted-foreground" />
+              <CardTitle>Purchase Orders</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              {report.po_expenses.map((po) => (
+                <div
+                  key={po.id}
+                  className="flex items-start justify-between gap-3 rounded-md border px-3 py-2.5 text-sm"
+                >
+                  <div className="min-w-0">
+                    <div className="flex flex-wrap items-center gap-1.5">
+                      <Badge variant="secondary" className="text-xs font-mono">
+                        {po.purchase_number}
+                      </Badge>
+                      <span className="font-medium">{po.supplier_name}</span>
+                    </div>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Received by {po.received_by_name} · {formatDate(po.received_at)}
+                    </p>
+                  </div>
+                  <span className="shrink-0 font-semibold tabular-nums text-amber-600 dark:text-amber-400">
+                    {formatIDR(po.total)}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* ── Close Shift Dialog ─────────────────────────────────────────── */}
       <Dialog open={closeDialogOpen} onOpenChange={setCloseDialogOpen}>

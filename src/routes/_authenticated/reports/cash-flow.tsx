@@ -133,13 +133,13 @@ function CashFlowSection({ branchId, dateFrom, dateTo }: CashFlowSectionProps) {
   const { data, isLoading } = useCashFlowStats({ branchId, dateFrom, dateTo })
   const rawPoints = data?.data ?? []
 
-  // Enrich each point with effective totals that include shift cash movements
+  // Enrich each point with effective totals that include shift cash movements and PO expenses
   const points = useMemo(
     () =>
       rawPoints.map((p) => ({
         ...p,
         effective_cash_in: (p.cash_in ?? 0) + (p.shift_cash_in ?? 0),
-        effective_cash_out: (p.cash_out ?? 0) + (p.shift_cash_out ?? 0),
+        effective_cash_out: (p.cash_out ?? 0) + (p.shift_cash_out ?? 0) + (p.po_expenses ?? 0),
       })),
     [rawPoints],
   )
@@ -159,10 +159,11 @@ function CashFlowSection({ branchId, dateFrom, dateTo }: CashFlowSectionProps) {
           cash_in: acc.cash_in + p.effective_cash_in,
           non_cash_in: acc.non_cash_in + (p.non_cash_in ?? 0),
           cash_out: acc.cash_out + p.effective_cash_out,
+          po_expenses: acc.po_expenses + (p.po_expenses ?? 0),
           total_revenue: acc.total_revenue + (p.total_revenue ?? 0),
           net_cash: acc.net_cash + (p.net_cash ?? 0),
         }),
-        { cash_in: 0, non_cash_in: 0, cash_out: 0, total_revenue: 0, net_cash: 0 },
+        { cash_in: 0, non_cash_in: 0, cash_out: 0, po_expenses: 0, total_revenue: 0, net_cash: 0 },
       ),
     [points],
   )
@@ -279,6 +280,7 @@ function CashFlowSection({ branchId, dateFrom, dateTo }: CashFlowSectionProps) {
                   <th className="pb-2 pr-4 text-right font-medium">Cash In</th>
                   <th className="pb-2 pr-4 text-right font-medium">Non-Cash In</th>
                   <th className="pb-2 pr-4 text-right font-medium">Total Revenue</th>
+                  <th className="pb-2 pr-4 text-right font-medium">PO Expenses</th>
                   <th className="pb-2 pr-4 text-right font-medium">Cash Out</th>
                   <th className="pb-2 text-right font-medium">Net Cash</th>
                 </tr>
@@ -297,6 +299,9 @@ function CashFlowSection({ branchId, dateFrom, dateTo }: CashFlowSectionProps) {
                     </td>
                     <td className="py-1.5 pr-4 text-right tabular-nums font-medium">
                       {formatIDR(p.total_revenue)}
+                    </td>
+                    <td className="py-1.5 pr-4 text-right tabular-nums text-amber-600">
+                      {p.po_expenses > 0 ? formatIDR(p.po_expenses) : <span className="text-muted-foreground">—</span>}
                     </td>
                     <td className="py-1.5 pr-4 text-right tabular-nums text-red-500">
                       {formatIDR(p.effective_cash_out)}
@@ -323,6 +328,9 @@ function CashFlowSection({ branchId, dateFrom, dateTo }: CashFlowSectionProps) {
                   </td>
                   <td className="pt-2 pr-4 text-right tabular-nums font-semibold">
                     {formatIDR(totals.total_revenue)}
+                  </td>
+                  <td className="pt-2 pr-4 text-right tabular-nums font-semibold text-amber-600">
+                    {formatIDR(totals.po_expenses)}
                   </td>
                   <td className="pt-2 pr-4 text-right tabular-nums font-semibold text-red-500">
                     {formatIDR(totals.cash_out)}
@@ -513,13 +521,13 @@ function SummarySection({ branchId, dateFrom, dateTo }: SummarySectionProps) {
   const { data: cashFlowData, isLoading } = useCashFlowStats({ branchId, dateFrom, dateTo })
   const points = cashFlowData?.data ?? []
 
-  // Aggregate totals from cash flow data (expenses include shift cash-outs)
+  // Aggregate totals from cash flow data (expenses = shift cash-outs + received POs)
   const { totalIncome, totalExpense } = useMemo(
     () =>
       points.reduce(
         (acc, p) => ({
           totalIncome: acc.totalIncome + (p.total_revenue ?? 0),
-          totalExpense: acc.totalExpense + (p.cash_out ?? 0) + (p.shift_cash_out ?? 0),
+          totalExpense: acc.totalExpense + (p.total_expenses ?? 0),
         }),
         { totalIncome: 0, totalExpense: 0 },
       ),
@@ -542,7 +550,7 @@ function SummarySection({ branchId, dateFrom, dateTo }: SummarySectionProps) {
         const label = format(startOfMonth(d), 'MMM yyyy')
         if (!months[key]) months[key] = { label, income: 0, expense: 0 }
         months[key].income += p.total_revenue ?? 0
-        months[key].expense += (p.cash_out ?? 0) + (p.shift_cash_out ?? 0)
+        months[key].expense += p.total_expenses ?? 0
       } catch {
         /* skip unparseable dates */
       }

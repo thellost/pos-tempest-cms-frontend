@@ -14,6 +14,7 @@ import {
   SearchIcon,
   ArrowDownCircleIcon,
   ArrowUpCircleIcon,
+  ShoppingBagIcon,
 } from 'lucide-react'
 import { PieChart, Pie, Cell } from 'recharts'
 import { useShiftReport } from '@/hooks/use-statistics'
@@ -340,6 +341,29 @@ function ShiftReportContent({ shiftId }: ShiftReportContentProps) {
               </>
             )}
 
+            {report.total_po_expenses > 0 && (
+              <>
+                <Separator className="my-1" />
+                <InfoRow
+                  label="PO Expenses"
+                  value={
+                    <span className="font-medium text-amber-600">
+                      -{formatIDR(report.total_po_expenses)}
+                    </span>
+                  }
+                />
+              </>
+            )}
+
+            <Separator className="my-2 border-foreground/20" />
+            <InfoRow
+              label="Net Cash Movement"
+              value={
+                <span className={cn('font-semibold', report.net_cash_movement >= 0 ? 'text-emerald-600' : 'text-destructive')}>
+                  {report.net_cash_movement >= 0 ? '+' : ''}{formatIDR(report.net_cash_movement)}
+                </span>
+              }
+            />
             <Separator className="my-2 border-foreground/20" />
             <InfoRow
               label="Expected Cash"
@@ -456,6 +480,52 @@ function ShiftReportContent({ shiftId }: ShiftReportContentProps) {
           </CardContent>
         </Card>
       </div>
+
+      {/* Purchase Orders */}
+      {report.po_expenses && report.po_expenses.length > 0 && (
+        <Card>
+          <CardHeader className="flex flex-row items-center gap-2 pb-2">
+            <ShoppingBagIcon className="size-5 text-muted-foreground" />
+            <CardTitle className="text-base">Purchase Orders</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left text-muted-foreground">
+                    <th className="pb-2 pr-4 font-medium">PO Number</th>
+                    <th className="pb-2 pr-4 font-medium">Supplier</th>
+                    <th className="pb-2 pr-4 font-medium">Received By</th>
+                    <th className="pb-2 pr-4 font-medium">Received At</th>
+                    <th className="pb-2 text-right font-medium">Total</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {report.po_expenses.map((po) => (
+                    <tr key={po.id} className="border-b last:border-0">
+                      <td className="py-2 pr-4 font-mono text-xs">{po.purchase_number}</td>
+                      <td className="py-2 pr-4">{po.supplier_name}</td>
+                      <td className="py-2 pr-4 text-muted-foreground">{po.received_by_name}</td>
+                      <td className="py-2 pr-4 text-muted-foreground">{formatDateTime(po.received_at)}</td>
+                      <td className="py-2 text-right tabular-nums font-semibold text-amber-600">
+                        {formatIDR(po.total)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+                <tfoot className="border-t-2">
+                  <tr>
+                    <td colSpan={4} className="pt-2 font-semibold">Total PO Expenses</td>
+                    <td className="pt-2 text-right tabular-nums font-bold text-amber-600">
+                      {formatIDR(report.total_po_expenses)}
+                    </td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Payment Breakdown */}
       <Card>

@@ -75,7 +75,7 @@ export interface CashFlowDataPoint {
   cash_in: number
   /** Total cash paid out (purchase order costs). */
   cash_out: number
-  /** Net cash: cash_in - cash_out. */
+  /** Net cash: (cash_in − cash_out) + (shift_cash_in − shift_cash_out) − po_expenses. */
   net_cash: number
   /** Revenue received via non-cash payment methods (card, e-wallet, QRIS, etc.). */
   non_cash_in: number
@@ -85,7 +85,9 @@ export interface CashFlowDataPoint {
   shift_cash_in: number
   /** Cash removed from the shift drawer (withdrawals, petty cash, etc.). */
   shift_cash_out: number
-  /** Total expenses including purchase orders and shift cash-outs. */
+  /** Total of purchase orders with status = "received" on this date. */
+  po_expenses: number
+  /** Total expenses: shift_cash_out + po_expenses. */
   total_expenses: number
 }
 
@@ -134,6 +136,8 @@ export interface ShiftReport {
   net_revenue: number
   total_cash_in: number
   total_cash_out: number
+  total_po_expenses: number
+  /** total_cash_in − total_cash_out − total_po_expenses */
   net_cash_movement: number
   payment_breakdown: Array<{
     payment_method: string
@@ -151,6 +155,28 @@ export interface ShiftReport {
     note: string | null
     created_at: string
     user_name: string
+  }>
+  /** Purchase orders received during this shift window. Omitted if none. */
+  po_expenses?: Array<{
+    id: number
+    purchase_number: string
+    supplier_id: number
+    branch_id: number
+    ordered_by: number
+    received_by: number
+    subtotal: number
+    tax_amount: number
+    total: number
+    status: string
+    notes: string | null
+    ordered_at: string
+    received_at: string
+    created_at: string
+    updated_at: string
+    supplier_name: string
+    ordered_by_name: string
+    received_by_name: string
+    branch_name: string
   }>
 }
 

@@ -9,9 +9,14 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as VerifyOtpRouteImport } from './routes/verify-otp'
+import { Route as RecoveryPasswordRouteImport } from './routes/recovery-password'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthRecoveryCallbackRouteImport } from './routes/auth/recovery-callback'
+import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as AuthenticatedUsersIndexRouteImport } from './routes/_authenticated/users/index'
 import { Route as AuthenticatedTablesIndexRouteImport } from './routes/_authenticated/tables/index'
 import { Route as AuthenticatedSuppliersIndexRouteImport } from './routes/_authenticated/suppliers/index'
@@ -44,9 +49,24 @@ import { Route as AuthenticatedMenuItemsItemIdRouteImport } from './routes/_auth
 import { Route as AuthenticatedCustomersCustomerIdRouteImport } from './routes/_authenticated/customers/$customerId'
 import { Route as AuthenticatedInventoryInventoryIdMovementsRouteImport } from './routes/_authenticated/inventory/$inventoryId/movements'
 
+const VerifyOtpRoute = VerifyOtpRouteImport.update({
+  id: '/verify-otp',
+  path: '/verify-otp',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecoveryPasswordRoute = RecoveryPasswordRouteImport.update({
+  id: '/recovery-password',
+  path: '/recovery-password',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
+  id: '/forgot-password',
+  path: '/forgot-password',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
@@ -57,6 +77,16 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthRecoveryCallbackRoute = AuthRecoveryCallbackRouteImport.update({
+  id: '/auth/recovery-callback',
+  path: '/auth/recovery-callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedUsersIndexRoute = AuthenticatedUsersIndexRouteImport.update({
   id: '/users/',
@@ -246,7 +276,12 @@ const AuthenticatedInventoryInventoryIdMovementsRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/recovery-password': typeof RecoveryPasswordRoute
+  '/verify-otp': typeof VerifyOtpRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth/recovery-callback': typeof AuthRecoveryCallbackRoute
   '/customers/$customerId': typeof AuthenticatedCustomersCustomerIdRoute
   '/menu-items/$itemId': typeof AuthenticatedMenuItemsItemIdRoute
   '/menu-items/create': typeof AuthenticatedMenuItemsCreateRoute
@@ -280,7 +315,12 @@ export interface FileRoutesByFullPath {
   '/inventory/$inventoryId/movements': typeof AuthenticatedInventoryInventoryIdMovementsRoute
 }
 export interface FileRoutesByTo {
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/recovery-password': typeof RecoveryPasswordRoute
+  '/verify-otp': typeof VerifyOtpRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth/recovery-callback': typeof AuthRecoveryCallbackRoute
   '/': typeof AuthenticatedIndexRoute
   '/customers/$customerId': typeof AuthenticatedCustomersCustomerIdRoute
   '/menu-items/$itemId': typeof AuthenticatedMenuItemsItemIdRoute
@@ -317,7 +357,12 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/forgot-password': typeof ForgotPasswordRoute
   '/login': typeof LoginRoute
+  '/recovery-password': typeof RecoveryPasswordRoute
+  '/verify-otp': typeof VerifyOtpRoute
+  '/auth/callback': typeof AuthCallbackRoute
+  '/auth/recovery-callback': typeof AuthRecoveryCallbackRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/customers/$customerId': typeof AuthenticatedCustomersCustomerIdRoute
   '/_authenticated/menu-items/$itemId': typeof AuthenticatedMenuItemsItemIdRoute
@@ -355,7 +400,12 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/forgot-password'
     | '/login'
+    | '/recovery-password'
+    | '/verify-otp'
+    | '/auth/callback'
+    | '/auth/recovery-callback'
     | '/customers/$customerId'
     | '/menu-items/$itemId'
     | '/menu-items/create'
@@ -389,7 +439,12 @@ export interface FileRouteTypes {
     | '/inventory/$inventoryId/movements'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/forgot-password'
     | '/login'
+    | '/recovery-password'
+    | '/verify-otp'
+    | '/auth/callback'
+    | '/auth/recovery-callback'
     | '/'
     | '/customers/$customerId'
     | '/menu-items/$itemId'
@@ -425,7 +480,12 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_authenticated'
+    | '/forgot-password'
     | '/login'
+    | '/recovery-password'
+    | '/verify-otp'
+    | '/auth/callback'
+    | '/auth/recovery-callback'
     | '/_authenticated/'
     | '/_authenticated/customers/$customerId'
     | '/_authenticated/menu-items/$itemId'
@@ -462,16 +522,42 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
+  RecoveryPasswordRoute: typeof RecoveryPasswordRoute
+  VerifyOtpRoute: typeof VerifyOtpRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
+  AuthRecoveryCallbackRoute: typeof AuthRecoveryCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/verify-otp': {
+      id: '/verify-otp'
+      path: '/verify-otp'
+      fullPath: '/verify-otp'
+      preLoaderRoute: typeof VerifyOtpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/recovery-password': {
+      id: '/recovery-password'
+      path: '/recovery-password'
+      fullPath: '/recovery-password'
+      preLoaderRoute: typeof RecoveryPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/login': {
       id: '/login'
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/forgot-password': {
+      id: '/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof ForgotPasswordRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -487,6 +573,20 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/auth/recovery-callback': {
+      id: '/auth/recovery-callback'
+      path: '/auth/recovery-callback'
+      fullPath: '/auth/recovery-callback'
+      preLoaderRoute: typeof AuthRecoveryCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/users/': {
       id: '/_authenticated/users/'
@@ -785,7 +885,12 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
+  RecoveryPasswordRoute: RecoveryPasswordRoute,
+  VerifyOtpRoute: VerifyOtpRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
+  AuthRecoveryCallbackRoute: AuthRecoveryCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
