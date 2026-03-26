@@ -6,7 +6,7 @@ import type { ShiftFilters } from '@/lib/query-keys'
 export interface Shift {
   id: number
   user_id: number
-  device_id: number
+  device_id: string
   branch_id: number
   status: 'open' | 'closed'
   opening_cash: number
@@ -80,7 +80,7 @@ export interface ShiftSummary {
 }
 
 export interface OpenShiftPayload {
-  device_id: number
+  device_id: string
   branch_id: number
   opening_cash?: number
 }

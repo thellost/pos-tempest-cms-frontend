@@ -107,7 +107,7 @@ export interface PaymentMethodBreakdown {
 export interface ShiftReportShift {
   id: number
   user_id: number
-  device_id: number
+  device_id: string
   branch_id: number
   status: 'open' | 'closed'
   opening_cash: number

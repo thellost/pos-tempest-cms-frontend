@@ -36,7 +36,7 @@ export type DeviceFilters = {
 
 export type ShiftFilters = {
   branchId?: number
-  deviceId?: number
+  deviceId?: string
   userId?: number
   status?: 'open' | 'closed'
   dateFrom?: string
@@ -193,7 +193,7 @@ export const queryKeys = {
   devices: {
     all: ['devices'] as const,
     list: (filters?: DeviceFilters) => ['devices', 'list', filters ?? {}] as const,
-    detail: (id: number) => ['devices', 'detail', id] as const,
+    detail: (device_uid: string) => ['devices', 'detail', device_uid] as const,
   },
 
   // ── Shifts ────────────────────────────────────────────────────────────────

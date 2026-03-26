@@ -179,7 +179,7 @@ function DevicesPage() {
             </DialogTitle>
           </DialogHeader>
           <DeviceForm
-            key={editingDevice?.id ?? 'new'}
+            key={editingDevice?.device_uid ?? 'new'}
             device={editingDevice ?? undefined}
             branchOptions={branchOptions}
             onSuccess={closeDialog}
@@ -212,7 +212,7 @@ function DevicesPage() {
           const nextStatus =
             statusTarget.status === 'active' ? 'inactive' : 'active'
           statusMutation.mutate(
-            { id: statusTarget.id, status: nextStatus },
+            { device_uid: statusTarget.device_uid, status: nextStatus },
             {
               onSuccess: () => {
                 setStatusDialogOpen(false)
@@ -250,7 +250,7 @@ function DeviceForm({ device, branchOptions, onSuccess }: DeviceFormProps) {
         const payload: UpdateDevicePayload = {
           device_name: value.device_name,
         }
-        await updateMutation.mutateAsync({ id: device.id, payload })
+        await updateMutation.mutateAsync({ device_uid: device.device_uid, payload })
       } else {
         const payload: CreateDevicePayload = {
           branch_id: parseInt(value.branch_id, 10),
@@ -298,7 +298,8 @@ function DeviceForm({ device, branchOptions, onSuccess }: DeviceFormProps) {
         validators={{
           onChange: ({ value }) => {
             if (!value?.trim()) return 'Device UID is required'
-            if (value.length > 36) return 'Max 36 characters'
+            const uuidV4 = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+            if (!uuidV4.test(value.trim())) return 'Must be a valid UUID v4'
             return undefined
           },
         }}

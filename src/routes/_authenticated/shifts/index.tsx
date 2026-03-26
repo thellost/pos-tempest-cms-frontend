@@ -84,7 +84,7 @@ function ShiftsPage() {
   const deviceOptions = useMemo(
     () =>
       (devicesData?.data ?? []).map((d) => ({
-        value: String(d.id),
+        value: d.device_uid,
         label: d.device_name,
       })),
     [devicesData],
@@ -96,9 +96,7 @@ function ShiftsPage() {
       branchId: filterValues.branch_id
         ? parseInt(filterValues.branch_id, 10)
         : undefined,
-      deviceId: filterValues.device_id
-        ? parseInt(filterValues.device_id, 10)
-        : undefined,
+      deviceId: filterValues.device_id || undefined,
       status: (filterValues.status || undefined) as
         | 'open'
         | 'closed'
@@ -315,7 +313,7 @@ function OpenShiftForm({
     () =>
       (devicesData?.data ?? [])
         .filter((d) => d.status === 'active')
-        .map((d) => ({ value: String(d.id), label: d.device_name })),
+        .map((d) => ({ value: d.device_uid, label: d.device_name })),
     [devicesData],
   )
 
@@ -330,7 +328,7 @@ function OpenShiftForm({
         return
       }
       await openMutation.mutateAsync({
-        device_id: parseInt(value.device_id, 10),
+        device_id: value.device_id,
         branch_id: parseInt(selectedBranchId, 10),
         opening_cash: Number(value.opening_cash) || 0,
       })

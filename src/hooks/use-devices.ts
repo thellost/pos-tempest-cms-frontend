@@ -19,11 +19,11 @@ export function useDevices(filters?: DeviceFilters) {
   })
 }
 
-export function useDevice(id: number) {
+export function useDevice(device_uid: string) {
   return useQuery({
-    queryKey: queryKeys.devices.detail(id),
-    queryFn: () => devicesService.get(id),
-    enabled: id > 0,
+    queryKey: queryKeys.devices.detail(device_uid),
+    queryFn: () => devicesService.get(device_uid),
+    enabled: !!device_uid,
   })
 }
 
@@ -46,15 +46,15 @@ export function useUpdateDevice() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({
-      id,
+      device_uid,
       payload,
     }: {
-      id: number
+      device_uid: string
       payload: UpdateDevicePayload
-    }) => devicesService.update(id, payload),
-    onSuccess: (_, { id }) => {
+    }) => devicesService.update(device_uid, payload),
+    onSuccess: (_, { device_uid }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.devices.all })
-      queryClient.invalidateQueries({ queryKey: queryKeys.devices.detail(id) })
+      queryClient.invalidateQueries({ queryKey: queryKeys.devices.detail(device_uid) })
       toast.success('Device updated successfully')
     },
     onError: (err: Error) => toast.error(err.message),
@@ -65,13 +65,13 @@ export function useUpdateDeviceStatus() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({
-      id,
+      device_uid,
       status,
     }: {
-      id: number
+      device_uid: string
       status: 'active' | 'inactive'
-    }) => devicesService.updateStatus(id, status),
-    onMutate: async ({ id, status }) => {
+    }) => devicesService.updateStatus(device_uid, status),
+    onMutate: async ({ device_uid, status }) => {
       await queryClient.cancelQueries({ queryKey: queryKeys.devices.all })
       const previousData = queryClient.getQueriesData<ApiResult<Device[]>>({
         queryKey: queryKeys.devices.all,
@@ -83,7 +83,7 @@ export function useUpdateDeviceStatus() {
           return {
             ...old,
             data: old.data.map((device) =>
-              device.id === id ? { ...device, status } : device,
+              device.device_uid === device_uid ? { ...device, status } : device,
             ),
           }
         },

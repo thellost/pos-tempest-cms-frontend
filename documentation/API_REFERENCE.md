@@ -622,9 +622,8 @@ List devices, optionally filtered by branch.
   "success": true,
   "data": [
     {
-      "id": 1,
-      "branch_id": 1,
       "device_uid": "550e8400-e29b-41d4-a716-446655440000",
+      "branch_id": 1,
       "device_name": "Kasir 1",
       "status": "active",
       "registered_at": "2026-01-20T09:00:00Z",
@@ -632,9 +631,8 @@ List devices, optionally filtered by branch.
       "branch_name": "Tempest Cafe - Sudirman"
     },
     {
-      "id": 2,
-      "branch_id": 1,
       "device_uid": "660e8400-e29b-41d4-a716-446655440001",
+      "branch_id": 1,
       "device_name": "Bar Terminal",
       "status": "active",
       "registered_at": "2026-01-25T10:00:00Z",
@@ -671,18 +669,18 @@ Register a new device.
 | Field | Type | Required | Validation |
 |-------|------|----------|------------|
 | `branch_id` | int | ✅ | must exist |
-| `device_uid` | string | ✅ | max 36 chars, must be unique |
+| `device_uid` | string (UUID) | ✅ | valid UUID v4, must be unique |
 | `device_name` | string | ✅ | max 100 chars |
 
 **Response `201 Created`:** Returns the created device object.
 
 ---
 
-### `PUT /api/v1/devices/:id`
+### `PUT /api/v1/devices/:device_uid`
 
 > **Roles:** admin, manager
 
-Update device name or status.
+Update device name or status. `:device_uid` is the UUID primary key of the device.
 
 **Request Body:**
 ```json
@@ -700,11 +698,11 @@ Update device name or status.
 
 ---
 
-### `PATCH /api/v1/devices/:id/status`
+### `PATCH /api/v1/devices/:device_uid/status`
 
 > **Roles:** admin, manager
 
-Change device status only.
+Change device status only. `:device_uid` is the UUID primary key of the device.
 
 **Request Body:**
 ```json
@@ -730,7 +728,7 @@ List shifts with optional filters.
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `branch_id` | int | Filter by branch |
-| `device_id` | int | Filter by device |
+| `device_id` | string (UUID) | Filter by device |
 | `user_id` | int | Filter by user who opened |
 | `status` | string | `open` or `closed` |
 | `date_from` | string | Start date `YYYY-MM-DD` |
@@ -746,7 +744,7 @@ List shifts with optional filters.
     {
       "id": 1,
       "user_id": 2,
-      "device_id": 1,
+      "device_id": "550e8400-e29b-41d4-a716-446655440000",
       "branch_id": 1,
       "status": "closed",
       "opening_cash": 500000.00,
@@ -854,7 +852,7 @@ Open a new shift on a device. The `user_id` is automatically set from the authen
 **Request Body:**
 ```json
 {
-  "device_id": 1,
+  "device_id": "550e8400-e29b-41d4-a716-446655440000",
   "branch_id": 1,
   "opening_cash": 500000.00
 }
@@ -862,7 +860,7 @@ Open a new shift on a device. The `user_id` is automatically set from the authen
 
 | Field | Type | Required | Validation |
 |-------|------|----------|------------|
-| `device_id` | int | ✅ | must exist, must not have an open shift |
+| `device_id` | string (UUID) | ✅ | must exist, must not have an open shift |
 | `branch_id` | int | ✅ | must exist |
 | `opening_cash` | float | ❌ | >= 0 (defaults to 0) |
 
@@ -3694,7 +3692,7 @@ Get a detailed financial report for a specific shift.
     "shift": {
       "id": 1,
       "user_id": 2,
-      "device_id": 1,
+      "device_id": "550e8400-e29b-41d4-a716-446655440000",
       "branch_id": 1,
       "status": "closed",
       "opening_cash": 500000.00,

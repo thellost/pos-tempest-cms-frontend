@@ -4,7 +4,6 @@ import type { DeviceFilters } from '@/lib/query-keys'
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface Device {
-  id: number
   branch_id: number
   branch_name: string | null
   device_uid: string
@@ -40,15 +39,15 @@ export const devicesService = {
       )}`,
     ),
 
-  get: (id: number) => api.get<Device>(`/api/v1/devices/${id}`),
+  get: (device_uid: string) => api.get<Device>(`/api/v1/devices/${device_uid}`),
 
   create: (payload: CreateDevicePayload) =>
     api.post<Device>('/api/v1/devices', payload),
 
-  update: (id: number, payload: UpdateDevicePayload) =>
-    api.put<Device>(`/api/v1/devices/${id}`, payload),
+  update: (device_uid: string, payload: UpdateDevicePayload) =>
+    api.put<Device>(`/api/v1/devices/${device_uid}`, payload),
 
   /** Change device status only — active ↔ inactive */
-  updateStatus: (id: number, status: 'active' | 'inactive') =>
-    api.patch<Device>(`/api/v1/devices/${id}/status`, { status }),
+  updateStatus: (device_uid: string, status: 'active' | 'inactive') =>
+    api.patch<Device>(`/api/v1/devices/${device_uid}/status`, { status }),
 }
