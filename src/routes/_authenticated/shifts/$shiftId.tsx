@@ -292,7 +292,7 @@ function ShiftDetailPage() {
                 value={
                   <span className="text-emerald-600 dark:text-emerald-400">
                     +{formatIDR(
-                      report.payment_breakdown.find(
+                      (report.payment_breakdown ?? []).find(
                         (p) => p.payment_method === 'cash',
                       )?.total_amount ?? 0,
                     )}
@@ -478,7 +478,7 @@ function ShiftDetailPage() {
 
               {/* Legend table */}
               <div className="w-full space-y-2 text-sm">
-                {report.payment_breakdown.map((item, i) => (
+                {(report.payment_breakdown ?? []).map((item, i) => (
                   <div
                     key={item.payment_method}
                     className="flex items-center justify-between gap-4 rounded-md px-3 py-2 odd:bg-muted/40"

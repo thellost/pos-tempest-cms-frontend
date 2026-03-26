@@ -59,6 +59,8 @@ interface DataTableProps<TData, TValue> {
   hidePagination?: boolean
   /** Initial column visibility state (e.g. for hiding columns on mobile) */
   initialColumnVisibility?: Record<string, boolean>
+  /** Called when a row is clicked. Makes rows appear clickable. */
+  onRowClick?: (row: TData) => void
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -103,6 +105,7 @@ export function DataTable<TData, TValue>({
   hideToolbar = false,
   hidePagination = false,
   initialColumnVisibility,
+  onRowClick,
 }: DataTableProps<TData, TValue>) {
   // Local state for sorting (used when caller doesn't provide server-side sorting)
   const [localSorting, setLocalSorting] = useState<SortingState>([])
@@ -208,6 +211,8 @@ export function DataTable<TData, TValue>({
                   <TableRow
                     key={row.id}
                     data-state={row.getIsSelected() && 'selected'}
+                    onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                    className={onRowClick ? 'cursor-pointer' : undefined}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>

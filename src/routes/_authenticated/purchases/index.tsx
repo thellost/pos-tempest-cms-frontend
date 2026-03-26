@@ -176,30 +176,26 @@ function PurchasesPage() {
       >
         {/* Date range */}
         <div className="flex items-center gap-2">
-          <div className="flex flex-col gap-1">
-            <Label className="text-xs text-muted-foreground">From</Label>
-            <Input
-              type="date"
-              className="h-9 w-[140px] text-sm"
-              value={dateFrom}
-              onChange={(e) => {
-                setDateFrom(e.target.value)
-                setPage(1)
-              }}
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <Label className="text-xs text-muted-foreground">To</Label>
-            <Input
-              type="date"
-              className="h-9 w-[140px] text-sm"
-              value={dateTo}
-              onChange={(e) => {
-                setDateTo(e.target.value)
-                setPage(1)
-              }}
-            />
-          </div>
+          <Label className="text-xs text-muted-foreground whitespace-nowrap">From</Label>
+          <Input
+            type="date"
+            className="h-9 w-[140px] text-sm"
+            value={dateFrom}
+            onChange={(e) => {
+              setDateFrom(e.target.value)
+              setPage(1)
+            }}
+          />
+          <Label className="text-xs text-muted-foreground whitespace-nowrap">To</Label>
+          <Input
+            type="date"
+            className="h-9 w-[140px] text-sm"
+            value={dateTo}
+            onChange={(e) => {
+              setDateTo(e.target.value)
+              setPage(1)
+            }}
+          />
         </div>
       </FilterBar>
 

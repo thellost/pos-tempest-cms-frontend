@@ -73,8 +73,6 @@ function InventoryPage() {
     ? parseInt(filterValues.branch_id, 10)
     : undefined
 
-  const lowStockBranchId = filterBranchId
-
   const queryFilters = useMemo(
     () => ({
       branchId: filterBranchId,
@@ -86,7 +84,7 @@ function InventoryPage() {
 
   const { data: allData, isLoading: allLoading } = useInventory(queryFilters)
   const { data: lowStockData, isLoading: lowLoading } =
-    useLowStockInventory(lowStockBranchId)
+    useLowStockInventory(undefined)
 
   // Client-side name filter
   const searchTerm = filterValues.search?.toLowerCase() ?? ''

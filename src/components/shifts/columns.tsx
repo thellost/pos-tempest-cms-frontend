@@ -1,5 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { EyeIcon, XCircleIcon } from 'lucide-react'
+import { XCircleIcon } from 'lucide-react'
 import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header'
 import { DataTableRowActions } from '@/components/data-table/data-table-row-actions'
 import { StatusBadge } from '@/components/status-badge'
@@ -36,14 +36,12 @@ function formatDateTime(dateStr: string | null | undefined): React.ReactNode {
 // ─── Props ────────────────────────────────────────────────────────────────────
 
 interface GetShiftColumnsOptions {
-  onViewDetail: (shift: Shift) => void
   onClose: (shift: Shift) => void
 }
 
 // ─── Column definitions ───────────────────────────────────────────────────────
 
 export function getShiftColumns({
-  onViewDetail,
   onClose,
 }: GetShiftColumnsOptions): ColumnDef<Shift>[] {
   return [
@@ -159,24 +157,21 @@ export function getShiftColumns({
     {
       id: 'actions',
       cell: ({ row }) => (
-        <DataTableRowActions
-          row={row}
-          actions={[
-            {
-              label: 'View Detail',
-              icon: EyeIcon,
-              onClick: onViewDetail,
-            },
-            {
-              label: 'Close Shift',
-              icon: XCircleIcon,
-              variant: 'destructive',
-              separator: true,
-              onClick: onClose,
-              hidden: (shift) => shift.status !== 'open',
-            },
-          ]}
-        />
+        // Stop propagation so clicking the actions menu doesn't trigger row navigation
+        <div onClick={(e) => e.stopPropagation()}>
+          <DataTableRowActions
+            row={row}
+            actions={[
+              {
+                label: 'Close Shift',
+                icon: XCircleIcon,
+                variant: 'destructive',
+                onClick: onClose,
+                hidden: (shift) => shift.status !== 'open',
+              },
+            ]}
+          />
+        </div>
       ),
     },
   ]

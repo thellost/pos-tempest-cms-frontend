@@ -26,6 +26,7 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart'
+import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 
 // ─── Route ────────────────────────────────────────────────────────────────────
@@ -262,8 +263,8 @@ function CashFlowSummaryCard({ branchId }: { branchId?: number }) {
 // ─── Dashboard Page ───────────────────────────────────────────────────────────
 
 function DashboardPage() {
-  const { branchId, user } = useAuth()
-  const { data, isLoading } = useDashboardStats(branchId ?? undefined)
+  const { user } = useAuth()
+  const { data, isLoading } = useDashboardStats(undefined)
 
   const stats = data?.data
 
@@ -276,17 +277,22 @@ function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Dashboard"
-        description={`Welcome back, ${user?.name ?? 'there'}. Here's what's happening today.`}
-      />
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <PageHeader
+          title="Dashboard"
+          description={`Welcome back, ${user?.name ?? 'there'}. Here's what's happening today.`}
+        />
+        <Badge variant="secondary" className="shrink-0 text-xs font-normal mt-1">
+          All Branches
+        </Badge>
+      </div>
 
       {/* ── Top row: Revenue chart + Cash flow ───────────────────────────── */}
       <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-3">
         <div className="flex h-full flex-col lg:col-span-2">
-          <RevenueChartCard branchId={branchId ?? undefined} />
+          <RevenueChartCard branchId={undefined} />
         </div>
-        <CashFlowSummaryCard branchId={branchId ?? undefined} />
+        <CashFlowSummaryCard branchId={undefined} />
       </div>
 
       {/* ── Bottom row: 6 KPI stat cards ─────────────────────────────────── */}
