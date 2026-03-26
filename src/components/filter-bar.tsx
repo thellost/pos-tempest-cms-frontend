@@ -98,7 +98,7 @@ export function FilterBar({
                 onChange(filter.key, value === '__all__' ? '' : value)
               }
             >
-              <SelectTrigger className="h-9 w-full sm:w-[160px]">
+              <SelectTrigger className="h-9 w-full sm:w-[200px]">
                 <SelectValue placeholder={filter.label} />
               </SelectTrigger>
               <SelectContent>

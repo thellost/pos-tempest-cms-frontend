@@ -668,7 +668,7 @@ function ShiftSelector({ selectedShiftId, onSelect }: ShiftSelectorProps) {
                 onSelect(null)
               }}
             >
-              <SelectTrigger className="w-44">
+              <SelectTrigger className="w-56">
                 <SelectValue placeholder="All Branches" />
               </SelectTrigger>
               <SelectContent>

@@ -730,7 +730,7 @@ function CashFlowReportPage() {
               value={branchId ? String(branchId) : 'all'}
               onValueChange={(v) => setBranchId(v === 'all' ? undefined : Number(v))}
             >
-              <SelectTrigger className="w-44">
+              <SelectTrigger className="w-56">
                 <SelectValue placeholder="All branches" />
               </SelectTrigger>
               <SelectContent>
