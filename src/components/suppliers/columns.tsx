@@ -19,6 +19,7 @@ export function getSupplierColumns({
   return [
     {
       accessorKey: 'name',
+      meta: { mobileTitle: true, mobileLabel: 'Supplier' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Name" />
       ),
@@ -28,6 +29,7 @@ export function getSupplierColumns({
     },
     {
       accessorKey: 'contact_person',
+      meta: { mobileOrder: 1, mobileLabel: 'Contact' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Contact Person" />
       ),
@@ -41,6 +43,7 @@ export function getSupplierColumns({
     },
     {
       accessorKey: 'phone',
+      meta: { mobileOrder: 2, mobileLabel: 'Phone' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Phone" />
       ),
@@ -83,6 +86,7 @@ export function getSupplierColumns({
     },
     {
       accessorKey: 'is_active',
+      meta: { mobileOrder: 3, mobileLabel: 'Status' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Status" />
       ),

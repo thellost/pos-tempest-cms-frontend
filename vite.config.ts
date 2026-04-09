@@ -23,12 +23,17 @@ export default defineConfig(({ mode }) => {
       // Sentry: upload source maps + instrument server middleware (production only).
       // In development this returns [] so there is no overhead.
       sentryTanstackStart({
-        org: env.VITE_SENTRY_ORG || process.env.SENTRY_ORG,
-        project: env.VITE_SENTRY_PROJECT || process.env.SENTRY_PROJECT,
+        org: env.VITE_SENTRY_ORG || process.env.VITE_SENTRY_ORG,
+        project: env.VITE_SENTRY_PROJECT || process.env.VITE_SENTRY_PROJECT,
         authToken: env.SENTRY_AUTH_TOKEN || process.env.SENTRY_AUTH_TOKEN,
         // Only upload source maps when auth token is present
         sourcemaps: {
           disable: !env.SENTRY_AUTH_TOKEN && !process.env.SENTRY_AUTH_TOKEN,
+        },
+        release: {
+          create: true,
+          finalize: true,
+          deploy: { env: process.env.NODE_ENV ?? mode },
         },
       }),
 

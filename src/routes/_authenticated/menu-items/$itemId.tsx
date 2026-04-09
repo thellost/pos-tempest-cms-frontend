@@ -271,7 +271,7 @@ function EditMenuItemForm({
                 )}
               </form.AppField>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="form-grid-mobile form-grid-mobile-2">
                 <form.AppField
                   name="sku"
                   validators={{
@@ -360,7 +360,7 @@ function EditMenuItemForm({
                 )}
               </form.AppField>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="form-grid-mobile form-grid-mobile-2">
                 <form.AppField
                   name="price"
                   validators={{
@@ -454,7 +454,7 @@ function EditMenuItemForm({
                 )}
               </form.AppField>
 
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              <div className="form-grid-mobile form-grid-mobile-2">
                 <form.AppField name="sort_order">
                   {(field) => (
                     <field.NumberField

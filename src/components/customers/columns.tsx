@@ -36,6 +36,7 @@ export function getCustomerColumns({
     {
       id: 'name',
       accessorKey: 'name',
+      meta: { mobileTitle: true, mobileLabel: 'Customer' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Name" />
       ),
@@ -60,6 +61,7 @@ export function getCustomerColumns({
     },
     {
       accessorKey: 'phone',
+      meta: { mobileOrder: 1, mobileLabel: 'Phone' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Phone" />
       ),
@@ -70,6 +72,7 @@ export function getCustomerColumns({
     },
     {
       accessorKey: 'loyalty_points',
+      meta: { mobileOrder: 2, mobileLabel: 'Points' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Points" />
       ),
@@ -101,6 +104,7 @@ export function getCustomerColumns({
     },
     {
       accessorKey: 'is_active',
+      meta: { mobileOrder: 3, mobileLabel: 'Status' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Status" />
       ),

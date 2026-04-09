@@ -30,7 +30,7 @@ export function PageHeader({
         )}
       </div>
       {actions && (
-        <div className="mt-3 flex shrink-0 items-center gap-2 sm:mt-0 sm:ml-4">
+        <div className="mt-3 flex w-full shrink-0 flex-wrap items-center gap-2 sm:mt-0 sm:ml-4 sm:w-auto sm:justify-end">
           {actions}
         </div>
       )}

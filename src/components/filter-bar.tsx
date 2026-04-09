@@ -61,24 +61,24 @@ export function FilterBar({
   return (
     <div
       className={cn(
-        'flex flex-wrap items-center gap-2',
+        'mobile-edge-safe-px flex w-full flex-col items-stretch gap-2 sm:flex-row sm:flex-wrap sm:items-center',
         className,
       )}
     >
       {filters.map((filter) => {
         if (filter.type === 'search') {
           return (
-            <div key={filter.key} className="relative min-w-0 w-full sm:min-w-[200px] sm:w-auto sm:flex-1">
+            <div key={filter.key} className="relative min-w-0 w-full sm:min-w-[220px] sm:w-auto sm:flex-1">
               <Input
                 placeholder={filter.placeholder ?? 'Search…'}
                 value={values[filter.key] ?? ''}
                 onChange={(e) => onChange(filter.key, e.target.value)}
-                className="h-9 pr-8"
+                className="h-11 pr-10"
               />
               {values[filter.key] && (
                 <button
                   type="button"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  className="touch-target-icon absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                   onClick={() => onChange(filter.key, '')}
                   aria-label="Clear search"
                 >
@@ -98,7 +98,7 @@ export function FilterBar({
                 onChange(filter.key, value === '__all__' ? '' : value)
               }
             >
-              <SelectTrigger className="h-9 w-full sm:w-[200px]">
+              <SelectTrigger className="h-11 w-full sm:w-[220px]">
                 <SelectValue placeholder={filter.label} />
               </SelectTrigger>
               <SelectContent>
@@ -125,8 +125,7 @@ export function FilterBar({
       {(!hideWhenEmpty || hasActiveFilters) && (
         <Button
           variant="ghost"
-          size="sm"
-          className="h-9 text-muted-foreground hover:text-foreground"
+          className="touch-target h-11 w-full justify-center text-muted-foreground hover:text-foreground sm:w-auto"
           onClick={onClear}
         >
           <XIcon className="mr-1.5 size-3.5" />

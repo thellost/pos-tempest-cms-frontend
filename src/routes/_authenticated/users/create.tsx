@@ -178,7 +178,7 @@ function CreateUserForm({ availableRoleOptions, onSuccess }: CreateUserFormProps
       </form.AppField>
 
       {/* Role + Branch */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="form-grid-mobile form-grid-mobile-2">
         <form.AppField
           name="role_id"
           validators={{
@@ -236,10 +236,11 @@ function CreateUserForm({ availableRoleOptions, onSuccess }: CreateUserFormProps
       </form.AppField>
 
       {/* Submit */}
-      <div className="flex justify-end gap-3 pt-2">
+      <div className="flex flex-col-reverse gap-3 pt-2 sm:flex-row sm:justify-end">
         <Button
           type="button"
           variant="outline"
+          className="w-full sm:w-auto"
           onClick={() => form.reset()}
         >
           Reset
@@ -247,7 +248,7 @@ function CreateUserForm({ availableRoleOptions, onSuccess }: CreateUserFormProps
         <form.AppForm>
           <form.SubscribeButton
             label="Create User"
-            className="w-auto min-w-[120px]"
+            className="w-full min-w-[120px] sm:w-auto"
           />
         </form.AppForm>
       </div>

@@ -52,6 +52,7 @@ export function getOrderColumns({
   return [
     {
       accessorKey: 'order_number',
+      meta: { mobileTitle: true, mobileLabel: 'Order' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Order Number" />
       ),
@@ -63,6 +64,7 @@ export function getOrderColumns({
     },
     {
       accessorKey: 'branch_name',
+      meta: { mobileOrder: 1, mobileLabel: 'Branch' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Branch" />
       ),
@@ -118,6 +120,7 @@ export function getOrderColumns({
     },
     {
       accessorKey: 'status',
+      meta: { mobileOrder: 2, mobileLabel: 'Status' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Status" />
       ),
@@ -132,6 +135,7 @@ export function getOrderColumns({
     },
     {
       accessorKey: 'total',
+      meta: { mobileOrder: 3, mobileLabel: 'Total' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Total" />
       ),
@@ -141,6 +145,7 @@ export function getOrderColumns({
     },
     {
       accessorKey: 'created_at',
+      meta: { mobileHidden: true },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Created At" />
       ),

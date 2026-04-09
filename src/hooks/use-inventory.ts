@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import * as Sentry from '@sentry/tanstackstart-react'
 import {
   inventoryService,
   type CreateInventoryPayload,
@@ -42,11 +43,44 @@ export function useCreateInventory() {
   return useMutation({
     mutationFn: (payload: CreateInventoryPayload) =>
       inventoryService.create(payload),
-    onSuccess: () => {
+    onMutate: (payload) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'createInventory started',
+        level: 'info',
+        data: {
+          branchId: payload.branch_id,
+          name: payload.name,
+          unit: payload.unit_of_measure,
+        },
+      })
+    },
+    onSuccess: (result) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'createInventory succeeded',
+        level: 'info',
+        data: {
+          inventoryId: result.data.id,
+          name: result.data.name,
+        },
+      })
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
       toast.success('Ingredient added to inventory')
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error, payload) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'createInventory failed',
+        level: 'error',
+        data: {
+          branchId: payload.branch_id,
+          name: payload.name,
+          error: err.message,
+        },
+      })
+      toast.error(err.message)
+    },
   })
 }
 
@@ -55,14 +89,45 @@ export function useAdjustStock() {
   return useMutation({
     mutationFn: (payload: AdjustStockPayload) =>
       inventoryService.adjustStock(payload),
+    onMutate: (payload) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'updateInventory started',
+        level: 'info',
+        data: {
+          inventoryId: payload.inventory_id,
+          quantityChange: payload.quantity_change,
+          movementType: payload.movement_type,
+        },
+      })
+    },
     onSuccess: (_, { inventory_id }) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'updateInventory succeeded',
+        level: 'info',
+        data: { inventoryId: inventory_id },
+      })
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
       queryClient.invalidateQueries({
         queryKey: queryKeys.inventory.movements(inventory_id),
       })
       toast.success('Stock adjusted successfully')
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error, payload) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'updateInventory failed',
+        level: 'error',
+        data: {
+          inventoryId: payload.inventory_id,
+          quantityChange: payload.quantity_change,
+          movementType: payload.movement_type,
+          error: err.message,
+        },
+      })
+      toast.error(err.message)
+    },
   })
 }
 
@@ -76,10 +141,38 @@ export function useUpdateThreshold() {
       id: number
       payload: UpdateThresholdPayload
     }) => inventoryService.updateThreshold(id, payload),
-    onSuccess: () => {
+    onMutate: ({ id, payload }) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'updateInventoryThreshold started',
+        level: 'info',
+        data: {
+          inventoryId: id,
+          lowStockThreshold: payload.low_stock_threshold,
+        },
+      })
+    },
+    onSuccess: (_, { id }) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'updateInventoryThreshold succeeded',
+        level: 'info',
+        data: { inventoryId: id },
+      })
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
       toast.success('Threshold updated')
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error, { id }) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'updateInventoryThreshold failed',
+        level: 'error',
+        data: {
+          inventoryId: id,
+          error: err.message,
+        },
+      })
+      toast.error(err.message)
+    },
   })
 }

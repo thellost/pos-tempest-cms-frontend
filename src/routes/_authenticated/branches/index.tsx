@@ -274,7 +274,7 @@ function BranchForm({ branch, onSuccess }: BranchFormProps) {
       </form.AppField>
 
       {/* Tax Rate + Service Charge */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="form-grid-mobile form-grid-mobile-2">
         <form.AppField
           name="tax_rate"
           validators={{
@@ -319,7 +319,7 @@ function BranchForm({ branch, onSuccess }: BranchFormProps) {
       </div>
 
       {/* Currency + Timezone */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="form-grid-mobile form-grid-mobile-2">
         <form.AppField name="currency">
           {(field) => (
             <field.SelectField
@@ -352,11 +352,11 @@ function BranchForm({ branch, onSuccess }: BranchFormProps) {
       )}
 
       {/* Submit */}
-      <div className="flex justify-end pt-2">
+      <div className="flex pt-2 sm:justify-end">
         <form.AppForm>
           <form.SubscribeButton
             label={isEdit ? 'Save Changes' : 'Create Branch'}
-            className="w-auto min-w-[130px]"
+            className="w-full min-w-[130px] sm:w-auto"
           />
         </form.AppForm>
       </div>

@@ -32,6 +32,7 @@ export function getInventoryColumns({
   return [
     {
       accessorKey: 'name',
+      meta: { mobileTitle: true, mobileLabel: 'Ingredient' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Ingredient" />
       ),
@@ -49,6 +50,7 @@ export function getInventoryColumns({
     },
     {
       accessorKey: 'branch_name',
+      meta: { mobileOrder: 3, mobileLabel: 'Branch' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Branch" />
       ),
@@ -58,6 +60,7 @@ export function getInventoryColumns({
     },
     {
       accessorKey: 'stock_quantity',
+      meta: { mobileOrder: 1, mobileLabel: 'Stock' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Stock Qty" />
       ),
@@ -92,6 +95,7 @@ export function getInventoryColumns({
     },
     {
       id: 'stock_status',
+      meta: { mobileOrder: 2, mobileLabel: 'Status' },
       header: 'Status',
       cell: ({ row }) => {
         const { is_low_stock } = row.original
@@ -109,6 +113,7 @@ export function getInventoryColumns({
     },
     {
       accessorKey: 'updated_at',
+      meta: { mobileHidden: true },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Last Updated" />
       ),

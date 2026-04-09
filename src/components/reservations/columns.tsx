@@ -47,6 +47,7 @@ export function getReservationColumns({
   return [
     {
       accessorKey: 'customer_name',
+      meta: { mobileTitle: true, mobileLabel: 'Customer' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Customer" />
       ),
@@ -71,6 +72,7 @@ export function getReservationColumns({
     },
     {
       accessorKey: 'branch_name',
+      meta: { mobileOrder: 2, mobileLabel: 'Branch' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Branch" />
       ),
@@ -98,6 +100,7 @@ export function getReservationColumns({
     },
     {
       accessorKey: 'guest_count',
+      meta: { mobileOrder: 3, mobileLabel: 'Guests' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Guests" />
       ),
@@ -107,6 +110,7 @@ export function getReservationColumns({
     },
     {
       accessorKey: 'reservation_datetime',
+      meta: { mobileOrder: 1, mobileLabel: 'When' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Date & Time" />
       ),
@@ -118,6 +122,7 @@ export function getReservationColumns({
     },
     {
       accessorKey: 'duration_minutes',
+      meta: { mobileHidden: true },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Duration" />
       ),

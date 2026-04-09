@@ -23,6 +23,7 @@ export function getMenuItemColumns({
   return [
     {
       id: 'image',
+      meta: { mobileHidden: true },
       header: '',
       cell: ({ row }) =>
         row.original.image_url ? (
@@ -40,6 +41,7 @@ export function getMenuItemColumns({
     },
     {
       accessorKey: 'name',
+      meta: { mobileTitle: true, mobileLabel: 'Menu Item' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Name" />
       ),
@@ -78,6 +80,7 @@ export function getMenuItemColumns({
     },
     {
       accessorKey: 'category_name',
+      meta: { mobileOrder: 2, mobileLabel: 'Category' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Category" />
       ),
@@ -109,6 +112,7 @@ export function getMenuItemColumns({
     },
     {
       accessorKey: 'price',
+      meta: { mobileOrder: 1, mobileLabel: 'Price' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Price" />
       ),
@@ -134,6 +138,7 @@ export function getMenuItemColumns({
     },
     {
       id: 'is_available',
+      meta: { mobileOrder: 3, mobileLabel: 'Available' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Available" />
       ),

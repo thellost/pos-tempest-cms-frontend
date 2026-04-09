@@ -42,6 +42,7 @@ export function getUserColumns({
     {
       id: 'user',
       accessorKey: 'name',
+      meta: { mobileTitle: true, mobileLabel: 'User' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="User" />
       ),
@@ -82,6 +83,7 @@ export function getUserColumns({
     },
     {
       accessorKey: 'role_name',
+      meta: { mobileOrder: 1, mobileLabel: 'Role' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Role" />
       ),
@@ -109,6 +111,7 @@ export function getUserColumns({
     },
     {
       accessorKey: 'is_active',
+      meta: { mobileOrder: 2, mobileLabel: 'Status' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Status" />
       ),
@@ -118,6 +121,7 @@ export function getUserColumns({
     },
     {
       accessorKey: 'last_login_at',
+      meta: { mobileOrder: 3, mobileLabel: 'Last Login' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Last Login" />
       ),

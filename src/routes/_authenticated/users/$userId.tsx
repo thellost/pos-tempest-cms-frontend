@@ -179,7 +179,7 @@ function EditUserForm({
       {/* Email — read-only */}
       <div className="flex flex-col gap-1.5">
         <label className="text-sm font-medium">Email</label>
-        <div className="flex h-9 items-center rounded-md border border-input bg-muted px-3 text-sm text-muted-foreground">
+        <div className="touch-target flex h-11 items-center rounded-md border border-input bg-muted px-3 text-sm text-muted-foreground">
           {email}
         </div>
         <p className="text-xs text-muted-foreground">
@@ -209,7 +209,7 @@ function EditUserForm({
       </form.AppField>
 
       {/* Role + Branch */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="form-grid-mobile form-grid-mobile-2">
         <form.AppField
           name="role_id"
           validators={{

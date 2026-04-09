@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabase'
+import * as Sentry from '@sentry/tanstackstart-react'
 
 // ─── Envelope types ───────────────────────────────────────────────────────────
 
@@ -67,7 +68,7 @@ class ApiClient {
   private baseUrl: string
 
   constructor() {
-    this.baseUrl = import.meta.env.asd ?? 'http://localhost:8080'
+    this.baseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
   }
 
   // ── Auth header ─────────────────────────────────────────────────────────────
@@ -92,50 +93,96 @@ class ApiClient {
     const headers = await this.getHeaders()
     const url = `${this.baseUrl}${path}`
 
-    const response = await fetch(url, {
-      method,
-      headers,
-      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
-    })
+    return Sentry.startSpan(
+      {
+        op: 'http.client',
+        name: `${method} ${path}`,
+        attributes: {
+          'http.request.method': method,
+          'url.full': url,
+          'url.path': path,
+          'server.address': this.baseUrl,
+        },
+      },
+      async (span) => {
+        const t0 = performance.now()
 
-    // ── 401 → sign out and redirect to login ────────────────────────────────
-    if (response.status === 401) {
-      await supabase.auth.signOut()
-      if (typeof window !== 'undefined') {
-        window.location.href = '/login'
-      }
-      throw new ApiError('Unauthorized', 'UNAUTHORIZED', 401)
-    }
+        const response = await fetch(url, {
+          method,
+          headers,
+          ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+        })
 
-    let envelope: ApiEnvelope<T>
+        const durationMs = Math.round(performance.now() - t0)
 
-    try {
-      envelope = (await response.json()) as ApiEnvelope<T>
-    } catch {
-      throw new ApiError(
-        `Failed to parse response from ${method} ${path}`,
-        'PARSE_ERROR',
-        response.status,
-      )
-    }
+        span.setAttributes({
+          'http.response.status_code': response.status,
+          'http.response_time_ms': durationMs,
+        })
 
-    if (!response.ok || !envelope.success) {
-      const errPayload = envelope.error
-      const message =
-        typeof errPayload === 'object' && errPayload !== null
-          ? errPayload.message
-          : (errPayload ?? `Request failed: ${method} ${path}`)
-      const code =
-        typeof errPayload === 'object' && errPayload !== null
-          ? errPayload.code
-          : 'API_ERROR'
-      throw new ApiError(message, code, response.status)
-    }
+        Sentry.addBreadcrumb({
+          category: 'http',
+          message: `${method} ${path}`,
+          level: response.ok ? 'info' : 'warning',
+          data: {
+            url,
+            method,
+            status_code: response.status,
+            duration_ms: durationMs,
+          },
+        })
 
-    return {
-      data: envelope.data as T,
-      meta: envelope.meta,
-    }
+        // ── 401 → sign out and redirect to login ────────────────────────────
+        if (response.status === 401) {
+          span.setStatus({ code: 2, message: 'unauthenticated' })
+          Sentry.addBreadcrumb({
+            category: 'auth',
+            message: 'Session expired — auto signed out',
+            level: 'warning',
+            data: { endpoint: path },
+          })
+          await supabase.auth.signOut()
+          if (typeof window !== 'undefined') {
+            window.location.href = '/login'
+          }
+          throw new ApiError('Unauthorized', 'UNAUTHORIZED', 401)
+        }
+
+        let envelope: ApiEnvelope<T>
+
+        try {
+          envelope = (await response.json()) as ApiEnvelope<T>
+        } catch {
+          span.setStatus({ code: 2, message: 'parse_error' })
+          throw new ApiError(
+            `Failed to parse response from ${method} ${path}`,
+            'PARSE_ERROR',
+            response.status,
+          )
+        }
+
+        if (!response.ok || !envelope.success) {
+          const errPayload = envelope.error
+          const message =
+            typeof errPayload === 'object' && errPayload !== null
+              ? errPayload.message
+              : (errPayload ?? `Request failed: ${method} ${path}`)
+          const code =
+            typeof errPayload === 'object' && errPayload !== null
+              ? errPayload.code
+              : 'API_ERROR'
+
+          span.setStatus({ code: 2, message: code.toLowerCase() })
+
+          throw new ApiError(message, code, response.status)
+        }
+
+        return {
+          data: envelope.data as T,
+          meta: envelope.meta,
+        }
+      },
+    )
   }
 
   // ── Public methods ──────────────────────────────────────────────────────────

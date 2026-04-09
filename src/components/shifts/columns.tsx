@@ -47,6 +47,7 @@ export function getShiftColumns({
   return [
     {
       accessorKey: 'id',
+      meta: { mobileTitle: true, mobileLabel: 'Shift' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="ID" />
       ),
@@ -58,6 +59,7 @@ export function getShiftColumns({
     },
     {
       accessorKey: 'user_name',
+      meta: { mobileOrder: 1, mobileLabel: 'User' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="User" />
       ),
@@ -87,6 +89,7 @@ export function getShiftColumns({
     },
     {
       accessorKey: 'status',
+      meta: { mobileOrder: 2, mobileLabel: 'Status' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Status" />
       ),
@@ -142,6 +145,7 @@ export function getShiftColumns({
     },
     {
       accessorKey: 'opened_at',
+      meta: { mobileOrder: 3, mobileLabel: 'Opened' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Opened At" />
       ),

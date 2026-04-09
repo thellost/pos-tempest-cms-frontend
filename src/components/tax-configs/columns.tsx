@@ -20,6 +20,7 @@ export function getTaxConfigColumns({
   return [
     {
       accessorKey: 'name',
+      meta: { mobileTitle: true, mobileLabel: 'Branch' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Branch" />
       ),
@@ -29,6 +30,7 @@ export function getTaxConfigColumns({
     },
     {
       accessorKey: 'tax_rate',
+      meta: { mobileOrder: 1, mobileLabel: 'Tax' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Tax Rate" />
       ),
@@ -44,6 +46,7 @@ export function getTaxConfigColumns({
     },
     {
       accessorKey: 'service_charge_rate',
+      meta: { mobileOrder: 2, mobileLabel: 'Service' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Service Charge" />
       ),
@@ -68,6 +71,7 @@ export function getTaxConfigColumns({
     },
     {
       accessorKey: 'is_active',
+      meta: { mobileOrder: 3, mobileLabel: 'Status' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Status" />
       ),

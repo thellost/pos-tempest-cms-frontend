@@ -20,6 +20,7 @@ export function getModifierGroupColumns({
   return [
     {
       accessorKey: 'name',
+      meta: { mobileTitle: true, mobileLabel: 'Modifier Group' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Name" />
       ),
@@ -40,6 +41,7 @@ export function getModifierGroupColumns({
     },
     {
       accessorKey: 'is_required',
+      meta: { mobileOrder: 1, mobileLabel: 'Required' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Required" />
       ),
@@ -56,6 +58,7 @@ export function getModifierGroupColumns({
     },
     {
       id: 'selections',
+      meta: { mobileOrder: 2, mobileLabel: 'Selections' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Selections" />
       ),
@@ -81,6 +84,7 @@ export function getModifierGroupColumns({
     },
     {
       accessorKey: 'is_active',
+      meta: { mobileOrder: 3, mobileLabel: 'Status' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Status" />
       ),

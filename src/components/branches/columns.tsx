@@ -20,6 +20,7 @@ export function getBranchColumns({
   return [
     {
       accessorKey: 'name',
+      meta: { mobileTitle: true, mobileLabel: 'Branch' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Name" />
       ),
@@ -29,6 +30,7 @@ export function getBranchColumns({
     },
     {
       accessorKey: 'address',
+      meta: { mobileHidden: true },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Address" />
       ),
@@ -48,6 +50,7 @@ export function getBranchColumns({
     },
     {
       accessorKey: 'phone',
+      meta: { mobileOrder: 1, mobileLabel: 'Phone' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Phone" />
       ),
@@ -69,6 +72,7 @@ export function getBranchColumns({
     },
     {
       accessorKey: 'currency',
+      meta: { mobileOrder: 2, mobileLabel: 'Currency' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Currency" />
       ),
@@ -86,6 +90,7 @@ export function getBranchColumns({
     },
     {
       accessorKey: 'is_active',
+      meta: { mobileOrder: 3, mobileLabel: 'Status' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Status" />
       ),

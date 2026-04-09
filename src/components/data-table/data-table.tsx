@@ -16,7 +16,9 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { useIsMobile } from '@/hooks/use-mobile'
 import type { PaginationMeta } from '@/lib/api-client'
+import { DataTableMobileList } from './data-table-mobile-list'
 import { DataTablePagination } from './data-table-pagination'
 import { DataTableSkeleton } from './data-table-skeleton'
 import { DataTableToolbar } from './data-table-toolbar'
@@ -107,6 +109,8 @@ export function DataTable<TData, TValue>({
   initialColumnVisibility,
   onRowClick,
 }: DataTableProps<TData, TValue>) {
+  const isMobile = useIsMobile()
+
   // Local state for sorting (used when caller doesn't provide server-side sorting)
   const [localSorting, setLocalSorting] = useState<SortingState>([])
   const [columnVisibility, setColumnVisibility] = useState<Record<string, boolean>>(initialColumnVisibility ?? {})
@@ -180,7 +184,15 @@ export function DataTable<TData, TValue>({
 
       {/* ── Table ── */}
       <div className="rounded-md border">
-        {isLoading ? (
+        {isMobile ? (
+          <DataTableMobileList
+            table={table}
+            isLoading={isLoading}
+            rowCount={pagination.pageSize}
+            emptyMessage={emptyMessage}
+            onRowClick={onRowClick}
+          />
+        ) : isLoading ? (
           <DataTableSkeleton
             columnCount={columns.length}
             rowCount={pagination.pageSize}

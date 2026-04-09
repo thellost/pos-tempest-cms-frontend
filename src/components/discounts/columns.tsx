@@ -43,6 +43,7 @@ export function getDiscountColumns({
   return [
     {
       accessorKey: 'name',
+      meta: { mobileTitle: true, mobileLabel: 'Discount' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Name" />
       ),
@@ -62,6 +63,7 @@ export function getDiscountColumns({
     },
     {
       accessorKey: 'discount_type',
+      meta: { mobileOrder: 1, mobileLabel: 'Type' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Type" />
       ),
@@ -83,6 +85,7 @@ export function getDiscountColumns({
     },
     {
       accessorKey: 'value',
+      meta: { mobileOrder: 2, mobileLabel: 'Value' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Value" />
       ),
@@ -148,6 +151,7 @@ export function getDiscountColumns({
     },
     {
       accessorKey: 'is_active',
+      meta: { mobileOrder: 3, mobileLabel: 'Status' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Status" />
       ),

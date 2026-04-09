@@ -1,7 +1,9 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import * as Sentry from '@sentry/tanstackstart-react'
 import {
   usersService,
+  type CreateUserPayload,
   type UpdateUserPayload,
   type User,
 } from '@/lib/services/users'
@@ -31,11 +33,45 @@ export function useCreateUser() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: usersService.create,
-    onSuccess: () => {
+    onMutate: (payload: CreateUserPayload) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'createUser started',
+        level: 'info',
+        data: {
+          email: payload.email,
+          roleId: payload.role_id,
+          branchId: payload.branch_id,
+        },
+      })
+    },
+    onSuccess: (result) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'createUser succeeded',
+        level: 'info',
+        data: {
+          userId: result.data.id,
+          email: result.data.email,
+        },
+      })
       queryClient.invalidateQueries({ queryKey: queryKeys.users.all })
       toast.success('User created successfully')
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error, payload) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'createUser failed',
+        level: 'error',
+        data: {
+          error: err.message,
+          email: payload.email,
+          roleId: payload.role_id,
+          branchId: payload.branch_id,
+        },
+      })
+      toast.error(err.message)
+    },
   })
 }
 
@@ -49,12 +85,42 @@ export function useUpdateUser() {
       id: number
       payload: UpdateUserPayload
     }) => usersService.update(id, payload),
+    onMutate: ({ id, payload }) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'updateUser started',
+        level: 'info',
+        data: {
+          userId: id,
+          roleId: payload.role_id,
+          branchId: payload.branch_id,
+          isActive: payload.is_active,
+        },
+      })
+    },
     onSuccess: (_, { id }) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'updateUser succeeded',
+        level: 'info',
+        data: { userId: id },
+      })
       queryClient.invalidateQueries({ queryKey: queryKeys.users.all })
       queryClient.invalidateQueries({ queryKey: queryKeys.users.detail(id) })
       toast.success('User updated successfully')
     },
-    onError: (err: Error) => toast.error(err.message),
+    onError: (err: Error, { id }) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'updateUser failed',
+        level: 'error',
+        data: {
+          userId: id,
+          error: err.message,
+        },
+      })
+      toast.error(err.message)
+    },
   })
 }
 

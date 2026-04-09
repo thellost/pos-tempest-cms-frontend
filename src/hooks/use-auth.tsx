@@ -10,6 +10,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import type { Session } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { clearAuthBootstrap, getAuthBootstrap } from '@/lib/auth-store'
+import * as Sentry from '@sentry/tanstackstart-react'
 
 export interface User {
   id: string
@@ -77,7 +78,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         return
       }
       const json = await response.json()
-      setUser((json.data as User) ?? null)
+      const profile = (json.data as User) ?? null
+      setUser(profile)
     } catch {
       // Network error (backend offline) — keep session alive, just no profile
       setUser(null)
@@ -87,9 +89,47 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   useEffect(() => {
+    if (user) {
+      Sentry.setUser({
+        id: String(user.id),
+        email: user.email,
+        username: user.name,
+      })
+      Sentry.setTag('user.role', user.role_name)
+      Sentry.setTag(
+        'branch.id',
+        user.branch_id !== null ? String(user.branch_id) : 'none',
+      )
+      return
+    }
+
+    Sentry.setUser(null)
+    Sentry.setTag('user.role', 'anonymous')
+    Sentry.setTag('branch.id', 'none')
+  }, [user])
+
+  useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, newSession) => {
+      async (event, newSession) => {
         setSession(newSession)
+
+        if (event === 'SIGNED_IN' && newSession?.user) {
+          Sentry.addBreadcrumb({
+            category: 'auth',
+            message: 'User signed in',
+            level: 'info',
+            data: { userId: newSession.user.id, email: newSession.user.email },
+          })
+        }
+
+        if (event === 'SIGNED_OUT') {
+          Sentry.addBreadcrumb({
+            category: 'auth',
+            message: 'User signed out',
+            level: 'info',
+          })
+        }
+
         await loadUserProfile(newSession)
       },
     )
@@ -115,10 +155,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = useCallback(async (email: string, password: string) => {
     const { error } = await supabase.auth.signInWithPassword({ email, password })
     if (error) throw error
+
+    Sentry.addBreadcrumb({
+      category: 'auth',
+      message: 'Sign in request succeeded',
+      level: 'info',
+      data: { email },
+    })
   }, [])
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut()
+    Sentry.setUser(null)
     clearAuthBootstrap()
     queryClient.removeQueries({ queryKey: ['users', 'me'] })
     setUser(null)

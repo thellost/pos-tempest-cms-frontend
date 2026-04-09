@@ -89,9 +89,7 @@ function OrderDetailSkeleton() {
 
 function OrderDetailPage() {
   const { orderId } = Route.useParams()
-  const id = parseInt(orderId, 10)
-
-  const { data: result, isLoading } = useOrder(id)
+  const { data: result, isLoading } = useOrder(orderId)
   const order = result?.data
 
   if (isLoading) {

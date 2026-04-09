@@ -11,10 +11,10 @@ export function useOrders(filters?: OrderFilters) {
   })
 }
 
-export function useOrder(id: number) {
+export function useOrder(id: string) {
   return useQuery({
     queryKey: queryKeys.orders.detail(id),
     queryFn: () => ordersService.get(id),
-    enabled: id > 0,
+    enabled: !!id,
   })
 }

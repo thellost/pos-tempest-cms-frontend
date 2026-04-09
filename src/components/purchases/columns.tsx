@@ -48,6 +48,7 @@ export function getPurchaseColumns({
   return [
     {
       accessorKey: 'purchase_number',
+      meta: { mobileTitle: true, mobileLabel: 'PO Number' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="PO Number" />
       ),
@@ -59,6 +60,7 @@ export function getPurchaseColumns({
     },
     {
       accessorKey: 'supplier_name',
+      meta: { mobileOrder: 1, mobileLabel: 'Supplier' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Supplier" />
       ),
@@ -108,6 +110,7 @@ export function getPurchaseColumns({
     },
     {
       accessorKey: 'total',
+      meta: { mobileOrder: 3, mobileLabel: 'Total' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Total" />
       ),
@@ -117,6 +120,7 @@ export function getPurchaseColumns({
     },
     {
       accessorKey: 'status',
+      meta: { mobileOrder: 2, mobileLabel: 'Status' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Status" />
       ),

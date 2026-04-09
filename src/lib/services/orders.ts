@@ -69,7 +69,7 @@ export interface OrderDiscount {
 }
 
 export interface Order {
-  id: number
+  id: string
   order_number: string
   branch_id: number
   table_id: number | null
@@ -139,5 +139,5 @@ export const ordersService = {
     )
   },
 
-  get: (id: number) => api.get<Order>(`/api/v1/orders/${id}`),
+  get: (id: string) => api.get<Order>(`/api/v1/orders/${id}`),
 }

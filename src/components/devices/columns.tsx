@@ -47,6 +47,7 @@ export function getDeviceColumns({
   return [
     {
       accessorKey: 'device_name',
+      meta: { mobileTitle: true, mobileLabel: 'Device' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Device Name" />
       ),
@@ -67,6 +68,7 @@ export function getDeviceColumns({
     },
     {
       accessorKey: 'branch_name',
+      meta: { mobileOrder: 1, mobileLabel: 'Branch' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Branch" />
       ),
@@ -77,6 +79,7 @@ export function getDeviceColumns({
     },
     {
       accessorKey: 'status',
+      meta: { mobileOrder: 2, mobileLabel: 'Status' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Status" />
       ),
@@ -124,6 +127,7 @@ export function getDeviceColumns({
     },
     {
       accessorKey: 'last_seen_at',
+      meta: { mobileOrder: 3, mobileLabel: 'Last Seen' },
       header: ({ column }) => (
         <DataTableColumnHeader column={column} title="Last Seen" />
       ),

@@ -163,10 +163,46 @@ Targets:
 
 ## 6) Coding checklist per module
 
-- [ ] Mobile card renderer integrated
-- [ ] Shared table state reused (no duplicate logic)
-- [ ] Touch-safe row action trigger used
-- [ ] Mobile action sheet/drawer wired
-- [ ] Popover/menu no longer closes unexpectedly
-- [ ] Destructive actions still confirmed
-- [ ] Important actions available without horizontal scroll
+### 6.1 Global checklist (reviewed)
+
+- [x] Mobile card renderer integrated
+- [x] Shared table state reused (no duplicate logic)
+- [x] Touch-safe row action trigger used
+- [x] Mobile action sheet/drawer wired
+- [x] Popover/menu close behavior stabilized for row actions
+- [~] Destructive actions still confirmed (module-by-module verification required)
+- [x] Important actions available without horizontal scroll for migrated DataTable modules
+
+### 6.2 Module status (after careful review)
+
+#### Priority 1
+- [x] Orders
+- [x] Reservations
+- [x] Inventory
+- [x] Menu Items
+- [x] Customers
+
+#### Priority 2
+- [x] Purchases
+- [x] Suppliers
+- [x] Shifts
+- [x] Devices
+- [x] Users
+
+#### Priority 3
+- [x] Discounts
+- [x] Tax Configs
+- [x] Branches
+- [ ] Audit Logs (uses custom table, not yet migrated to responsive card/list)
+
+### 6.3 Review fixes applied during Step 6
+
+1. Fixed row-actions component runtime safety:
+	- imported React state/type directly instead of relying on `React` namespace usage.
+2. Fixed purchases table column mapping bug:
+	- moved accidental misplaced `meta` object into the `total` column definition.
+
+### 6.4 Remaining coding task from Step 6
+
+- Migrate Audit Logs custom table to mobile-friendly card/list layout (or create a dedicated responsive variant for audit entries).
+- Perform final destructive-action confirmation sweep for all modules to ensure delete/cancel flows always open confirmation UI on mobile.
