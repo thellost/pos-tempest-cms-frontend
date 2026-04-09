@@ -2801,6 +2801,71 @@ List raw ingredient stock levels with optional filters.
 
 ---
 
+### `GET /api/v1/inventory/:id`
+
+> **Roles:** admin, manager
+
+Get one raw ingredient inventory item by ID.
+
+**Response `200 OK`:** Same object shape as list items.
+
+**Error `404`:** `"inventory not found"`
+
+---
+
+### `PUT /api/v1/inventory/:id`
+
+> **Roles:** admin, manager
+
+Update an inventory item.
+
+**Request Body (all optional):**
+```json
+{
+  "branch_id": 1,
+  "name": "Chicken Thigh",
+  "unit_of_measure": "kg",
+  "description": "Fresh chicken thigh, boneless",
+  "low_stock_threshold": 6.000
+}
+```
+
+| Field | Type | Required | Validation |
+|-------|------|----------|------------|
+| `branch_id` | int | ❌ | must exist |
+| `name` | string | ❌ | max 150 chars |
+| `unit_of_measure` | string | ❌ | `piece`, `kg`, `gram`, `ons`, `liter`, `ml`, `portion` |
+| `description` | string | ❌ | nullable |
+| `low_stock_threshold` | float | ❌ | >= 0 |
+
+**Response `200 OK`:** Returns updated inventory object.
+
+**Error `404`:** `"inventory not found"`
+
+---
+
+### `DELETE /api/v1/inventory/:id`
+
+> **Roles:** admin, manager
+
+Delete an inventory item.
+
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "inventory deleted successfully"
+  }
+}
+```
+
+**Error `404`:** `"inventory not found"`
+
+**Error `409`:** Inventory item is still referenced by other records (e.g. recipe ingredients, purchase items, movement history).
+
+---
+
 ### `GET /api/v1/inventory/low-stock`
 
 > **Roles:** admin, manager
@@ -3195,11 +3260,13 @@ Mark a purchase as received. **Automatically adds all items to inventory.**
 |-------|------|----------|------------|
 | `notes` | string | ❌ | — |
 
-**Side effects:** For each purchase item, the raw ingredient's `stock_quantity` is increased by the purchased quantity and an `inventory_movements` record of type `purchase_in` is created.
+**Side effects:** For each purchase item, the raw ingredient's `stock_quantity` is increased by the purchased quantity and an `inventory_movements` record of type `purchase_in` is created. Both operations are atomic — if either fails, neither is applied for that item.
 
 **Response `200 OK`:** Returns the updated purchase object.
 
 **Error `400`:** `"purchase already received"` or `"purchase is cancelled"`
+
+**Error `500`:** `"failed to receive item (inventory_id=X)"` — inventory adjustment or movement recording failed for a specific item. No stock changes are applied for that item.
 
 ---
 
