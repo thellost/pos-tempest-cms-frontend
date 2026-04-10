@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import {
   CheckIcon,
   ChevronsUpDownIcon,
@@ -6,7 +6,9 @@ import {
   Trash2Icon,
   UtensilsIcon,
 } from 'lucide-react'
-import { useInventory } from '@/hooks/use-inventory'
+import { useInventorySearch } from '@/hooks/use-inventory'
+import { useDebounce } from '@/hooks/use-debounce'
+import type { InventorySearchResult } from '@/lib/services/inventory'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -55,10 +57,18 @@ export function IngredientsFieldArray({
   rows,
   onChange,
 }: IngredientsFieldArrayProps) {
-  const { data: inventoryData, isLoading: inventoryLoading } = useInventory({
-    pageSize: 200,
-  })
-  const inventoryItems = inventoryData?.data ?? []
+  // Shared search state across all pickers — one API call for all rows
+  const [searchQuery, setSearchQuery] = useState('')
+  const debouncedSearch = useDebounce(searchQuery, 300)
+
+  const { data: searchData, isLoading: searchLoading } = useInventorySearch(debouncedSearch)
+  const searchResults: InventorySearchResult[] = searchData?.data ?? []
+
+  // Cache of items ever seen — so selected items still show their label when results change
+  const selectedItemsCache = useRef<Map<number, InventorySearchResult>>(new Map())
+  for (const item of searchResults) {
+    selectedItemsCache.current.set(item.id, item)
+  }
 
   // Track ids that appear more than once for inline duplicate errors
   const idCounts = new Map<number, number>()
@@ -138,8 +148,11 @@ export function IngredientsFieldArray({
                   key={row.key}
                   row={row}
                   index={index}
-                  inventoryItems={inventoryItems}
-                  inventoryLoading={inventoryLoading}
+                  searchResults={searchResults}
+                  searchLoading={searchLoading}
+                  searchQuery={searchQuery}
+                  onSearchQueryChange={setSearchQuery}
+                  selectedItemsCache={selectedItemsCache.current}
                   isDuplicate={isDuplicate}
                   onChangeInventory={(id) =>
                     handleChangeInventory(row.key, id)
@@ -158,19 +171,14 @@ export function IngredientsFieldArray({
 
 // ─── Row Item ─────────────────────────────────────────────────────────────────
 
-interface InventoryItemShape {
-  id: number
-  name: string
-  unit_of_measure: string
-  branch_name: string
-  is_low_stock: boolean
-}
-
 interface IngredientRowItemProps {
   row: IngredientRow
   index: number
-  inventoryItems: InventoryItemShape[]
-  inventoryLoading: boolean
+  searchResults: InventorySearchResult[]
+  searchLoading: boolean
+  searchQuery: string
+  onSearchQueryChange: (q: string) => void
+  selectedItemsCache: Map<number, InventorySearchResult>
   isDuplicate: boolean
   onChangeInventory: (id: number | null) => void
   onChangeQty: (qty: number) => void
@@ -180,15 +188,22 @@ interface IngredientRowItemProps {
 function IngredientRowItem({
   row,
   index,
-  inventoryItems,
-  inventoryLoading,
+  searchResults,
+  searchLoading,
+  searchQuery,
+  onSearchQueryChange,
+  selectedItemsCache,
   isDuplicate,
   onChangeInventory,
   onChangeQty,
   onRemove,
 }: IngredientRowItemProps) {
   const [open, setOpen] = useState(false)
-  const selectedItem = inventoryItems.find((i) => i.id === row.inventory_id)
+
+  // Prefer current results, fall back to cache so already-selected items always show a label
+  const selectedItem =
+    searchResults.find((i) => i.id === row.inventory_id) ??
+    (row.inventory_id !== null ? selectedItemsCache.get(row.inventory_id) : undefined)
 
   return (
     <div className="rounded-lg border bg-card p-3">
@@ -213,61 +228,63 @@ function IngredientRowItem({
                   )}
                 >
                   <span className="truncate">
-                    {inventoryLoading
-                      ? 'Loading…'
-                      : selectedItem
-                        ? `${selectedItem.name} — ${selectedItem.branch_name}`
-                        : 'Select ingredient…'}
+                    {selectedItem
+                      ? `${selectedItem.name} (${selectedItem.unit_of_measure})`
+                      : 'Select ingredient…'}
                   </span>
                   <ChevronsUpDownIcon className="ml-2 size-4 shrink-0 opacity-50" />
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-[360px] p-0" align="start">
-                <Command>
-                  <CommandInput placeholder="Search inventory items…" />
+                <Command shouldFilter={false}>
+                  <CommandInput
+                    placeholder="Type to search ingredients…"
+                    value={searchQuery}
+                    onValueChange={onSearchQueryChange}
+                  />
                   <CommandList>
-                    <CommandEmpty>No items found.</CommandEmpty>
-                    <CommandGroup>
-                      {inventoryItems.map((item) => (
-                        <CommandItem
-                          key={item.id}
-                          value={`${item.name} ${item.branch_name} ${item.unit_of_measure}`}
-                          onSelect={() => {
-                            onChangeInventory(
-                              item.id === row.inventory_id ? null : item.id,
-                            )
-                            setOpen(false)
-                          }}
-                          className="flex flex-col items-start gap-0.5"
-                        >
-                          <div className="flex w-full items-center gap-2">
-                            <CheckIcon
-                              className={cn(
-                                'size-4 shrink-0',
-                                row.inventory_id === item.id
-                                  ? 'opacity-100'
-                                  : 'opacity-0',
-                              )}
-                            />
-                            <div className="min-w-0 flex-1">
-                              <p className="truncate font-medium">
-                                {item.name}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {item.branch_name}
-                                {' · '}
-                                {item.unit_of_measure}
-                                {item.is_low_stock && (
-                                  <span className="ml-1 text-amber-500">
-                                    · Low stock
-                                  </span>
+                    {searchQuery.trim().length === 0 ? (
+                      <CommandEmpty>Type to search ingredients.</CommandEmpty>
+                    ) : searchLoading ? (
+                      <CommandEmpty>Searching…</CommandEmpty>
+                    ) : searchResults.length === 0 ? (
+                      <CommandEmpty>No items found.</CommandEmpty>
+                    ) : (
+                      <CommandGroup>
+                        {searchResults.map((item) => (
+                          <CommandItem
+                            key={item.id}
+                            value={String(item.id)}
+                            onSelect={() => {
+                              onChangeInventory(
+                                item.id === row.inventory_id ? null : item.id,
+                              )
+                              setOpen(false)
+                            }}
+                            className="flex flex-col items-start gap-0.5"
+                          >
+                            <div className="flex w-full items-center gap-2">
+                              <CheckIcon
+                                className={cn(
+                                  'size-4 shrink-0',
+                                  row.inventory_id === item.id
+                                    ? 'opacity-100'
+                                    : 'opacity-0',
                                 )}
-                              </p>
+                              />
+                              <div className="min-w-0 flex-1">
+                                <p className="truncate font-medium">
+                                  {item.name}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {item.unit_of_measure}
+                                </p>
+                              </div>
                             </div>
-                          </div>
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    )}
                   </CommandList>
                 </Command>
               </PopoverContent>

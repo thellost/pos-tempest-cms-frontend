@@ -286,6 +286,7 @@ export const queryKeys = {
     list: (filters?: InventoryFilters) => ['inventory', 'list', filters ?? {}] as const,
     lowStock: (branchId?: number) => ['inventory', 'low-stock', branchId] as const,
     detail: (id: number) => ['inventory', 'detail', id] as const,
+    search: (q: string, branchId?: number) => ['inventory', 'search', q, branchId] as const,
     movements: (inventoryId: number, filters?: InventoryMovementFilters) =>
       ['inventory', 'movements', inventoryId, filters ?? {}] as const,
   },

@@ -2,7 +2,7 @@
 
 > **Base URL:** `http://localhost:8080`
 > **Content-Type:** `application/json`
-> **Total Endpoints:** 96
+> **Total Endpoints:** 97
 
 ---
 
@@ -2749,10 +2749,13 @@ List raw ingredient stock levels with optional filters.
 | `branch_id` | int | Filter by branch |
 | `low_stock_only` | bool | Only items where stock ≤ threshold |
 | `name` | string | Partial name search (case-insensitive) |
+| `search` | string | Alias for `name` — use this for consistency with other list endpoints |
 | `page` | int | Page number |
-| `page_size` | int | Items per page |
+| `page_size` | int | Items per page (max 100) |
 
-> **Changed:** `menu_item_id` filter removed. `name` search filter added.
+> **Note:** `?search=` and `?name=` are interchangeable. Both perform a case-insensitive partial match on the ingredient name across **all** rows in the database — not just the current page. Use these server-side filters instead of filtering client-side.
+
+> **Changed:** `menu_item_id` filter removed. `name` / `search` filter added.
 
 **Response `200 OK`:**
 ```json
@@ -2798,6 +2801,46 @@ List raw ingredient stock levels with optional filters.
 > **Changed fields vs old response:**
 > - ❌ Removed: `menu_item_id`, `menu_item_name`, `menu_item_sku`
 > - ✅ Added: `name`, `unit_of_measure`, `description`, `created_at`
+
+---
+
+### `GET /api/v1/inventory/search`
+
+> **Roles:** admin, manager
+
+Lightweight autocomplete search endpoint for ingredient pickers (e.g. when adding ingredients to a menu item). Returns up to 50 matching inventory items with minimal fields — designed for search-as-you-type dropdowns.
+
+**Query Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `q` | string | ✅ | Search term — partial match on ingredient name (case-insensitive) |
+| `branch_id` | int | ❌ | Filter by branch |
+
+**Response `200 OK`:**
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 5,
+      "branch_id": 1,
+      "name": "Rice",
+      "unit_of_measure": "kg"
+    },
+    {
+      "id": 12,
+      "branch_id": 1,
+      "name": "Jasmine Rice",
+      "unit_of_measure": "kg"
+    }
+  ]
+}
+```
+
+**Error `400`:** `q` parameter is missing or empty.
+
+> **Usage tip:** Call this endpoint as the user types in an ingredient picker. Returns at most 50 results — no pagination needed. To browse the full inventory list with pagination, use `GET /api/v1/inventory`.
 
 ---
 

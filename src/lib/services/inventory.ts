@@ -69,6 +69,13 @@ export interface UpdateThresholdPayload {
   low_stock_threshold: number
 }
 
+export interface InventorySearchResult {
+  id: number
+  branch_id: number
+  name: string
+  unit_of_measure: UnitOfMeasure
+}
+
 export interface UpdateInventoryPayload {
   name?: string
   unit_of_measure?: UnitOfMeasure
@@ -111,7 +118,7 @@ export const inventoryService = {
 
   delete: (id: number) => api.delete<void>(`/api/v1/inventory/${id}`),
 
-  listMovements:(
+  listMovements: (
     inventoryId: number,
     filters?: InventoryMovementFilters,
   ) => {
@@ -119,5 +126,11 @@ export const inventoryService = {
     return api.get<InventoryMovement[]>(
       `/api/v1/inventory/${inventoryId}/movements${buildQueryParams({}, { page: page ?? 1, pageSize: pageSize ?? 20 })}`,
     )
+  },
+
+  search: (q: string, branchId?: number) => {
+    const params: Record<string, unknown> = { q }
+    if (branchId) params.branch_id = branchId
+    return api.get<InventorySearchResult[]>(`/api/v1/inventory/search?q=${encodeURIComponent(q)}${branchId ? `&branch_id=${branchId}` : ''}`)
   },
 }

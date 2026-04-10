@@ -83,33 +83,19 @@ function InventoryPage() {
   const queryFilters = useMemo(
     () => ({
       branchId: filterBranchId,
+      name: filterValues.search || undefined,
       page,
       pageSize,
     }),
-    [filterBranchId, page, pageSize],
+    [filterBranchId, filterValues.search, page, pageSize],
   )
 
   const { data: allData, isLoading: allLoading } = useInventory(queryFilters)
   const { data: lowStockData, isLoading: lowLoading } =
     useLowStockInventory(undefined)
 
-  // Client-side name filter
-  const searchTerm = filterValues.search?.toLowerCase() ?? ''
-  const filteredAll = useMemo(() => {
-    const rows = allData?.data ?? []
-    if (!searchTerm) return rows
-    return rows.filter((item) =>
-      item.name.toLowerCase().includes(searchTerm),
-    )
-  }, [allData, searchTerm])
-
-  const filteredLowStock = useMemo(() => {
-    const rows = lowStockData?.data ?? []
-    if (!searchTerm) return rows
-    return rows.filter((item) =>
-      item.name.toLowerCase().includes(searchTerm),
-    )
-  }, [lowStockData, searchTerm])
+  const allRows = allData?.data ?? []
+  const lowStockRows = lowStockData?.data ?? []
 
   const columns = useMemo(
     () =>
@@ -162,7 +148,7 @@ function InventoryPage() {
 
   const handleFilterChange = (key: string, value: string) => {
     setFilterValues((prev) => ({ ...prev, [key]: value }))
-    if (key !== 'search') setPage(1)
+    setPage(1)
   }
 
   const handleFilterClear = () => {
@@ -213,7 +199,7 @@ function InventoryPage() {
         <TabsContent value="all" className="mt-4">
           <DataTable
             columns={columns}
-            data={filteredAll}
+            data={allRows}
             meta={allData?.meta}
             isLoading={allLoading}
             pagination={{ page, pageSize }}
@@ -230,7 +216,7 @@ function InventoryPage() {
         <TabsContent value="low_stock" className="mt-4">
           <DataTable
             columns={columns}
-            data={filteredLowStock}
+            data={lowStockRows}
             isLoading={lowLoading}
             pagination={{ page: 1, pageSize: 100 }}
             onPaginationChange={() => {}}

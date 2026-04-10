@@ -246,3 +246,11 @@ export function useDeleteInventory() {
     },
   })
 }
+
+export function useInventorySearch(q: string, branchId?: number) {
+  return useQuery({
+    queryKey: queryKeys.inventory.search(q, branchId),
+    queryFn: () => inventoryService.search(q, branchId),
+    enabled: q.trim().length > 0,
+  })
+}
