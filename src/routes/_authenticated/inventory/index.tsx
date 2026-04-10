@@ -10,8 +10,10 @@ import {
   useAdjustStock,
   useUpdateThreshold,
   useCreateInventory,
+  useUpdateInventory,
+  useDeleteInventory,
 } from '@/hooks/use-inventory'
-import type { InventoryItem, UnitOfMeasure } from '@/lib/services/inventory'
+import type { InventoryItem, UnitOfMeasure, UpdateInventoryPayload } from '@/lib/services/inventory'
 import { getInventoryColumns } from '@/components/inventory/columns'
 import { FilterBar } from '@/components/filter-bar'
 import { PageHeader } from '@/components/page-header'
@@ -26,6 +28,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { requireRole } from '@/lib/auth-guards'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 
 // ─── Route ────────────────────────────────────────────────────────────────────
 
@@ -57,6 +60,10 @@ function InventoryPage() {
   const [adjustOpen, setAdjustOpen] = useState(false)
   const [thresholdTarget, setThresholdTarget] = useState<InventoryItem | null>(null)
   const [thresholdOpen, setThresholdOpen] = useState(false)
+  const [editTarget, setEditTarget] = useState<InventoryItem | null>(null)
+  const [editOpen, setEditOpen] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<InventoryItem | null>(null)
+  const [deleteOpen, setDeleteOpen] = useState(false)
 
   // Branch options for filter
   const { data: branchesData } = useBranches({ pageSize: 100 })
@@ -121,9 +128,19 @@ function InventoryPage() {
             params: { inventoryId: String(item.id) },
           })
         },
+        onEdit: (item) => {
+          setEditTarget(item)
+          setEditOpen(true)
+        },
+        onDelete: (item) => {
+          setDeleteTarget(item)
+          setDeleteOpen(true)
+        },
       }),
     [navigate],
   )
+
+  const deleteMutation = useDeleteInventory()
 
   const filterConfigs = useMemo(
     () => [
@@ -294,6 +311,58 @@ function InventoryPage() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* ── Edit Ingredient Dialog ── */}
+      <Dialog
+        open={editOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            setEditOpen(false)
+            setEditTarget(null)
+          } else {
+            setEditOpen(true)
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Ingredient</DialogTitle>
+          </DialogHeader>
+          {editTarget && (
+            <EditIngredientForm
+              key={editTarget.id}
+              item={editTarget}
+              onSuccess={() => {
+                setEditOpen(false)
+                setEditTarget(null)
+              }}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* ── Delete Ingredient Confirm ── */}
+      <ConfirmDialog
+        title={`Delete "${deleteTarget?.name}"?`}
+        description="This ingredient will be permanently removed from inventory. This action cannot be undone."
+        confirmLabel="Delete"
+        variant="destructive"
+        isLoading={deleteMutation.isPending}
+        open={deleteOpen}
+        onOpenChange={(open) => {
+          if (!open) setDeleteTarget(null)
+          setDeleteOpen(open)
+        }}
+        onConfirm={() => {
+          if (!deleteTarget) return
+          deleteMutation.mutate(deleteTarget.id, {
+            onSuccess: () => {
+              setDeleteOpen(false)
+              setDeleteTarget(null)
+            },
+          })
+        }}
+      />
     </div>
   )
 }
@@ -631,6 +700,105 @@ function ThresholdForm({ item, onSuccess }: ThresholdFormProps) {
             label="Save Threshold"
             className="w-auto min-w-[120px]"
           />
+        </form.AppForm>
+      </div>
+    </form>
+  )
+}
+
+// ─── Edit Ingredient Form ─────────────────────────────────────────────────────
+
+interface EditIngredientFormProps {
+  item: InventoryItem
+  onSuccess: () => void
+}
+
+function EditIngredientForm({ item, onSuccess }: EditIngredientFormProps) {
+  const updateMutation = useUpdateInventory()
+
+  const form = useAppForm({
+    defaultValues: {
+      name: item.name,
+      unit_of_measure: item.unit_of_measure,
+      description: item.description ?? '',
+    },
+    onSubmit: async ({ value }) => {
+      await updateMutation.mutateAsync({
+        id: item.id,
+        payload: {
+          name: value.name.trim(),
+          unit_of_measure: value.unit_of_measure,
+          description: value.description?.trim() || null,
+        } as UpdateInventoryPayload,
+      })
+      onSuccess()
+    },
+  })
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault()
+        e.stopPropagation()
+        form.handleSubmit()
+      }}
+      className="space-y-4"
+    >
+      <div className="rounded-md bg-muted px-4 py-3 text-sm">
+        <p className="text-muted-foreground">
+          Branch: <span className="font-medium text-foreground">{item.branch_name}</span>
+        </p>
+        <p className="text-muted-foreground">
+          Current stock:{' '}
+          <span className="font-medium text-foreground">
+            {item.stock_quantity} {item.unit_of_measure}
+          </span>
+        </p>
+      </div>
+
+      <form.AppField
+        name="name"
+        validators={{
+          onChange: ({ value }) =>
+            !value?.trim() ? 'Name is required' : undefined,
+        }}
+      >
+        {(field) => (
+          <field.TextField
+            label="Ingredient Name *"
+            placeholder="e.g. Chicken Breast"
+          />
+        )}
+      </form.AppField>
+
+      <form.AppField
+        name="unit_of_measure"
+        validators={{
+          onChange: ({ value }) => (!value ? 'Unit is required' : undefined),
+        }}
+      >
+        {(field) => (
+          <field.SelectField
+            label="Unit of Measure *"
+            options={UNIT_OPTIONS}
+            placeholder="Select unit…"
+          />
+        )}
+      </form.AppField>
+
+      <form.AppField name="description">
+        {(field) => (
+          <field.TextareaField
+            label="Description"
+            placeholder="Optional notes about this ingredient"
+            rows={2}
+          />
+        )}
+      </form.AppField>
+
+      <div className="flex justify-end pt-2">
+        <form.AppForm>
+          <form.SubscribeButton label="Save Changes" className="w-auto min-w-[120px]" />
         </form.AppForm>
       </div>
     </form>

@@ -6,6 +6,7 @@ import {
   type CreateInventoryPayload,
   type AdjustStockPayload,
   type UpdateThresholdPayload,
+  type UpdateInventoryPayload,
 } from '@/lib/services/inventory'
 import { queryKeys, type InventoryFilters, type InventoryMovementFilters } from '@/lib/query-keys'
 
@@ -171,6 +172,75 @@ export function useUpdateThreshold() {
           inventoryId: id,
           error: err.message,
         },
+      })
+      toast.error(err.message)
+    },
+  })
+}
+
+export function useUpdateInventory() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id, payload }: { id: number; payload: UpdateInventoryPayload }) =>
+      inventoryService.update(id, payload),
+    onMutate: ({ id, payload }) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'updateInventoryItem started',
+        level: 'info',
+        data: { inventoryId: id, name: payload.name },
+      })
+    },
+    onSuccess: (_, { id }) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'updateInventoryItem succeeded',
+        level: 'info',
+        data: { inventoryId: id },
+      })
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
+      toast.success('Ingredient updated')
+    },
+    onError: (err: Error, { id }) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'updateInventoryItem failed',
+        level: 'error',
+        data: { inventoryId: id, error: err.message },
+      })
+      toast.error(err.message)
+    },
+  })
+}
+
+export function useDeleteInventory() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (id: number) => inventoryService.delete(id),
+    onMutate: (id) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'deleteInventory started',
+        level: 'info',
+        data: { inventoryId: id },
+      })
+    },
+    onSuccess: (_, id) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'deleteInventory succeeded',
+        level: 'info',
+        data: { inventoryId: id },
+      })
+      queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
+      toast.success('Ingredient deleted')
+    },
+    onError: (err: Error, id) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'deleteInventory failed',
+        level: 'error',
+        data: { inventoryId: id, error: err.message },
       })
       toast.error(err.message)
     },

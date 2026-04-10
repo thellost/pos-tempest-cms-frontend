@@ -69,6 +69,12 @@ export interface UpdateThresholdPayload {
   low_stock_threshold: number
 }
 
+export interface UpdateInventoryPayload {
+  name?: string
+  unit_of_measure?: UnitOfMeasure
+  description?: string | null
+}
+
 // ─── Service ──────────────────────────────────────────────────────────────────
 
 export const inventoryService = {
@@ -100,7 +106,12 @@ export const inventoryService = {
   updateThreshold: (id: number, payload: UpdateThresholdPayload) =>
     api.patch<InventoryItem>(`/api/v1/inventory/${id}/threshold`, payload),
 
-  listMovements: (
+  update: (id: number, payload: UpdateInventoryPayload) =>
+    api.put<InventoryItem>(`/api/v1/inventory/${id}`, payload),
+
+  delete: (id: number) => api.delete<void>(`/api/v1/inventory/${id}`),
+
+  listMovements:(
     inventoryId: number,
     filters?: InventoryMovementFilters,
   ) => {

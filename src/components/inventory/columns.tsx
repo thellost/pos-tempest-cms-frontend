@@ -1,5 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { AlertTriangleIcon, HistoryIcon, PencilIcon, SlidersIcon } from 'lucide-react'
+import { AlertTriangleIcon, HistoryIcon, PencilIcon, SlidersIcon, Trash2Icon } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header'
 import { DataTableRowActions } from '@/components/data-table/data-table-row-actions'
@@ -20,6 +20,8 @@ interface GetInventoryColumnsOptions {
   onAdjust: (item: InventoryItem) => void
   onEditThreshold: (item: InventoryItem) => void
   onViewMovements: (item: InventoryItem) => void
+  onEdit: (item: InventoryItem) => void
+  onDelete: (item: InventoryItem) => void
 }
 
 // ─── Column definitions ───────────────────────────────────────────────────────
@@ -28,6 +30,8 @@ export function getInventoryColumns({
   onAdjust,
   onEditThreshold,
   onViewMovements,
+  onEdit,
+  onDelete,
 }: GetInventoryColumnsOptions): ColumnDef<InventoryItem>[] {
   return [
     {
@@ -134,6 +138,11 @@ export function getInventoryColumns({
           row={row}
           actions={[
             {
+              label: 'Edit',
+              icon: PencilIcon,
+              onClick: (item) => onEdit(item),
+            },
+            {
               label: 'Adjust Stock',
               icon: SlidersIcon,
               onClick: (item) => onAdjust(item),
@@ -142,6 +151,12 @@ export function getInventoryColumns({
               label: 'Edit Threshold',
               icon: PencilIcon,
               onClick: (item) => onEditThreshold(item),
+            },
+            {
+              label: 'Delete',
+              icon: Trash2Icon,
+              variant: 'destructive',
+              onClick: (item) => onDelete(item),
             },
             {
               label: 'Movement History',
