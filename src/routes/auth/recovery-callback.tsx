@@ -26,12 +26,10 @@ function RecoveryCallbackPage() {
     // createBrowserClient auto-exchanges the PKCE code from the URL.
     // We listen for the resulting auth event instead of calling
     // exchangeCodeForSession manually (which would fail — code already used).
-    console.log('[recovery-callback] URL:', window.location.href)
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log('[recovery-callback] auth event:', event, 'session:', !!session)
       if (
         (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') &&
         session
@@ -42,7 +40,6 @@ function RecoveryCallbackPage() {
 
     // Fallback: session may already exist if the event fired before we subscribed
     supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log('[recovery-callback] getSession fallback, session:', !!session)
       if (session) {
         navigate({ to: '/recovery-password' as string })
       }

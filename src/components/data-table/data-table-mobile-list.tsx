@@ -1,10 +1,16 @@
-import { flexRender, type Column, type Table } from '@tanstack/react-table'
+import { flexRender, type Column, type Row, type Table } from '@tanstack/react-table'
 import { InboxIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 
 interface DataTableMobileListProps<TData> {
   table: Table<TData>
+  /**
+   * Pre-computed rows from the parent's render scope.
+   * Passing these explicitly ensures React detects data changes
+   * even when the `table` object reference stays the same.
+   */
+  rows?: Row<TData>[]
   isLoading?: boolean
   rowCount?: number
   emptyMessage?: string
@@ -43,6 +49,7 @@ function getMobileMeta(column: Column<unknown, unknown>): MobileColumnMeta | nul
 
 export function DataTableMobileList<TData>({
   table,
+  rows: propRows,
   isLoading = false,
   rowCount = 10,
   emptyMessage = 'No results found.',
@@ -68,7 +75,7 @@ export function DataTableMobileList<TData>({
     )
   }
 
-  const rows = table.getRowModel().rows
+  const rows = propRows ?? table.getRowModel().rows
 
   if (rows.length === 0) {
     return (

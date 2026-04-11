@@ -175,13 +175,13 @@ function TablesPage() {
       />
 
       {/* Branch selector */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <Label className="shrink-0 text-sm font-medium">Branch</Label>
         <Select
           value={selectedBranchId}
           onValueChange={setSelectedBranchId}
         >
-          <SelectTrigger className="w-[220px]">
+          <SelectTrigger className="w-full sm:w-[220px]">
             <SelectValue placeholder="Select a branch" />
           </SelectTrigger>
           <SelectContent>
@@ -439,7 +439,7 @@ function TableCard({
   return (
     <div
       className={cn(
-        'group relative flex flex-col gap-2 rounded-xl border-2 p-4 transition-all',
+        'relative flex flex-col gap-2 rounded-xl border-2 p-4 transition-all',
         config.cardClass,
       )}
     >
@@ -486,8 +486,8 @@ function TableCard({
         </Select>
       )}
 
-      {/* Actions (shown on hover) */}
-      <div className="flex gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+      {/* Actions — always visible for touch devices */}
+      <div className="flex gap-1">
         <Button
           size="sm"
           variant="outline"
@@ -501,9 +501,7 @@ function TableCard({
           variant="outline"
           className="h-7 flex-1 px-2 text-xs text-destructive hover:bg-destructive/10"
           onClick={onDelete}
-          disabled={
-            table.status === 'occupied' || table.status === 'reserved'
-          }
+          disabled={table.status === 'occupied' || table.status === 'reserved'}
         >
           <Trash2Icon className="size-3" />
         </Button>

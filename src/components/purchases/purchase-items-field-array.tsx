@@ -142,29 +142,33 @@ export function PurchaseItemsFieldArray({
           </div>
         ) : (
           <div className="space-y-3">
-            {/* Column headers */}
-            <div className="grid grid-cols-[1fr_80px_100px_120px_100px_36px] items-center gap-2 px-0.5 text-xs font-medium text-muted-foreground">
-              <span>Ingredient</span>
-              <span>Qty</span>
-              <span>Unit</span>
-              <span>Cost / Unit</span>
-              <span>Subtotal</span>
-              <span />
-            </div>
+            <div className="overflow-x-auto">
+              <div className="min-w-[500px] space-y-2">
+                {/* Column headers */}
+                <div className="grid grid-cols-[1fr_80px_100px_120px_100px_36px] items-center gap-2 px-0.5 text-xs font-medium text-muted-foreground">
+                  <span>Ingredient</span>
+                  <span>Qty</span>
+                  <span>Unit</span>
+                  <span>Cost / Unit</span>
+                  <span>Subtotal</span>
+                  <span />
+                </div>
 
-            {rows.map((row) => {
-              const rowSubtotal = row.quantity * row.cost_per_unit
-              return (
-                <PurchaseItemRowView
-                  key={row.key}
-                  row={row}
-                  inventoryItems={inventoryItems}
-                  rowSubtotal={rowSubtotal}
-                  onUpdate={(patch) => handleUpdate(row.key, patch)}
-                  onRemove={() => handleRemove(row.key)}
-                />
-              )
-            })}
+                {rows.map((row) => {
+                  const rowSubtotal = row.quantity * row.cost_per_unit
+                  return (
+                    <PurchaseItemRowView
+                      key={row.key}
+                      row={row}
+                      inventoryItems={inventoryItems}
+                      rowSubtotal={rowSubtotal}
+                      onUpdate={(patch) => handleUpdate(row.key, patch)}
+                      onRemove={() => handleRemove(row.key)}
+                    />
+                  )
+                })}
+              </div>
+            </div>
 
             {/* Totals footer */}
             <div className="mt-2 flex justify-end border-t pt-3">

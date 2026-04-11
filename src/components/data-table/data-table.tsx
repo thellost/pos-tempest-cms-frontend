@@ -187,6 +187,7 @@ export function DataTable<TData, TValue>({
         {isMobile ? (
           <DataTableMobileList
             table={table}
+            rows={table.getRowModel().rows}
             isLoading={isLoading}
             rowCount={pagination.pageSize}
             emptyMessage={emptyMessage}

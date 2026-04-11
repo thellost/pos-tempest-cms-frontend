@@ -358,11 +358,11 @@ function ReservationsPage() {
         onClear={handleClearFilters}
       >
         {viewMode === 'list' && (
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <Label className="text-xs text-muted-foreground whitespace-nowrap">From</Label>
             <Input
               type="date"
-              className="h-9 w-[140px] text-sm"
+              className="h-9 w-full min-w-[120px] text-sm"
               value={dateFrom}
               onChange={(e) => {
                 setDateFrom(e.target.value)
@@ -372,7 +372,7 @@ function ReservationsPage() {
             <Label className="text-xs text-muted-foreground whitespace-nowrap">To</Label>
             <Input
               type="date"
-              className="h-9 w-[140px] text-sm"
+              className="h-9 w-full min-w-[120px] text-sm"
               value={dateTo}
               onChange={(e) => {
                 setDateTo(e.target.value)
@@ -424,25 +424,28 @@ function ReservationsPage() {
             </button>
           </div>
 
-          {/* Day-of-week headers */}
-          <div className="grid grid-cols-7 border-b">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
-              <div
-                key={d}
-                className="py-2 text-center text-xs font-medium text-muted-foreground"
-              >
-                {d}
+          {/* Scrollable calendar — min-width ensures readable cells on mobile */}
+          <div className="overflow-x-auto">
+            <div className="min-w-[560px]">
+              {/* Day-of-week headers */}
+              <div className="grid grid-cols-7 border-b">
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
+                  <div
+                    key={d}
+                    className="py-2 text-center text-xs font-medium text-muted-foreground"
+                  >
+                    {d}
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
 
-          {/* Calendar grid */}
-          {calendarLoading ? (
-            <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
-              Loading…
-            </div>
-          ) : (
-            <div className="grid grid-cols-7">
+              {/* Calendar grid */}
+              {calendarLoading ? (
+                <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
+                  Loading…
+                </div>
+              ) : (
+                <div className="grid grid-cols-7">
               {calendarDays.map((date, idx) => {
                 if (!date) {
                   return (
@@ -507,6 +510,8 @@ function ReservationsPage() {
               })}
             </div>
           )}
+            </div>
+          </div>
 
           {/* Legend */}
           <div className="flex flex-wrap gap-3 border-t px-4 py-3">

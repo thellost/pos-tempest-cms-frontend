@@ -1,6 +1,8 @@
 import { XIcon } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { useDebounce } from '@/hooks/use-debounce'
 import {
   Select,
   SelectContent,
@@ -28,6 +30,59 @@ export interface SelectFilterConfig {
 }
 
 export type FilterConfig = SearchFilterConfig | SelectFilterConfig
+
+// ─── SearchFilterInput ────────────────────────────────────────────────────────
+
+interface SearchFilterInputProps {
+  filterKey: string
+  placeholder?: string
+  externalValue: string
+  onChange: (key: string, value: string) => void
+}
+
+function SearchFilterInput({
+  filterKey,
+  placeholder,
+  externalValue,
+  onChange,
+}: SearchFilterInputProps) {
+  const [inputValue, setInputValue] = useState(externalValue)
+  const debouncedValue = useDebounce(inputValue, 300)
+
+  // Fire parent onChange only when debounced value settles
+  useEffect(() => {
+    onChange(filterKey, debouncedValue)
+  }, [debouncedValue]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sync back when external value is cleared or changed from outside (e.g. "Clear filters")
+  useEffect(() => {
+    setInputValue(externalValue)
+  }, [externalValue])
+
+  return (
+    <div className="relative min-w-0 w-full sm:min-w-[220px] sm:w-auto sm:flex-1">
+      <Input
+        placeholder={placeholder ?? 'Search…'}
+        value={inputValue}
+        onChange={(e) => setInputValue(e.target.value)}
+        className="h-11 pr-10"
+      />
+      {inputValue && (
+        <button
+          type="button"
+          className="touch-target-icon absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          onClick={() => {
+            setInputValue('')
+            onChange(filterKey, '')
+          }}
+          aria-label="Clear search"
+        >
+          <XIcon className="size-3.5" />
+        </button>
+      )}
+    </div>
+  )
+}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -68,24 +123,13 @@ export function FilterBar({
       {filters.map((filter) => {
         if (filter.type === 'search') {
           return (
-            <div key={filter.key} className="relative min-w-0 w-full sm:min-w-[220px] sm:w-auto sm:flex-1">
-              <Input
-                placeholder={filter.placeholder ?? 'Search…'}
-                value={values[filter.key] ?? ''}
-                onChange={(e) => onChange(filter.key, e.target.value)}
-                className="h-11 pr-10"
-              />
-              {values[filter.key] && (
-                <button
-                  type="button"
-                  className="touch-target-icon absolute right-1 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  onClick={() => onChange(filter.key, '')}
-                  aria-label="Clear search"
-                >
-                  <XIcon className="size-3.5" />
-                </button>
-              )}
-            </div>
+            <SearchFilterInput
+              key={filter.key}
+              filterKey={filter.key}
+              placeholder={filter.placeholder}
+              externalValue={values[filter.key] ?? ''}
+              onChange={onChange}
+            />
           )
         }
 

@@ -254,7 +254,7 @@ function AuditLogsPage() {
                 setDateFrom(e.target.value)
                 setPage(1)
               }}
-              className="h-9 w-40"
+              className="h-9 w-full min-w-[130px]"
             />
           </div>
           <div className="space-y-1.5">
@@ -266,7 +266,7 @@ function AuditLogsPage() {
                 setDateTo(e.target.value)
                 setPage(1)
               }}
-              className="h-9 w-40"
+              className="h-9 w-full min-w-[130px]"
             />
           </div>
           {hasActiveFilters && (
@@ -283,7 +283,7 @@ function AuditLogsPage() {
       </div>
 
       {/* Table */}
-      <div className="rounded-md border">
+      <div className="overflow-x-auto rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>

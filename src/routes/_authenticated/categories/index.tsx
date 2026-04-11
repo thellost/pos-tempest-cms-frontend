@@ -9,6 +9,7 @@ import {
   PencilIcon,
   Trash2Icon,
   FolderPlusIcon,
+  MoreHorizontalIcon,
 } from 'lucide-react'
 import { useAppForm } from '@/hooks/use-form'
 import {
@@ -29,6 +30,13 @@ import { StatusBadge } from '@/components/status-badge'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Button } from '@/components/ui/button'
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import {
   Dialog,
   DialogContent,
   DialogHeader,
@@ -37,6 +45,7 @@ import {
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Badge } from '@/components/ui/badge'
+import { useIsMobile } from '@/hooks/use-mobile'
 import { cn } from '@/lib/utils'
 
 // ─── Route ────────────────────────────────────────────────────────────────────
@@ -236,6 +245,7 @@ function CategoryTreeNode({
   const hasChildren = (node.children ?? []).length > 0
   const isExpanded = expanded.has(node.id)
   const descendantCount = useMemo(() => countDescendants(node), [node])
+  const isMobile = useIsMobile()
 
   return (
     <>
@@ -245,7 +255,7 @@ function CategoryTreeNode({
           depth > 0 && 'bg-muted/20',
           hasChildren && 'cursor-pointer',
         )}
-        style={{ paddingLeft: `${16 + depth * 24}px` }}
+        style={{ paddingLeft: `${16 + depth * (isMobile ? 12 : 20)}px` }}
         onClick={() => hasChildren && onToggle(node.id)}
       >
         {/* Expand / Collapse indicator */}
@@ -300,7 +310,7 @@ function CategoryTreeNode({
             </span>
           )}
           {descendantCount > 0 && (
-            <Badge variant="secondary" className="shrink-0 text-xs">
+            <Badge variant="secondary" className="hidden shrink-0 text-xs sm:inline-flex">
               {descendantCount} sub
             </Badge>
           )}
@@ -312,38 +322,37 @@ function CategoryTreeNode({
         </span>
 
         {/* Status */}
-        <StatusBadge status={node.is_active ? 'active' : 'inactive'} />
-
-        {/* Row actions (visible on hover) */}
-        <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7"
-            title="Add sub-category"
-            onClick={(e) => { e.stopPropagation(); onAddChild(node.id) }}
-          >
-            <FolderPlusIcon className="size-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7"
-            title="Edit"
-            onClick={(e) => { e.stopPropagation(); onEdit(node) }}
-          >
-            <PencilIcon className="size-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7 text-destructive hover:text-destructive"
-            title="Delete"
-            onClick={(e) => { e.stopPropagation(); onDelete(node) }}
-          >
-            <Trash2Icon className="size-3.5" />
-          </Button>
+        <div className="hidden sm:block shrink-0">
+          <StatusBadge status={node.is_active ? 'active' : 'inactive'} />
         </div>
+
+        {/* Row actions — single dropdown works on both hover/desktop and touch/mobile */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+            <Button variant="ghost" size="icon" className="size-7 shrink-0">
+              <MoreHorizontalIcon className="size-4" />
+              <span className="sr-only">Actions</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onAddChild(node.id) }}>
+              <FolderPlusIcon className="mr-2 size-4" />
+              Add sub-category
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(node) }}>
+              <PencilIcon className="mr-2 size-4" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={(e) => { e.stopPropagation(); onDelete(node) }}
+            >
+              <Trash2Icon className="mr-2 size-4" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Children */}

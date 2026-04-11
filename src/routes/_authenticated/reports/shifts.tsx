@@ -668,7 +668,7 @@ function ShiftSelector({ selectedShiftId, onSelect }: ShiftSelectorProps) {
                 onSelect(null)
               }}
             >
-              <SelectTrigger className="w-56">
+              <SelectTrigger className="w-full min-w-[160px]">
                 <SelectValue placeholder="All Branches" />
               </SelectTrigger>
               <SelectContent>
@@ -687,7 +687,7 @@ function ShiftSelector({ selectedShiftId, onSelect }: ShiftSelectorProps) {
             <Label className="text-xs">From</Label>
             <Input
               type="date"
-              className="w-36"
+              className="w-full min-w-[120px]"
               value={dateFrom}
               onChange={(e) => {
                 setDateFrom(e.target.value)
@@ -701,7 +701,7 @@ function ShiftSelector({ selectedShiftId, onSelect }: ShiftSelectorProps) {
             <Label className="text-xs">To</Label>
             <Input
               type="date"
-              className="w-36"
+              className="w-full min-w-[120px]"
               value={dateTo}
               onChange={(e) => {
                 setDateTo(e.target.value)
@@ -711,7 +711,7 @@ function ShiftSelector({ selectedShiftId, onSelect }: ShiftSelectorProps) {
           </div>
 
           {/* Shift select */}
-          <div className="flex flex-col gap-1 min-w-64 flex-1">
+          <div className="flex flex-col gap-1 min-w-[180px] flex-1">
             <Label className="text-xs">Shift</Label>
             <Select
               value={selectedShiftId?.toString() ?? ''}

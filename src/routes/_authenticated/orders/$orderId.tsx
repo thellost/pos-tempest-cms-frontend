@@ -259,7 +259,8 @@ function OrderDetailPage() {
               No items.
             </p>
           ) : (
-            <Table>
+            <div className="overflow-x-auto">
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Item</TableHead>
@@ -323,7 +324,8 @@ function OrderDetailPage() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -339,7 +341,8 @@ function OrderDetailPage() {
               No payment records.
             </p>
           ) : (
-            <Table>
+            <div className="overflow-x-auto">
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Method</TableHead>
@@ -375,7 +378,8 @@ function OrderDetailPage() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>
@@ -391,7 +395,8 @@ function OrderDetailPage() {
               No discounts applied.
             </p>
           ) : (
-            <Table>
+            <div className="overflow-x-auto">
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Discount Name</TableHead>
@@ -431,7 +436,8 @@ function OrderDetailPage() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+              </Table>
+            </div>
           )}
         </CardContent>
       </Card>

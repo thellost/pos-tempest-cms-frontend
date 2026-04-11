@@ -187,11 +187,11 @@ function ShiftsPage() {
         onClear={handleClearFilters}
       >
         {/* Date range inputs */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <Label className="text-xs text-muted-foreground whitespace-nowrap">From</Label>
           <Input
             type="date"
-            className="h-9 w-[140px] text-sm"
+            className="h-9 w-full min-w-[120px] text-sm"
             value={dateFrom}
             onChange={(e) => {
               setDateFrom(e.target.value)
@@ -201,7 +201,7 @@ function ShiftsPage() {
           <Label className="text-xs text-muted-foreground whitespace-nowrap">To</Label>
           <Input
             type="date"
-            className="h-9 w-[140px] text-sm"
+            className="h-9 w-full min-w-[120px] text-sm"
             value={dateTo}
             onChange={(e) => {
               setDateTo(e.target.value)

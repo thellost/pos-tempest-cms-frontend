@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ChevronDownIcon, ChevronUpIcon, SearchIcon } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
@@ -24,6 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Separator } from '@/components/ui/separator'
+import { useDebounce } from '@/hooks/use-debounce'
 import { requireRole } from '@/lib/auth-guards'
 import { cn } from '@/lib/utils'
 
@@ -74,6 +75,7 @@ function OrdersPage() {
 
   // Filters
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebounce(search, 300)
   const [branchId, setBranchId] = useState(
     userBranchId ? String(userBranchId) : '',
   )
@@ -142,7 +144,7 @@ function OrdersPage() {
   // Build query from filter state
   const queryFilters = useMemo(
     () => ({
-      search: search.trim() || undefined,
+      search: debouncedSearch.trim() || undefined,
       branchId: branchId ? parseInt(branchId, 10) : undefined,
       status: (status || undefined) as
         | 'pending'
@@ -170,7 +172,7 @@ function OrdersPage() {
       pageSize,
     }),
     [
-      search,
+      debouncedSearch,
       branchId,
       status,
       paymentStatus,
@@ -187,6 +189,11 @@ function OrdersPage() {
   )
 
   const { data, isLoading } = useOrders(queryFilters)
+
+  // Reset to page 1 when debounced search changes
+  useEffect(() => {
+    setPage(1)
+  }, [debouncedSearch])
 
   const hasActiveFilters = !!(
     search ||
@@ -240,10 +247,7 @@ function OrdersPage() {
           <Input
             placeholder="Search by order number…"
             value={search}
-            onChange={(e) => {
-              setSearch(e.target.value)
-              setPage(1)
-            }}
+            onChange={(e) => setSearch(e.target.value)}
             className="h-9 pl-8"
           />
         </div>

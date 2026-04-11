@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import {
   ChevronRightIcon,
   LayersIcon,
+  MoreHorizontalIcon,
   PencilIcon,
   PlusIcon,
   Trash2Icon,
@@ -38,6 +39,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 
@@ -316,7 +324,7 @@ function ModifierGroupRow({
     <>
       {/* ── Group row ──────────────────────────────────────────────────── */}
       <div
-        className="group flex cursor-pointer items-center gap-2 px-4 py-3 hover:bg-muted/40 transition-colors"
+        className="flex cursor-pointer items-center gap-2 px-4 py-3 hover:bg-muted/40 transition-colors"
         onClick={() => onToggle(group.id)}
       >
         {/* Expand / collapse indicator */}
@@ -370,36 +378,33 @@ function ModifierGroupRow({
         {/* Status */}
         <StatusBadge status={group.is_active ? 'active' : 'inactive'} />
 
-        {/* Row actions (visible on hover) */}
-        <div className="flex shrink-0 items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7"
-            title="Add modifier option"
-            onClick={(e) => { e.stopPropagation(); onAddModifier(group) }}
-          >
-            <PlusIcon className="size-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7"
-            title="Edit group"
-            onClick={(e) => { e.stopPropagation(); onEdit(group) }}
-          >
-            <PencilIcon className="size-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-7 text-destructive hover:text-destructive"
-            title="Delete group"
-            onClick={(e) => { e.stopPropagation(); onDelete(group) }}
-          >
-            <Trash2Icon className="size-3.5" />
-          </Button>
-        </div>
+        {/* Row actions */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild onClick={(e) => e.stopPropagation()}>
+            <Button variant="ghost" size="icon" className="size-7 shrink-0">
+              <MoreHorizontalIcon className="size-4" />
+              <span className="sr-only">Actions</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onAddModifier(group) }}>
+              <PlusIcon className="mr-2 size-4" />
+              Add modifier option
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={(e) => { e.stopPropagation(); onEdit(group) }}>
+              <PencilIcon className="mr-2 size-4" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={(e) => { e.stopPropagation(); onDelete(group) }}
+            >
+              <Trash2Icon className="mr-2 size-4" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* ── Expanded modifiers sub-table ────────────────────────────────── */}
@@ -497,7 +502,7 @@ interface ModifierSubRowProps {
 
 function ModifierSubRow({ modifier, onEdit, onDelete }: ModifierSubRowProps) {
   return (
-    <tr className="group hover:bg-muted/30 transition-colors">
+    <tr className="hover:bg-muted/30 transition-colors">
       <td className="px-3 py-2 font-medium">{modifier.name}</td>
       <td className="px-3 py-2 text-muted-foreground">
         {modifier.extra_price > 0
@@ -509,26 +514,28 @@ function ModifierSubRow({ modifier, onEdit, onDelete }: ModifierSubRowProps) {
         <StatusBadge status={modifier.is_active ? 'active' : 'inactive'} />
       </td>
       <td className="px-3 py-2">
-        <div className="flex justify-end items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-6"
-            title="Edit modifier"
-            onClick={() => onEdit(modifier)}
-          >
-            <PencilIcon className="size-3" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-6 text-destructive hover:text-destructive"
-            title="Delete modifier"
-            onClick={() => onDelete(modifier)}
-          >
-            <Trash2Icon className="size-3" />
-          </Button>
-        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="size-6">
+              <MoreHorizontalIcon className="size-3.5" />
+              <span className="sr-only">Actions</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onEdit(modifier)}>
+              <PencilIcon className="mr-2 size-4" />
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              className="text-destructive focus:text-destructive"
+              onClick={() => onDelete(modifier)}
+            >
+              <Trash2Icon className="mr-2 size-4" />
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </td>
     </tr>
   )

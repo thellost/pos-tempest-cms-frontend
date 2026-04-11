@@ -97,6 +97,7 @@ function InventoryPage() {
   const allRows = allData?.data ?? []
   const lowStockRows = lowStockData?.data ?? []
 
+
   const columns = useMemo(
     () =>
       getInventoryColumns({

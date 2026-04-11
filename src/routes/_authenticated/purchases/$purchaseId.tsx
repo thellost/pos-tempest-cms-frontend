@@ -208,7 +208,8 @@ function PurchaseDetailPage() {
         </CardHeader>
         <CardContent className="p-0">
           {po.items && po.items.length > 0 ? (
-            <Table>
+            <div className="overflow-x-auto">
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Ingredient</TableHead>
@@ -239,7 +240,8 @@ function PurchaseDetailPage() {
                   </TableRow>
                 ))}
               </TableBody>
-            </Table>
+              </Table>
+            </div>
           ) : (
             <div className="py-10 text-center text-sm text-muted-foreground">
               No items on this purchase order.

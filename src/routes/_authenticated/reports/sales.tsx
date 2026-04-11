@@ -617,13 +617,13 @@ function SalesReportPage() {
       <Card>
         <CardContent className="flex flex-wrap items-end gap-4 pt-4">
           {/* Branch */}
-          <div className="flex flex-col gap-1.5 min-w-40">
+          <div className="flex flex-col gap-1.5 min-w-[160px]">
             <label className="text-xs font-medium text-muted-foreground">Branch</label>
             <Select
               value={branchId ? String(branchId) : 'all'}
               onValueChange={(v) => setBranchId(v === 'all' ? undefined : Number(v))}
             >
-              <SelectTrigger className="w-56">
+              <SelectTrigger className="w-full min-w-[140px]">
                 <SelectValue placeholder="All branches" />
               </SelectTrigger>
               <SelectContent>
