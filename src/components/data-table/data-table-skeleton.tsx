@@ -30,7 +30,8 @@ export function DataTableSkeleton({
   withActions = false,
 }: DataTableSkeletonProps) {
   return (
-    <Table>
+    <div className="overflow-x-auto">
+      <Table>
       <TableHeader>
         <TableRow>
           {withCheckbox && (
@@ -82,5 +83,6 @@ export function DataTableSkeleton({
         ))}
       </TableBody>
     </Table>
+    </div>
   )
 }

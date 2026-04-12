@@ -5,7 +5,7 @@ import { Separator } from '@/components/ui/separator'
 
 function SidebarSkeleton() {
   return (
-    <aside className="flex h-screen w-64 shrink-0 flex-col border-r bg-sidebar">
+    <aside className="hidden md:flex h-screen w-64 shrink-0 flex-col border-r bg-sidebar">
       {/* Header */}
       <div className="flex h-14 items-center border-b px-4">
         <Skeleton className="h-5 w-32" />
@@ -99,31 +99,34 @@ function ContentSkeleton() {
       {/* Table-like block */}
       <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
         {/* Toolbar */}
-        <div className="flex items-center gap-3 border-b px-4 py-3">
-          <Skeleton className="h-8 w-56 rounded-md" />
+        <div className="flex flex-wrap items-center gap-3 border-b px-4 py-3">
+          <Skeleton className="h-8 w-full sm:w-56 rounded-md" />
           <div className="ml-auto flex gap-2">
             <Skeleton className="h-8 w-20 rounded-md" />
             <Skeleton className="h-8 w-20 rounded-md" />
           </div>
         </div>
 
-        {/* Header row */}
-        <div className="flex gap-4 border-b bg-muted/40 px-4 py-2.5">
-          {[32, 40, 28, 36, 24].map((w, i) => (
-            <Skeleton key={i} className={`h-3.5 w-${w} opacity-60`} />
-          ))}
-        </div>
-        {/* Data rows */}
-        {Array.from({ length: 7 }).map((_, ri) => (
-          <div
-            key={ri}
-            className="flex gap-4 border-b px-4 py-3 last:border-0"
-          >
-            {[32, 40, 28, 36, 24].map((w, ci) => (
-              <Skeleton key={ci} className={`h-3.5 w-${w}`} />
+        {/* Scrollable table body */}
+        <div className="overflow-x-auto">
+          {/* Header row */}
+          <div className="flex gap-4 border-b bg-muted/40 px-4 py-2.5 min-w-[360px]">
+            {(['w-32', 'w-40', 'w-28', 'w-36', 'w-24'] as const).map((wCls, i) => (
+              <Skeleton key={i} className={`h-3.5 ${wCls} opacity-60`} />
             ))}
           </div>
-        ))}
+          {/* Data rows */}
+          {Array.from({ length: 7 }).map((_, ri) => (
+            <div
+              key={ri}
+              className="flex gap-4 border-b px-4 py-3 last:border-0 min-w-[360px]"
+            >
+              {(['w-32', 'w-40', 'w-28', 'w-36', 'w-24'] as const).map((wCls, ci) => (
+                <Skeleton key={ci} className={`h-3.5 ${wCls}`} />
+              ))}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
