@@ -64,7 +64,7 @@ export interface Ingredient {
   updated_at: string
   /** Denormalised fields from the inventory/menu-item join */
   inventory_name: string
-  unit_of_measure: string
+  unit_of_measure: UnitOfMeasure
   branch_name: string
   stock_quantity: number
 }

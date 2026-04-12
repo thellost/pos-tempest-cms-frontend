@@ -120,6 +120,11 @@ function EditMenuItemPage() {
               ...createIngredientRow(),
               inventory_id: ing.inventory_id,
               quantity_needed: ing.quantity_needed,
+              selected_inventory: {
+                id: ing.inventory_id,
+                name: ing.inventory_name,
+                unit_of_measure: ing.unit_of_measure,
+              },
             }))}
             modifierGroups={item.modifier_groups ?? []}
             onSuccess={() => navigate({ to: '/menu-items' })}

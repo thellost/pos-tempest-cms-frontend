@@ -6,9 +6,9 @@ import {
   Trash2Icon,
   UtensilsIcon,
 } from 'lucide-react'
+import type { InventorySearchResult } from '@/lib/services/inventory'
 import { useInventorySearch } from '@/hooks/use-inventory'
 import { useDebounce } from '@/hooks/use-debounce'
-import type { InventorySearchResult } from '@/lib/services/inventory'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -30,11 +30,17 @@ import { cn } from '@/lib/utils'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+export type IngredientOption = Pick<
+  InventorySearchResult,
+  'id' | 'name' | 'unit_of_measure' | 'branch_id'
+>
+
 export interface IngredientRow {
   /** Stable React key — not sent to the API */
   key: string
   inventory_id: number | null
   quantity_needed: number
+  selected_inventory?: IngredientOption
 }
 
 function generateKey() {
@@ -66,6 +72,11 @@ export function IngredientsFieldArray({
 
   // Cache of items ever seen — so selected items still show their label when results change
   const selectedItemsCache = useRef<Map<number, InventorySearchResult>>(new Map())
+  for (const row of rows) {
+    if (row.selected_inventory) {
+      selectedItemsCache.current.set(row.selected_inventory.id, row.selected_inventory)
+    }
+  }
   for (const item of searchResults) {
     selectedItemsCache.current.set(item.id, item)
   }
