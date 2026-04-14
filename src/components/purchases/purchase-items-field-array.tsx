@@ -1,6 +1,8 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { CheckIcon, ChevronsUpDownIcon, PlusIcon, Trash2Icon, ShoppingCartIcon } from 'lucide-react'
-import { useInventory } from '@/hooks/use-inventory'
+import { useInventorySearch } from '@/hooks/use-inventory'
+import { useDebounce } from '@/hooks/use-debounce'
+import type { InventorySearchResult } from '@/lib/services/inventory'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -87,8 +89,28 @@ export function PurchaseItemsFieldArray({
   onChange,
   branchId,
 }: PurchaseItemsFieldArrayProps) {
-  const { data: inventoryData } = useInventory({ branchId, pageSize: 200 })
-  const inventoryItems = inventoryData?.data ?? []
+  // Shared search state across all pickers — one API call for all rows
+  const [searchQuery, setSearchQuery] = useState('')
+  const debouncedSearch = useDebounce(searchQuery, 300)
+
+  const { data: searchData, isLoading: searchLoading } = useInventorySearch(debouncedSearch, branchId)
+  const searchResults: InventorySearchResult[] = searchData?.data ?? []
+
+  // Cache of items ever seen — so selected items still show their label when results change
+  const selectedItemsCache = useRef<Map<number, InventorySearchResult>>(new Map())
+  for (const row of rows) {
+    if (row.inventory_id !== null && row.inventory_name) {
+      selectedItemsCache.current.set(row.inventory_id, {
+        id: row.inventory_id,
+        name: row.inventory_name,
+        unit_of_measure: row.unit_of_measure,
+        branch_id: branchId ?? 0,
+      } as InventorySearchResult)
+    }
+  }
+  for (const item of searchResults) {
+    selectedItemsCache.current.set(item.id, item)
+  }
 
   const subtotal = rows.reduce(
     (sum, r) => sum + r.quantity * r.cost_per_unit,
@@ -160,7 +182,11 @@ export function PurchaseItemsFieldArray({
                     <PurchaseItemRowView
                       key={row.key}
                       row={row}
-                      inventoryItems={inventoryItems}
+                      searchResults={searchResults}
+                      searchLoading={searchLoading}
+                      searchQuery={searchQuery}
+                      onSearchQueryChange={setSearchQuery}
+                      selectedItemsCache={selectedItemsCache.current}
                       rowSubtotal={rowSubtotal}
                       onUpdate={(patch) => handleUpdate(row.key, patch)}
                       onRemove={() => handleRemove(row.key)}
@@ -190,7 +216,11 @@ export function PurchaseItemsFieldArray({
 
 interface PurchaseItemRowViewProps {
   row: PurchaseItemRow
-  inventoryItems: { id: number; name: string; unit_of_measure: string }[]
+  searchResults: InventorySearchResult[]
+  searchLoading: boolean
+  searchQuery: string
+  onSearchQueryChange: (q: string) => void
+  selectedItemsCache: Map<number, InventorySearchResult>
   rowSubtotal: number
   onUpdate: (patch: Partial<PurchaseItemRow>) => void
   onRemove: () => void
@@ -198,14 +228,21 @@ interface PurchaseItemRowViewProps {
 
 function PurchaseItemRowView({
   row,
-  inventoryItems,
+  searchResults,
+  searchLoading,
+  searchQuery,
+  onSearchQueryChange,
+  selectedItemsCache,
   rowSubtotal,
   onUpdate,
   onRemove,
 }: PurchaseItemRowViewProps) {
   const [open, setOpen] = useState(false)
 
-  const selectedItem = inventoryItems.find((i) => i.id === row.inventory_id)
+  // Prefer current results, fall back to cache so already-selected items always show a label
+  const selectedItem =
+    searchResults.find((i) => i.id === row.inventory_id) ??
+    (row.inventory_id !== null ? selectedItemsCache.get(row.inventory_id) : undefined)
 
   return (
     <div className="grid grid-cols-[1fr_80px_100px_120px_100px_36px] items-center gap-2">
@@ -228,39 +265,50 @@ function PurchaseItemRowView({
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-[320px] p-0">
-          <Command>
-            <CommandInput placeholder="Search ingredients…" />
+          <Command shouldFilter={false}>
+            <CommandInput
+              placeholder="Type to search ingredients…"
+              value={searchQuery}
+              onValueChange={onSearchQueryChange}
+            />
             <CommandList>
-              <CommandEmpty>No ingredients found.</CommandEmpty>
-              <CommandGroup>
-                {inventoryItems.map((item) => (
-                  <CommandItem
-                    key={item.id}
-                    value={item.name}
-                    onSelect={() => {
-                      onUpdate({
-                        inventory_id: item.id,
-                        inventory_name: item.name,
-                        unit_of_measure: item.unit_of_measure as UnitOfMeasure,
-                      })
-                      setOpen(false)
-                    }}
-                  >
-                    <CheckIcon
-                      className={cn(
-                        'mr-2 size-4',
-                        row.inventory_id === item.id
-                          ? 'opacity-100'
-                          : 'opacity-0',
-                      )}
-                    />
-                    <span>{item.name}</span>
-                    <span className="ml-auto text-xs text-muted-foreground">
-                      {item.unit_of_measure}
-                    </span>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
+              {searchQuery.trim().length === 0 ? (
+                <CommandEmpty>Type to search ingredients.</CommandEmpty>
+              ) : searchLoading ? (
+                <CommandEmpty>Searching…</CommandEmpty>
+              ) : searchResults.length === 0 ? (
+                <CommandEmpty>No ingredients found.</CommandEmpty>
+              ) : (
+                <CommandGroup>
+                  {searchResults.map((item) => (
+                    <CommandItem
+                      key={item.id}
+                      value={String(item.id)}
+                      onSelect={() => {
+                        onUpdate({
+                          inventory_id: item.id,
+                          inventory_name: item.name,
+                          unit_of_measure: item.unit_of_measure as UnitOfMeasure,
+                        })
+                        setOpen(false)
+                      }}
+                    >
+                      <CheckIcon
+                        className={cn(
+                          'mr-2 size-4',
+                          row.inventory_id === item.id
+                            ? 'opacity-100'
+                            : 'opacity-0',
+                        )}
+                      />
+                      <span>{item.name}</span>
+                      <span className="ml-auto text-xs text-muted-foreground">
+                        {item.unit_of_measure}
+                      </span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              )}
             </CommandList>
           </Command>
         </PopoverContent>
