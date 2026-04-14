@@ -46,7 +46,7 @@ import { cn } from '@/lib/utils'
 // ─── Route ────────────────────────────────────────────────────────────────────
 
 export const Route = createFileRoute('/_authenticated/reports/shifts')({
-  beforeLoad: requireRole(['admin', 'manager']),
+  beforeLoad: requireRole(['admin', 'manager', 'cashier']),
   component: ShiftReportPage,
 })
 

@@ -59,7 +59,7 @@ import { cn } from '@/lib/utils'
 // ─── Route ────────────────────────────────────────────────────────────────────
 
 export const Route = createFileRoute('/_authenticated/tables/')({
-  beforeLoad: requireRole(['admin', 'manager']),
+  beforeLoad: requireRole(['admin', 'manager', 'cashier']),
   component: TablesPage,
 })
 

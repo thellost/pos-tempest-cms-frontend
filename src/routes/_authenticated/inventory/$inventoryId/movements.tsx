@@ -13,7 +13,7 @@ import { requireRole } from '@/lib/auth-guards'
 export const Route = createFileRoute(
   '/_authenticated/inventory/$inventoryId/movements',
 )({
-  beforeLoad: requireRole(['admin', 'manager']),
+  beforeLoad: requireRole(['admin', 'manager', 'cashier']),
   component: MovementHistoryPage,
 })
 

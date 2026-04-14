@@ -5,6 +5,7 @@ import {
   CheckCircleIcon,
   XCircleIcon,
   PackageIcon,
+  CreditCardIcon,
 } from 'lucide-react'
 import { usePurchase, useReceivePurchase, useCancelPurchase } from '@/hooks/use-purchases'
 import { useAppForm } from '@/hooks/use-form'
@@ -20,6 +21,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog'
 import {
   Table,
@@ -35,7 +37,7 @@ import { formatIDR } from '@/components/purchases/columns'
 // ─── Route ────────────────────────────────────────────────────────────────────
 
 export const Route = createFileRoute('/_authenticated/purchases/$purchaseId')({
-  beforeLoad: requireRole(['admin', 'manager']),
+  beforeLoad: requireRole(['admin', 'manager', 'cashier']),
   component: PurchaseDetailPage,
 })
 
@@ -82,11 +84,14 @@ function PurchaseDetailPage() {
   // ── Receive form ─────────────────────────────────────────────────────────
 
   const receiveForm = useAppForm({
-    defaultValues: { notes: '' },
+    defaultValues: { paid_amount: 0, notes: '' },
     onSubmit: async ({ value }) => {
       await receiveMutation.mutateAsync({
         id,
-        payload: { notes: value.notes?.trim() || undefined },
+        payload: {
+          paid_amount: Number(value.paid_amount),
+          notes: value.notes?.trim() || undefined,
+        },
       })
       setReceiveDialogOpen(false)
     },
@@ -107,7 +112,16 @@ function PurchaseDetailPage() {
   }
 
   const isOrdered = po.status === 'ordered'
+  const isPartialReceived = po.status === 'partial_received'
+  const canReceive = isOrdered || isPartialReceived
   const isTerminal = po.status === 'received' || po.status === 'cancelled'
+
+  const remaining = po.total - (po.paid_amount ?? 0)
+  const openReceiveDialog = () => {
+    receiveForm.setFieldValue('paid_amount', remaining > 0 ? remaining : po.total)
+    receiveForm.setFieldValue('notes', '')
+    setReceiveDialogOpen(true)
+  }
 
   return (
     <div className="space-y-6">
@@ -122,7 +136,7 @@ function PurchaseDetailPage() {
           title={po.purchase_number}
           description={`${po.supplier_name} · ${po.branch_name}`}
           actions={
-            isOrdered ? (
+            canReceive ? (
               <div className="flex gap-2">
                 <Button
                   variant="outline"
@@ -132,9 +146,18 @@ function PurchaseDetailPage() {
                   <XCircleIcon className="mr-2 size-4" />
                   Cancel PO
                 </Button>
-                <Button onClick={() => setReceiveDialogOpen(true)}>
-                  <CheckCircleIcon className="mr-2 size-4" />
-                  Mark Received
+                <Button onClick={openReceiveDialog}>
+                  {isPartialReceived ? (
+                    <>
+                      <CreditCardIcon className="mr-2 size-4" />
+                      Make Payment
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircleIcon className="mr-2 size-4" />
+                      Mark Received
+                    </>
+                  )}
                 </Button>
               </div>
             ) : null
@@ -194,6 +217,28 @@ function PurchaseDetailPage() {
               label="Total"
               value={<span className="text-base font-bold">{formatIDR(po.total)}</span>}
             />
+            {po.paid_amount !== null && po.paid_amount !== undefined && (
+              <>
+                <InfoRow
+                  label="Paid"
+                  value={
+                    <span className="font-medium text-green-700 dark:text-green-400">
+                      {formatIDR(po.paid_amount)}
+                    </span>
+                  }
+                />
+                {po.status === 'partial_received' && (
+                  <InfoRow
+                    label="Remaining"
+                    value={
+                      <span className="font-semibold text-yellow-700 dark:text-yellow-400">
+                        {formatIDR(po.total - po.paid_amount)}
+                      </span>
+                    }
+                  />
+                )}
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -250,19 +295,19 @@ function PurchaseDetailPage() {
         </CardContent>
       </Card>
 
-      {/* ── Mark Received Dialog ── */}
+      {/* ── Mark Received / Make Payment Dialog ── */}
       <Dialog open={receiveDialogOpen} onOpenChange={setReceiveDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Mark as Received</DialogTitle>
+            <DialogTitle>
+              {isPartialReceived ? 'Make Payment' : 'Mark as Received'}
+            </DialogTitle>
+            <DialogDescription>
+              {isPartialReceived
+                ? `Remaining balance: ${formatIDR(remaining)}. Enter the payment amount below.`
+                : `Record payment for ${po.purchase_number}. Inventory will be updated on the first payment.`}
+            </DialogDescription>
           </DialogHeader>
-          <p className="text-sm text-muted-foreground">
-            This will mark{' '}
-            <span className="font-medium text-foreground">
-              {po.purchase_number}
-            </span>{' '}
-            as received and automatically update inventory for all line items.
-          </p>
           <form
             onSubmit={(e) => {
               e.preventDefault()
@@ -271,6 +316,16 @@ function PurchaseDetailPage() {
             }}
             className="space-y-4 pt-2"
           >
+            <receiveForm.AppField name="paid_amount">
+              {(field) => (
+                <field.NumberField
+                  label="Payment Amount (IDR)"
+                  placeholder="0"
+                  min={1}
+                />
+              )}
+            </receiveForm.AppField>
+
             <receiveForm.AppField name="notes">
               {(field) => (
                 <field.TextareaField
@@ -290,7 +345,9 @@ function PurchaseDetailPage() {
                 Cancel
               </Button>
               <receiveForm.AppForm>
-                <receiveForm.SubscribeButton label="Mark Received" />
+                <receiveForm.SubscribeButton
+                  label={isPartialReceived ? 'Record Payment' : 'Mark Received'}
+                />
               </receiveForm.AppForm>
             </div>
           </form>

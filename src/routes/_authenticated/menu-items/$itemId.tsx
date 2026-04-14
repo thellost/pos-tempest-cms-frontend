@@ -54,7 +54,7 @@ import { Separator } from '@/components/ui/separator'
 // ─── Route ────────────────────────────────────────────────────────────────────
 
 export const Route = createFileRoute('/_authenticated/menu-items/$itemId')({
-  beforeLoad: requireRole(['admin', 'manager']),
+  beforeLoad: requireRole(['admin', 'manager', 'cashier']),
   component: EditMenuItemPage,
 })
 

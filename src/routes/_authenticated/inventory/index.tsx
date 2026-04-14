@@ -33,7 +33,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog'
 // ─── Route ────────────────────────────────────────────────────────────────────
 
 export const Route = createFileRoute('/_authenticated/inventory/')({
-  beforeLoad: requireRole(['admin', 'manager']),
+  beforeLoad: requireRole(['admin', 'manager', 'cashier']),
   component: InventoryPage,
 })
 
@@ -42,7 +42,7 @@ export const Route = createFileRoute('/_authenticated/inventory/')({
 function InventoryPage() {
   const navigate = useNavigate()
   const isMobile = useIsMobile()
-  const { branchId: userBranchId } = useAuth()
+  const { branchId: userBranchId, role } = useAuth()
 
   // Pagination
   const [page, setPage] = useState(1)
@@ -101,6 +101,7 @@ function InventoryPage() {
   const columns = useMemo(
     () =>
       getInventoryColumns({
+        canAdjust: role !== 'cashier',
         onAdjust: (item) => {
           setAdjustTarget(item)
           setAdjustOpen(true)

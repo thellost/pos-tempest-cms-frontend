@@ -32,7 +32,7 @@ import { cn } from '@/lib/utils'
 
 export type IngredientOption = Pick<
   InventorySearchResult,
-  'id' | 'name' | 'unit_of_measure' | 'branch_id'
+  'id' | 'name' | 'unit_of_measure'
 >
 
 export interface IngredientRow {
@@ -71,7 +71,7 @@ export function IngredientsFieldArray({
   const searchResults: InventorySearchResult[] = searchData?.data ?? []
 
   // Cache of items ever seen — so selected items still show their label when results change
-  const selectedItemsCache = useRef<Map<number, InventorySearchResult>>(new Map())
+  const selectedItemsCache = useRef<Map<number, IngredientOption>>(new Map())
   for (const row of rows) {
     if (row.selected_inventory) {
       selectedItemsCache.current.set(row.selected_inventory.id, row.selected_inventory)
@@ -189,7 +189,7 @@ interface IngredientRowItemProps {
   searchLoading: boolean
   searchQuery: string
   onSearchQueryChange: (q: string) => void
-  selectedItemsCache: Map<number, InventorySearchResult>
+  selectedItemsCache: Map<number, IngredientOption>
   isDuplicate: boolean
   onChangeInventory: (id: number | null) => void
   onChangeQty: (qty: number) => void
@@ -210,6 +210,9 @@ function IngredientRowItem({
   onRemove,
 }: IngredientRowItemProps) {
   const [open, setOpen] = useState(false)
+  const [qtyDisplay, setQtyDisplay] = useState<string>(() =>
+    row.quantity_needed === 0 ? '' : String(row.quantity_needed)
+  )
 
   // Prefer current results, fall back to cache so already-selected items always show a label
   const selectedItem =
@@ -313,13 +316,23 @@ function IngredientRowItem({
               Quantity Needed
             </Label>
             <Input
-              type="number"
-              min={0.001}
-              step={0.001}
-              value={row.quantity_needed}
+              type="text"
+              inputMode="decimal"
+              value={qtyDisplay}
               onChange={(e) => {
-                const v = parseFloat(e.target.value)
+                const str = e.target.value
+                if (str !== '' && !/^-?\d*\.?\d*$/.test(str)) return
+                setQtyDisplay(str)
+                const v = parseFloat(str)
                 if (!isNaN(v) && v > 0) onChangeQty(v)
+              }}
+              onBlur={() => {
+                const v = parseFloat(qtyDisplay)
+                if (isNaN(v) || v <= 0) {
+                  setQtyDisplay(String(row.quantity_needed))
+                } else {
+                  setQtyDisplay(String(v))
+                }
               }}
               className="h-9"
               placeholder="e.g. 0.200"

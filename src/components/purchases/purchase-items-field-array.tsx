@@ -238,6 +238,12 @@ function PurchaseItemRowView({
   onRemove,
 }: PurchaseItemRowViewProps) {
   const [open, setOpen] = useState(false)
+  const [qtyDisplay, setQtyDisplay] = useState<string>(() =>
+    row.quantity === 0 ? '' : String(row.quantity)
+  )
+  const [priceDisplay, setPriceDisplay] = useState<string>(() =>
+    row.cost_per_unit === 0 ? '' : String(row.cost_per_unit)
+  )
 
   // Prefer current results, fall back to cache so already-selected items always show a label
   const selectedItem =
@@ -316,14 +322,27 @@ function PurchaseItemRowView({
 
       {/* Quantity */}
       <Input
-        type="number"
+        type="text"
+        inputMode="decimal"
         className="h-9 text-sm"
-        min={0.001}
-        step={0.001}
-        value={row.quantity}
-        onChange={(e) =>
-          onUpdate({ quantity: e.target.value === '' ? 0 : Number(e.target.value) })
-        }
+        value={qtyDisplay}
+        onChange={(e) => {
+          const str = e.target.value
+          if (str !== '' && !/^\d*\.?\d*$/.test(str)) return
+          setQtyDisplay(str)
+          const n = parseFloat(str)
+          if (!isNaN(n)) onUpdate({ quantity: n })
+        }}
+        onBlur={() => {
+          const n = parseFloat(qtyDisplay)
+          if (isNaN(n) || n <= 0) {
+            setQtyDisplay(row.quantity > 0 ? String(row.quantity) : '1')
+            if (row.quantity <= 0) onUpdate({ quantity: 1 })
+          } else {
+            setQtyDisplay(String(n))
+          }
+        }}
+        placeholder="Qty"
       />
 
       {/* Unit of measure */}
@@ -349,17 +368,26 @@ function PurchaseItemRowView({
           Rp
         </span>
         <Input
-          type="number"
+          type="text"
+          inputMode="numeric"
           className="h-9 rounded-l-none text-sm"
-          min={0}
-          step={100}
-          value={row.cost_per_unit}
-          onChange={(e) =>
-            onUpdate({
-              cost_per_unit:
-                e.target.value === '' ? 0 : Number(e.target.value),
-            })
-          }
+          value={priceDisplay}
+          onChange={(e) => {
+            const str = e.target.value
+            if (str !== '' && !/^\d*\.?\d*$/.test(str)) return
+            setPriceDisplay(str)
+            const n = parseFloat(str)
+            if (!isNaN(n)) onUpdate({ cost_per_unit: n })
+          }}
+          onBlur={() => {
+            const n = parseFloat(priceDisplay)
+            if (isNaN(n)) {
+              setPriceDisplay(row.cost_per_unit === 0 ? '' : String(row.cost_per_unit))
+            } else {
+              setPriceDisplay(String(n))
+            }
+          }}
+          placeholder="0"
         />
       </div>
 

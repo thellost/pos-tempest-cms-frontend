@@ -41,6 +41,7 @@ export interface Purchase {
   total: number
   status: PurchaseStatus
   notes: string | null
+  paid_amount: number | null
   ordered_at: string
   received_at: string | null
   created_at: string
@@ -68,6 +69,7 @@ export interface CreatePurchasePayload {
 }
 
 export interface ReceivePurchasePayload {
+  paid_amount: number
   notes?: string
 }
 
@@ -93,8 +95,8 @@ export const purchasesService = {
   create: (payload: CreatePurchasePayload) =>
     api.post<Purchase>('/api/v1/purchases', payload),
 
-  receive: (id: number, payload?: ReceivePurchasePayload) =>
-    api.post<Purchase>(`/api/v1/purchases/${id}/receive`, payload ?? {}),
+  receive: (id: number, payload: ReceivePurchasePayload) =>
+    api.post<Purchase>(`/api/v1/purchases/${id}/receive`, payload),
 
   cancel: (id: number) =>
     api.patch<Purchase>(`/api/v1/purchases/${id}/cancel`, {}),

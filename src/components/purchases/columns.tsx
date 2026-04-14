@@ -138,6 +138,8 @@ export function getPurchaseColumns({
       cell: ({ row }) => {
         const po = row.original
         const isOrdered = po.status === 'ordered'
+        const isPartialReceived = po.status === 'partial_received'
+        const canReceive = isOrdered || isPartialReceived
         return (
           <DataTableRowActions
             row={row}
@@ -147,10 +149,10 @@ export function getPurchaseColumns({
                 icon: EyeIcon,
                 onClick: onViewDetail,
               },
-              ...(isOrdered
+              ...(canReceive
                 ? [
                     {
-                      label: 'Mark Received',
+                      label: isOrdered ? 'Mark Received' : 'Make Payment',
                       icon: CheckCircleIcon,
                       onClick: onReceive,
                     },

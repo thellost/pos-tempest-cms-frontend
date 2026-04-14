@@ -22,6 +22,7 @@ interface GetInventoryColumnsOptions {
   onViewMovements: (item: InventoryItem) => void
   onEdit: (item: InventoryItem) => void
   onDelete: (item: InventoryItem) => void
+  canAdjust?: boolean
 }
 
 // ─── Column definitions ───────────────────────────────────────────────────────
@@ -32,6 +33,7 @@ export function getInventoryColumns({
   onViewMovements,
   onEdit,
   onDelete,
+  canAdjust = true,
 }: GetInventoryColumnsOptions): ColumnDef<InventoryItem>[] {
   return [
     {
@@ -142,11 +144,15 @@ export function getInventoryColumns({
               icon: PencilIcon,
               onClick: (item) => onEdit(item),
             },
-            {
-              label: 'Adjust Stock',
-              icon: SlidersIcon,
-              onClick: (item) => onAdjust(item),
-            },
+            ...(canAdjust
+              ? [
+                  {
+                    label: 'Adjust Stock',
+                    icon: SlidersIcon,
+                    onClick: (item: InventoryItem) => onAdjust(item),
+                  },
+                ]
+              : []),
             {
               label: 'Edit Threshold',
               icon: PencilIcon,

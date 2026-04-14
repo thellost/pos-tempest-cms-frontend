@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useFieldContext } from '@/hooks/form-context'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -18,10 +19,14 @@ interface NumberFieldProps {
   disabled?: boolean
 }
 
+// Regex: optional leading minus, optional digits, optional dot, optional digits
+// Allows: "", "-", "0", "1.5", ".5", "123.", "-0.5"
+const DECIMAL_RE = /^-?\d*\.?\d*$/
+
 export function NumberField({
   label,
-  min,
-  max,
+  min: _min,
+  max: _max,
   step,
   prefix,
   suffix,
@@ -31,6 +36,59 @@ export function NumberField({
 }: NumberFieldProps) {
   const field = useFieldContext<number>()
   const errors = field.state.meta.errors
+
+  // String-based display so users can type freely.
+  // Show "" when the field value is 0 (avoids "stuck on 0" UX problem).
+  const [displayValue, setDisplayValue] = useState<string>(() => {
+    const v = field.state.value
+    return v == null || v === 0 ? '' : String(v)
+  })
+
+  // Detect external changes to field value (setFieldValue, form.reset, etc.)
+  // and sync the display. Use state instead of ref to avoid anti-patterns.
+  const [trackedFieldValue, setTrackedFieldValue] = useState<number>(
+    field.state.value ?? 0,
+  )
+  if (field.state.value !== trackedFieldValue) {
+    setTrackedFieldValue(field.state.value ?? 0)
+    const v = field.state.value ?? 0
+    const parsedDisplay = parseFloat(displayValue)
+    // Only override if the display doesn't already reflect the new value
+    // (avoids wiping "1." while user is mid-typing "1.5")
+    if (parsedDisplay !== v) {
+      setDisplayValue(v === 0 ? '' : String(v))
+    }
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const str = e.target.value
+    // Reject characters that can never form a valid number
+    if (str !== '' && !DECIMAL_RE.test(str)) return
+    setDisplayValue(str)
+    if (str === '' || str === '-' || str === '.') {
+      field.handleChange(0)
+    } else {
+      const n = parseFloat(str)
+      if (!isNaN(n)) field.handleChange(n)
+    }
+  }
+
+  const handleBlur = () => {
+    const n = parseFloat(displayValue)
+    if (isNaN(n) || displayValue === '') {
+      setDisplayValue('')
+      field.handleChange(0)
+    } else {
+      // Normalize: strip trailing dot ("1." → "1"), etc.
+      setDisplayValue(String(n))
+    }
+    field.handleBlur()
+  }
+
+  // Use decimal inputMode for fractional steps (quantities/weights),
+  // numeric for integer steps (prices, counts).
+  const inputMode: React.HTMLAttributes<HTMLInputElement>['inputMode'] =
+    step != null && step < 1 ? 'decimal' : 'numeric'
 
   return (
     <div className="flex flex-col gap-1.5">
@@ -44,17 +102,11 @@ export function NumberField({
         <Input
           id={field.name}
           name={field.name}
-          type="number"
-          value={field.state.value ?? ''}
-          onChange={(e) =>
-            field.handleChange(
-              e.target.value === '' ? ('' as unknown as number) : Number(e.target.value),
-            )
-          }
-          onBlur={field.handleBlur}
-          min={min}
-          max={max}
-          step={step}
+          type="text"
+          inputMode={inputMode}
+          value={displayValue}
+          onChange={handleChange}
+          onBlur={handleBlur}
           placeholder={placeholder}
           disabled={disabled}
           aria-invalid={errors.length > 0}

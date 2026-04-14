@@ -22,7 +22,7 @@ import { formatIDR } from '@/components/purchases/columns'
 // ─── Route ────────────────────────────────────────────────────────────────────
 
 export const Route = createFileRoute('/_authenticated/purchases/create')({
-  beforeLoad: requireRole(['admin', 'manager']),
+  beforeLoad: requireRole(['admin', 'manager', 'cashier']),
   component: CreatePurchasePage,
 })
 

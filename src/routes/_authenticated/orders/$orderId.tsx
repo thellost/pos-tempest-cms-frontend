@@ -22,7 +22,7 @@ import { formatIDR } from '@/components/orders/columns'
 // ─── Route ────────────────────────────────────────────────────────────────────
 
 export const Route = createFileRoute('/_authenticated/orders/$orderId')({
-  beforeLoad: requireRole(['admin', 'manager']),
+  beforeLoad: requireRole(['admin', 'manager', 'cashier']),
   component: OrderDetailPage,
 })
 

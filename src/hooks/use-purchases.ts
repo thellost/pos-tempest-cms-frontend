@@ -47,13 +47,18 @@ export function useReceivePurchase() {
       payload,
     }: {
       id: number
-      payload?: ReceivePurchasePayload
+      payload: ReceivePurchasePayload
     }) => purchasesService.receive(id, payload),
-    onSuccess: (_, { id }) => {
+    onSuccess: (result, { id }) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.purchases.all })
       queryClient.invalidateQueries({ queryKey: queryKeys.purchases.detail(id) })
       queryClient.invalidateQueries({ queryKey: queryKeys.inventory.all })
-      toast.success('Purchase order marked as received. Inventory updated.')
+      const newStatus = result.data?.status
+      toast.success(
+        newStatus === 'received'
+          ? 'Purchase order received. Inventory updated.'
+          : 'Partial payment recorded.',
+      )
     },
     onError: (err: Error) => toast.error(err.message),
   })

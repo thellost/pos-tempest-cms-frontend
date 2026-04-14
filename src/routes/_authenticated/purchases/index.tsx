@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { PlusIcon } from 'lucide-react'
 import { useAuth } from '@/hooks/use-auth'
@@ -15,12 +15,20 @@ import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
+import { formatIDR } from '@/components/purchases/columns'
 import { requireRole } from '@/lib/auth-guards'
 
 // ─── Route ────────────────────────────────────────────────────────────────────
 
 export const Route = createFileRoute('/_authenticated/purchases/')({
-  beforeLoad: requireRole(['admin', 'manager']),
+  beforeLoad: requireRole(['admin', 'manager', 'cashier']),
   component: PurchasesPage,
 })
 
@@ -46,6 +54,7 @@ function PurchasesPage() {
 
   // Action dialogs
   const [receiveTarget, setReceiveTarget] = useState<Purchase | null>(null)
+  const [receivePayment, setReceivePayment] = useState('')
   const [cancelTarget, setCancelTarget] = useState<Purchase | null>(null)
 
   // Filter option data
@@ -97,6 +106,15 @@ function PurchasesPage() {
 
   const receiveMutation = useReceivePurchase()
   const cancelMutation = useCancelPurchase()
+
+  // Pre-fill payment amount when a receive target is selected
+  useEffect(() => {
+    if (receiveTarget) {
+      const remaining = receiveTarget.total - (receiveTarget.paid_amount ?? 0)
+      const amount = remaining > 0 ? remaining : receiveTarget.total
+      setReceivePayment(String(amount))
+    }
+  }, [receiveTarget])
 
   const columns = useMemo(
     () =>
@@ -213,21 +231,69 @@ function PurchasesPage() {
         emptyMessage="No purchase orders found."
       />
 
-      {/* ── Mark Received Confirm Dialog ── */}
-      <ConfirmDialog
+      {/* ── Receive / Payment Dialog ── */}
+      <Dialog
         open={!!receiveTarget}
         onOpenChange={(open) => { if (!open) setReceiveTarget(null) }}
-        title="Mark Purchase as Received?"
-        description={`This will mark ${receiveTarget?.purchase_number ?? 'this PO'} as received and automatically add all items to inventory. This action cannot be undone.`}
-        confirmLabel="Mark Received"
-        variant="default"
-        isLoading={receiveMutation.isPending}
-        onConfirm={async () => {
-          if (!receiveTarget) return
-          await receiveMutation.mutateAsync({ id: receiveTarget.id })
-          setReceiveTarget(null)
-        }}
-      />
+      >
+        <DialogContent className="sm:max-w-sm">
+          <DialogHeader>
+            <DialogTitle>
+              {receiveTarget?.status === 'partial_received' ? 'Make Payment' : 'Mark as Received'}
+            </DialogTitle>
+            <DialogDescription>
+              {receiveTarget?.status === 'partial_received'
+                ? `Remaining: ${formatIDR((receiveTarget?.total ?? 0) - (receiveTarget?.paid_amount ?? 0))}`
+                : `Record payment for ${receiveTarget?.purchase_number ?? 'this PO'}. Inventory will be updated on the first payment.`}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <div className="space-y-1.5">
+              <Label htmlFor="receive-amount">Payment Amount (IDR)</Label>
+              <Input
+                id="receive-amount"
+                type="text"
+                inputMode="numeric"
+                value={receivePayment}
+                onChange={(e) => {
+                  const str = e.target.value
+                  if (str !== '' && !/^\d*\.?\d*$/.test(str)) return
+                  setReceivePayment(str)
+                }}
+                onBlur={() => {
+                  const n = parseFloat(receivePayment)
+                  if (!isNaN(n)) setReceivePayment(String(n))
+                }}
+                placeholder="0"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button
+                variant="outline"
+                onClick={() => setReceiveTarget(null)}
+                disabled={receiveMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                disabled={receiveMutation.isPending || !receivePayment || parseFloat(receivePayment) <= 0}
+                onClick={async () => {
+                  if (!receiveTarget) return
+                  await receiveMutation.mutateAsync({
+                    id: receiveTarget.id,
+                    payload: { paid_amount: parseFloat(receivePayment) || 0 },
+                  })
+                  setReceiveTarget(null)
+                }}
+              >
+                {receiveMutation.isPending ? 'Saving…' : (
+                  receiveTarget?.status === 'partial_received' ? 'Record Payment' : 'Mark Received'
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* ── Cancel Confirm Dialog ── */}
       <ConfirmDialog

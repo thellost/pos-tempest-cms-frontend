@@ -25,7 +25,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 // ─── Route ────────────────────────────────────────────────────────────────────
 
 export const Route = createFileRoute('/_authenticated/users/$userId')({
-  beforeLoad: requireRole(['admin', 'manager']),
+  beforeLoad: requireRole(['admin', 'manager', 'cashier']),
   component: EditUserPage,
 })
 

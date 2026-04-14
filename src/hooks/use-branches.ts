@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import {
   branchesService,
-  type CreateBranchPayload,
   type UpdateBranchPayload,
 } from '@/lib/services/branches'
 import { queryKeys, type BranchFilters } from '@/lib/query-keys'

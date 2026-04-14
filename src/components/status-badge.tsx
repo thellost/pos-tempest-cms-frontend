@@ -46,6 +46,12 @@ const STATUS_COLORS: Record<string, StatusColor> = {
   closed: 'gray',
 
   // Device statuses  (already covered by active/inactive above)
+
+  // Purchase / PO statuses
+  ordered: 'blue',
+  partial_received: 'yellow',
+  received: 'green',
+  // cancelled already mapped to 'red' above
 }
 
 const COLOR_CLASSES: Record<StatusColor, string> = {

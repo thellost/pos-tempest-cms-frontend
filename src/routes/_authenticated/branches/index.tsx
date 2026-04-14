@@ -29,7 +29,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 // ─── Route ────────────────────────────────────────────────────────────────────
 
 export const Route = createFileRoute('/_authenticated/branches/')({
-  beforeLoad: requireRole(['admin', 'manager']),
+  beforeLoad: requireRole(['admin', 'manager', 'cashier']),
   component: BranchesPage,
 })
 

@@ -50,7 +50,7 @@ import { cn } from '@/lib/utils'
 // ─── Route ────────────────────────────────────────────────────────────────────
 
 export const Route = createFileRoute('/_authenticated/reports/cash-flow')({
-  beforeLoad: requireRole(['admin', 'manager']),
+  beforeLoad: requireRole(['admin', 'manager', 'cashier']),
   component: CashFlowReportPage,
 })
 
