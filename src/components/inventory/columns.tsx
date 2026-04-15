@@ -23,6 +23,9 @@ interface GetInventoryColumnsOptions {
   onEdit: (item: InventoryItem) => void
   onDelete: (item: InventoryItem) => void
   canAdjust?: boolean
+  canEdit?: boolean
+  canEditThreshold?: boolean
+  canDelete?: boolean
 }
 
 // ─── Column definitions ───────────────────────────────────────────────────────
@@ -34,6 +37,9 @@ export function getInventoryColumns({
   onEdit,
   onDelete,
   canAdjust = true,
+  canEdit = true,
+  canEditThreshold = true,
+  canDelete = true,
 }: GetInventoryColumnsOptions): ColumnDef<InventoryItem>[] {
   return [
     {
@@ -139,31 +145,18 @@ export function getInventoryColumns({
         <DataTableRowActions
           row={row}
           actions={[
-            {
-              label: 'Edit',
-              icon: PencilIcon,
-              onClick: (item) => onEdit(item),
-            },
-            ...(canAdjust
-              ? [
-                  {
-                    label: 'Adjust Stock',
-                    icon: SlidersIcon,
-                    onClick: (item: InventoryItem) => onAdjust(item),
-                  },
-                ]
+            ...(canEdit
+              ? [{ label: 'Edit', icon: PencilIcon, onClick: (item: InventoryItem) => onEdit(item) }]
               : []),
-            {
-              label: 'Edit Threshold',
-              icon: PencilIcon,
-              onClick: (item) => onEditThreshold(item),
-            },
-            {
-              label: 'Delete',
-              icon: Trash2Icon,
-              variant: 'destructive',
-              onClick: (item) => onDelete(item),
-            },
+            ...(canAdjust
+              ? [{ label: 'Adjust Stock', icon: SlidersIcon, onClick: (item: InventoryItem) => onAdjust(item) }]
+              : []),
+            ...(canEditThreshold
+              ? [{ label: 'Edit Threshold', icon: PencilIcon, onClick: (item: InventoryItem) => onEditThreshold(item) }]
+              : []),
+            ...(canDelete
+              ? [{ label: 'Delete', icon: Trash2Icon, variant: 'destructive' as const, onClick: (item: InventoryItem) => onDelete(item) }]
+              : []),
             {
               label: 'Movement History',
               icon: HistoryIcon,
