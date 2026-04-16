@@ -12,6 +12,9 @@ export interface Branch {
   service_charge_rate: number
   currency: string
   timezone: string
+  opening_time: string   // HH:MM 24h
+  closing_time: string   // HH:MM 24h
+  auto_shift: boolean
   is_active: boolean
   created_at: string
   updated_at: string
@@ -25,6 +28,9 @@ export interface CreateBranchPayload {
   service_charge_rate?: number
   currency?: string
   timezone?: string
+  opening_time?: string  // HH:MM 24h
+  closing_time?: string  // HH:MM 24h
+  auto_shift?: boolean
 }
 
 export type UpdateBranchPayload = Partial<CreateBranchPayload> & {

@@ -10,6 +10,7 @@ import { NumberField } from '@/components/form-fields/number-field'
 import { PasswordField } from '@/components/form-fields/password-field'
 import { PhoneField } from '@/components/form-fields/phone-field'
 import { PinCodeField } from '@/components/form-fields/pin-code-field'
+import { TimeField } from '@/components/form-fields/time-field'
 import { RadioGroupField } from '@/components/form-fields/radio-group-field'
 import { SelectField } from '@/components/form-fields/select-field'
 import { SliderField } from '@/components/form-fields/slider-field'
@@ -40,6 +41,7 @@ export const { useAppForm } = createFormHook({
     PasswordField,
     PhoneField,
     PinCodeField,
+    TimeField,
   },
   formComponents: {
     SubscribeButton,

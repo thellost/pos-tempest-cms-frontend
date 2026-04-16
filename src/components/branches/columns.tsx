@@ -89,6 +89,25 @@ export function getBranchColumns({
       ),
     },
     {
+      id: 'hours',
+      meta: { mobileHidden: true },
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Hours" />
+      ),
+      cell: ({ row }) => {
+        const { opening_time, closing_time, auto_shift } = row.original
+        if (!opening_time || !closing_time) return <span className="text-muted-foreground">—</span>
+        return (
+          <span className="text-sm text-muted-foreground">
+            {opening_time}–{closing_time}
+            {!auto_shift && (
+              <span className="ml-1 text-xs text-muted-foreground/60">(manual)</span>
+            )}
+          </span>
+        )
+      },
+    },
+    {
       accessorKey: 'is_active',
       meta: { mobileOrder: 3, mobileLabel: 'Status' },
       header: ({ column }) => (

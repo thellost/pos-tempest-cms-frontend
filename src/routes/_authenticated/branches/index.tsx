@@ -204,6 +204,9 @@ function BranchForm({ branch, onSuccess }: BranchFormProps) {
       service_charge_rate: branch?.service_charge_rate ?? 0,
       currency: branch?.currency ?? 'IDR',
       timezone: branch?.timezone ?? 'Asia/Jakarta',
+      opening_time: branch?.opening_time ?? '08:00',
+      closing_time: branch?.closing_time ?? '22:00',
+      auto_shift: branch?.auto_shift ?? true,
       is_active: branch?.is_active ?? true,
     },
     onSubmit: async ({ value }) => {
@@ -215,6 +218,9 @@ function BranchForm({ branch, onSuccess }: BranchFormProps) {
         service_charge_rate: Number(value.service_charge_rate),
         currency: value.currency,
         timezone: value.timezone,
+        opening_time: value.opening_time,
+        closing_time: value.closing_time,
+        auto_shift: value.auto_shift,
       }
 
       if (isEdit && branch) {
@@ -338,6 +344,37 @@ function BranchForm({ branch, onSuccess }: BranchFormProps) {
           )}
         </form.AppField>
       </div>
+
+      {/* Opening + Closing Time */}
+      <div className="form-grid-mobile form-grid-mobile-2">
+        <form.AppField name="opening_time">
+          {(field) => (
+            <field.TimeField
+              label="Opening Time"
+              description="Auto-shift open time"
+            />
+          )}
+        </form.AppField>
+
+        <form.AppField name="closing_time">
+          {(field) => (
+            <field.TimeField
+              label="Closing Time"
+              description="Auto-shift close time"
+            />
+          )}
+        </form.AppField>
+      </div>
+
+      {/* Auto Shift */}
+      <form.AppField name="auto_shift">
+        {(field) => (
+          <field.SwitchField
+            label="Auto Shift"
+            description="Automatically open and close shifts based on opening/closing times."
+          />
+        )}
+      </form.AppField>
 
       {/* Is Active (edit only) */}
       {isEdit && (
