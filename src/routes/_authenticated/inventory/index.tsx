@@ -125,7 +125,7 @@ function InventoryPage() {
           setDeleteOpen(true)
         },
       }),
-    [navigate],
+    [navigate, role],
   )
 
   const deleteMutation = useDeleteInventory()
