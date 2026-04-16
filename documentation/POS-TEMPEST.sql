@@ -1,3 +1,5 @@
+SET search_path TO pos_tempest;
+
 CREATE TYPE "role_type" AS ENUM (
   'admin',
   'manager',
@@ -188,6 +190,9 @@ CREATE TABLE "branches" (
   "currency" varchar(3) NOT NULL DEFAULT 'IDR',
   "timezone" varchar(50) NOT NULL DEFAULT 'Asia/Jakarta',
   "is_active" boolean NOT NULL DEFAULT true,
+  "opening_time" varchar(5) NOT NULL DEFAULT '08:00',
+  "closing_time" varchar(5) NOT NULL DEFAULT '22:00',
+  "auto_shift" boolean NOT NULL DEFAULT true,
   "created_at" timestamp NOT NULL DEFAULT (now()),
   "updated_at" timestamp NOT NULL DEFAULT (now())
 );
@@ -361,6 +366,7 @@ CREATE TABLE "orders" (
   "table_id" integer,
   "cashier_id" integer NOT NULL,
   "customer_id" integer,
+  "customer_name" varchar(150),
   "shift_id" integer,
   "order_type" order_type NOT NULL DEFAULT 'dine_in',
   "status" order_status NOT NULL DEFAULT 'pending',
@@ -503,6 +509,7 @@ CREATE TABLE "purchases" (
   "subtotal" decimal(14,2) NOT NULL DEFAULT 0,
   "tax_amount" decimal(14,2) NOT NULL DEFAULT 0,
   "total" decimal(14,2) NOT NULL DEFAULT 0,
+  "paid_amount" decimal(14,2) NOT NULL DEFAULT 0,
   "status" purchase_status NOT NULL DEFAULT 'ordered',
   "notes" text,
   "ordered_at" timestamp NOT NULL DEFAULT (now()),
@@ -741,6 +748,12 @@ COMMENT ON TABLE "branches" IS 'Restaurant branches / outlets';
 COMMENT ON COLUMN "branches"."tax_rate" IS 'Default tax rate e.g. 11% PPN';
 
 COMMENT ON COLUMN "branches"."service_charge_rate" IS 'e.g. 5% service charge';
+
+COMMENT ON COLUMN "branches"."opening_time" IS '24h clock HH:MM e.g. 08:00 — used by Go scheduler to auto-open shifts';
+
+COMMENT ON COLUMN "branches"."closing_time" IS '24h clock HH:MM e.g. 23:00 — used by Go scheduler to auto-close shifts';
+
+COMMENT ON COLUMN "branches"."auto_shift" IS 'When true the Go scheduler manages shift open/close automatically using branch timezone';
 
 COMMENT ON TABLE "floor_areas" IS 'Sections / areas within a branch';
 
@@ -1022,3 +1035,9 @@ ALTER TABLE "order_items" ADD COLUMN IF NOT EXISTS "round_number" integer;
 ALTER TABLE "order_items" ADD COLUMN IF NOT EXISTS "weight" decimal(8,3);
 ALTER TABLE "kitchen_order_tickets" ADD COLUMN IF NOT EXISTS "round_number" integer;
 ALTER TABLE "inventory_movements" ALTER COLUMN "reference_id" TYPE text USING reference_id::text;
+
+
+--- USAGE ---
+GRANT USAGE, SELECT ON SEQUENCE inventory_movements_id_seq TO authenticated;
+GRANT USAGE, SELECT ON SEQUENCE inventory_movements_id_seq TO service_role;
+GRANT USAGE, SELECT ON SEQUENCE inventory_movements_id_seq TO powersync_role;
