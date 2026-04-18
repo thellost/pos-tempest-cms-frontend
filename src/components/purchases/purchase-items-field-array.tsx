@@ -164,36 +164,34 @@ export function PurchaseItemsFieldArray({
           </div>
         ) : (
           <div className="space-y-3">
-            <div className="overflow-x-auto">
-              <div className="min-w-[500px] space-y-2">
-                {/* Column headers */}
-                <div className="grid grid-cols-[1fr_80px_100px_120px_100px_36px] items-center gap-2 px-0.5 text-xs font-medium text-muted-foreground">
-                  <span>Ingredient</span>
-                  <span>Qty</span>
-                  <span>Unit</span>
-                  <span>Cost / Unit</span>
-                  <span>Subtotal</span>
-                  <span />
-                </div>
-
-                {rows.map((row) => {
-                  const rowSubtotal = row.quantity * row.cost_per_unit
-                  return (
-                    <PurchaseItemRowView
-                      key={row.key}
-                      row={row}
-                      searchResults={searchResults}
-                      searchLoading={searchLoading}
-                      searchQuery={searchQuery}
-                      onSearchQueryChange={setSearchQuery}
-                      selectedItemsCache={selectedItemsCache.current}
-                      rowSubtotal={rowSubtotal}
-                      onUpdate={(patch) => handleUpdate(row.key, patch)}
-                      onRemove={() => handleRemove(row.key)}
-                    />
-                  )
-                })}
+            <div className="space-y-2">
+              {/* Column headers — desktop only */}
+              <div className="hidden sm:grid sm:grid-cols-[1fr_80px_100px_120px_100px_36px] sm:items-center sm:gap-2 sm:px-0.5 sm:text-xs sm:font-medium sm:text-muted-foreground">
+                <span>Ingredient</span>
+                <span>Qty</span>
+                <span>Unit</span>
+                <span>Cost / Unit</span>
+                <span>Subtotal</span>
+                <span />
               </div>
+
+              {rows.map((row) => {
+                const rowSubtotal = row.quantity * row.cost_per_unit
+                return (
+                  <PurchaseItemRowView
+                    key={row.key}
+                    row={row}
+                    searchResults={searchResults}
+                    searchLoading={searchLoading}
+                    searchQuery={searchQuery}
+                    onSearchQueryChange={setSearchQuery}
+                    selectedItemsCache={selectedItemsCache.current}
+                    rowSubtotal={rowSubtotal}
+                    onUpdate={(patch) => handleUpdate(row.key, patch)}
+                    onRemove={() => handleRemove(row.key)}
+                  />
+                )
+              })}
             </div>
 
             {/* Totals footer */}
@@ -251,157 +249,184 @@ function PurchaseItemRowView({
     (row.inventory_id !== null ? selectedItemsCache.get(row.inventory_id) : undefined)
 
   return (
-    <div className="grid grid-cols-[1fr_80px_100px_120px_100px_36px] items-center gap-2">
-      {/* Ingredient combobox */}
-      <Popover open={open} onOpenChange={setOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            variant="outline"
-            role="combobox"
-            aria-expanded={open}
-            className={cn(
-              'h-9 w-full justify-between overflow-hidden font-normal',
-              !selectedItem && 'text-muted-foreground',
-            )}
-          >
-            <span className="truncate">
-              {selectedItem ? selectedItem.name : 'Select ingredient…'}
-            </span>
-            <ChevronsUpDownIcon className="ml-1 size-3.5 shrink-0 opacity-50" />
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent className="w-[320px] p-0">
-          <Command shouldFilter={false}>
-            <CommandInput
-              placeholder="Type to search ingredients…"
-              value={searchQuery}
-              onValueChange={onSearchQueryChange}
-            />
-            <CommandList>
-              {searchQuery.trim().length === 0 ? (
-                <CommandEmpty>Type to search ingredients.</CommandEmpty>
-              ) : searchLoading ? (
-                <CommandEmpty>Searching…</CommandEmpty>
-              ) : searchResults.length === 0 ? (
-                <CommandEmpty>No ingredients found.</CommandEmpty>
-              ) : (
-                <CommandGroup>
-                  {searchResults.map((item) => (
-                    <CommandItem
-                      key={item.id}
-                      value={String(item.id)}
-                      onSelect={() => {
-                        onUpdate({
-                          inventory_id: item.id,
-                          inventory_name: item.name,
-                          unit_of_measure: item.unit_of_measure as UnitOfMeasure,
-                        })
-                        setOpen(false)
-                      }}
-                    >
-                      <CheckIcon
-                        className={cn(
-                          'mr-2 size-4',
-                          row.inventory_id === item.id
-                            ? 'opacity-100'
-                            : 'opacity-0',
-                        )}
-                      />
-                      <span>{item.name}</span>
-                      <span className="ml-auto text-xs text-muted-foreground">
-                        {item.unit_of_measure}
-                      </span>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
+    <div className="grid grid-cols-2 gap-x-2 gap-y-2.5 rounded-lg border p-3 sm:rounded-none sm:border-0 sm:p-0 sm:grid-cols-[1fr_80px_100px_120px_100px_36px] sm:items-center sm:gap-x-2 sm:gap-y-0">
+      {/* Ingredient combobox — spans both cols on mobile */}
+      <div className="col-span-2 sm:col-span-1">
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className={cn(
+                'h-9 w-full justify-between overflow-hidden font-normal',
+                !selectedItem && 'text-muted-foreground',
               )}
-            </CommandList>
-          </Command>
-        </PopoverContent>
-      </Popover>
+            >
+              <span className="truncate">
+                {selectedItem ? selectedItem.name : 'Select ingredient…'}
+              </span>
+              <ChevronsUpDownIcon className="ml-1 size-3.5 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[320px] p-0">
+            <Command shouldFilter={false}>
+              <CommandInput
+                placeholder="Type to search ingredients…"
+                value={searchQuery}
+                onValueChange={onSearchQueryChange}
+              />
+              <CommandList>
+                {searchQuery.trim().length === 0 ? (
+                  <CommandEmpty>Type to search ingredients.</CommandEmpty>
+                ) : searchLoading ? (
+                  <CommandEmpty>Searching…</CommandEmpty>
+                ) : searchResults.length === 0 ? (
+                  <CommandEmpty>No ingredients found.</CommandEmpty>
+                ) : (
+                  <CommandGroup>
+                    {searchResults.map((item) => (
+                      <CommandItem
+                        key={item.id}
+                        value={String(item.id)}
+                        onSelect={() => {
+                          onUpdate({
+                            inventory_id: item.id,
+                            inventory_name: item.name,
+                            unit_of_measure: item.unit_of_measure as UnitOfMeasure,
+                          })
+                          setOpen(false)
+                        }}
+                      >
+                        <CheckIcon
+                          className={cn(
+                            'mr-2 size-4',
+                            row.inventory_id === item.id
+                              ? 'opacity-100'
+                              : 'opacity-0',
+                          )}
+                        />
+                        <span>{item.name}</span>
+                        <span className="ml-auto text-xs text-muted-foreground">
+                          {item.unit_of_measure}
+                        </span>
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                )}
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      </div>
 
       {/* Quantity */}
-      <Input
-        type="text"
-        inputMode="decimal"
-        className="h-9 text-sm"
-        value={qtyDisplay}
-        onChange={(e) => {
-          const str = e.target.value
-          if (str !== '' && !/^\d*\.?\d*$/.test(str)) return
-          setQtyDisplay(str)
-          const n = parseFloat(str)
-          if (!isNaN(n)) onUpdate({ quantity: n })
-        }}
-        onBlur={() => {
-          const n = parseFloat(qtyDisplay)
-          if (isNaN(n) || n <= 0) {
-            setQtyDisplay(row.quantity > 0 ? String(row.quantity) : '1')
-            if (row.quantity <= 0) onUpdate({ quantity: 1 })
-          } else {
-            setQtyDisplay(String(n))
-          }
-        }}
-        placeholder="Qty"
-      />
-
-      {/* Unit of measure */}
-      <Select
-        value={row.unit_of_measure}
-        onValueChange={(v) => onUpdate({ unit_of_measure: v as UnitOfMeasure })}
-      >
-        <SelectTrigger className="h-9 text-sm">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {UNIT_OPTIONS.map((opt) => (
-            <SelectItem key={opt.value} value={opt.value}>
-              {opt.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
-      {/* Cost per unit */}
-      <div className="flex items-center">
-        <span className="inline-flex h-9 items-center rounded-l-md border border-r-0 border-input bg-muted px-2 text-xs text-muted-foreground">
-          Rp
-        </span>
+      <div>
+        <p className="mb-1 text-xs text-muted-foreground sm:hidden">Qty</p>
         <Input
           type="text"
-          inputMode="numeric"
-          className="h-9 rounded-l-none text-sm"
-          value={priceDisplay}
+          inputMode="decimal"
+          className="h-9 text-sm"
+          value={qtyDisplay}
           onChange={(e) => {
             const str = e.target.value
             if (str !== '' && !/^\d*\.?\d*$/.test(str)) return
-            setPriceDisplay(str)
+            setQtyDisplay(str)
             const n = parseFloat(str)
-            if (!isNaN(n)) onUpdate({ cost_per_unit: n })
+            if (!isNaN(n)) onUpdate({ quantity: n })
           }}
           onBlur={() => {
-            const n = parseFloat(priceDisplay)
-            if (isNaN(n)) {
-              setPriceDisplay(row.cost_per_unit === 0 ? '' : String(row.cost_per_unit))
+            const n = parseFloat(qtyDisplay)
+            if (isNaN(n) || n <= 0) {
+              setQtyDisplay(row.quantity > 0 ? String(row.quantity) : '1')
+              if (row.quantity <= 0) onUpdate({ quantity: 1 })
             } else {
-              setPriceDisplay(String(n))
+              setQtyDisplay(String(n))
             }
           }}
-          placeholder="0"
+          placeholder="Qty"
         />
       </div>
 
-      {/* Row subtotal (read-only) */}
-      <div className="h-9 px-2 text-right text-sm font-medium leading-9">
-        {formatIDR(rowSubtotal)}
+      {/* Unit of measure */}
+      <div>
+        <p className="mb-1 text-xs text-muted-foreground sm:hidden">Unit</p>
+        <Select
+          value={row.unit_of_measure}
+          onValueChange={(v) => onUpdate({ unit_of_measure: v as UnitOfMeasure })}
+        >
+          <SelectTrigger className="h-9 text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            {UNIT_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value}>
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
-      {/* Remove */}
+      {/* Cost per unit */}
+      <div>
+        <p className="mb-1 text-xs text-muted-foreground sm:hidden">Cost / Unit</p>
+        <div className="flex items-center">
+          <span className="inline-flex h-9 items-center rounded-l-md border border-r-0 border-input bg-muted px-2 text-xs text-muted-foreground">
+            Rp
+          </span>
+          <Input
+            type="text"
+            inputMode="numeric"
+            className="h-9 rounded-l-none text-sm"
+            value={priceDisplay}
+            onChange={(e) => {
+              const str = e.target.value
+              if (str !== '' && !/^\d*\.?\d*$/.test(str)) return
+              setPriceDisplay(str)
+              const n = parseFloat(str)
+              if (!isNaN(n)) onUpdate({ cost_per_unit: n })
+            }}
+            onBlur={() => {
+              const n = parseFloat(priceDisplay)
+              if (isNaN(n)) {
+                setPriceDisplay(row.cost_per_unit === 0 ? '' : String(row.cost_per_unit))
+              } else {
+                setPriceDisplay(String(n))
+              }
+            }}
+            placeholder="0"
+          />
+        </div>
+      </div>
+
+      {/* Subtotal + remove button (mobile: side by side; desktop: subtotal only here) */}
+      <div className="flex items-end justify-between sm:block">
+        <div>
+          <p className="mb-1 text-xs text-muted-foreground sm:hidden">Subtotal</p>
+          <div className="h-9 text-sm font-medium leading-9 sm:px-2 sm:text-right">
+            {formatIDR(rowSubtotal)}
+          </div>
+        </div>
+        {/* Remove — mobile only (sits next to subtotal) */}
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          className="size-9 shrink-0 text-muted-foreground hover:text-destructive sm:hidden"
+          onClick={onRemove}
+          aria-label="Remove item"
+        >
+          <Trash2Icon className="size-4" />
+        </Button>
+      </div>
+
+      {/* Remove — desktop only (6th column) */}
       <Button
         type="button"
         variant="ghost"
         size="icon"
-        className="size-9 shrink-0 text-muted-foreground hover:text-destructive"
+        className="hidden size-9 shrink-0 text-muted-foreground hover:text-destructive sm:inline-flex"
         onClick={onRemove}
         aria-label="Remove item"
       >

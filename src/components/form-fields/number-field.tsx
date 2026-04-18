@@ -45,12 +45,13 @@ export function NumberField({
   })
 
   // Detect external changes to field value (setFieldValue, form.reset, etc.)
-  // and sync the display. Use state instead of ref to avoid anti-patterns.
-  const [trackedFieldValue, setTrackedFieldValue] = useState<number>(
-    field.state.value ?? 0,
+  // and sync the display. Track null separately to avoid setState-during-render
+  // loops when the field legitimately holds null (e.g. optional number fields).
+  const [trackedFieldValue, setTrackedFieldValue] = useState<number | null>(
+    field.state.value ?? null,
   )
   if (field.state.value !== trackedFieldValue) {
-    setTrackedFieldValue(field.state.value ?? 0)
+    setTrackedFieldValue(field.state.value ?? null)
     const v = field.state.value ?? 0
     const parsedDisplay = parseFloat(displayValue)
     // Only override if the display doesn't already reflect the new value
