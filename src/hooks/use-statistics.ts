@@ -82,13 +82,13 @@ export function useCashFlowStats(filters: StatsFilter = {}) {
 
 /**
  * Fetches the detailed financial report for a specific shift.
- * Only enabled when a valid shiftId (> 0) is provided.
+ * Only enabled when a non-empty shiftId is provided.
  */
-export function useShiftReport(shiftId: number | null) {
+export function useShiftReport(shiftId: string | null) {
   return useQuery({
-    queryKey: queryKeys.statistics.shiftReport(shiftId ?? 0),
+    queryKey: queryKeys.statistics.shiftReport(shiftId ?? ''),
     queryFn: () => statisticsService.getShiftReport(shiftId!),
-    enabled: shiftId != null && shiftId > 0,
+    enabled: !!shiftId,
     staleTime: 5 * 60_000,
   })
 }

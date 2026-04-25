@@ -174,7 +174,7 @@ function EmptyPlaceholder() {
 // ─── Shift Report Content ─────────────────────────────────────────────────────
 
 interface ShiftReportContentProps {
-  shiftId: number
+  shiftId: string
 }
 
 function ShiftReportContent({ shiftId }: ShiftReportContentProps) {
@@ -632,8 +632,8 @@ function ShiftReportContent({ shiftId }: ShiftReportContentProps) {
 // ─── Shift Selector ───────────────────────────────────────────────────────────
 
 interface ShiftSelectorProps {
-  selectedShiftId: number | null
-  onSelect: (id: number | null) => void
+  selectedShiftId: string | null
+  onSelect: (id: string | null) => void
 }
 
 function ShiftSelector({ selectedShiftId, onSelect }: ShiftSelectorProps) {
@@ -714,8 +714,8 @@ function ShiftSelector({ selectedShiftId, onSelect }: ShiftSelectorProps) {
           <div className="flex flex-col gap-1 min-w-[180px] flex-1">
             <Label className="text-xs">Shift</Label>
             <Select
-              value={selectedShiftId?.toString() ?? ''}
-              onValueChange={(v) => onSelect(v ? Number(v) : null)}
+              value={selectedShiftId ?? ''}
+              onValueChange={(v) => onSelect(v ? v : null)}
             >
               <SelectTrigger>
                 <SelectValue placeholder={isFetching ? 'Loading shifts…' : 'Choose a shift…'} />
@@ -729,7 +729,7 @@ function ShiftSelector({ selectedShiftId, onSelect }: ShiftSelectorProps) {
                   shiftList.map((s) => (
                     <SelectItem
                       key={s.id}
-                      value={s.id.toString()}
+                      value={s.id}
                       textValue={`#${s.id} ${s.user_name} · ${s.branch_name} · ${format(parseISO(s.opened_at), 'dd MMM yyyy')}${s.status === 'open' ? ' (Open)' : ''}`}
                     >
                       <div className="flex items-center gap-2">
@@ -762,7 +762,7 @@ function ShiftSelector({ selectedShiftId, onSelect }: ShiftSelectorProps) {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 function ShiftReportPage() {
-  const [selectedShiftId, setSelectedShiftId] = useState<number | null>(null)
+  const [selectedShiftId, setSelectedShiftId] = useState<string | null>(null)
 
   return (
     <div className="space-y-6">

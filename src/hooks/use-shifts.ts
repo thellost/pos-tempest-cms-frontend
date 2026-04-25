@@ -18,19 +18,19 @@ export function useShifts(filters?: ShiftFilters) {
   })
 }
 
-export function useShift(id: number) {
+export function useShift(id: string) {
   return useQuery({
     queryKey: queryKeys.shifts.detail(id),
     queryFn: () => shiftsService.get(id),
-    enabled: id > 0,
+    enabled: !!id,
   })
 }
 
-export function useShiftSummary(id: number) {
+export function useShiftSummary(id: string) {
   return useQuery({
     queryKey: queryKeys.shifts.summary(id),
     queryFn: () => shiftsService.summary(id),
-    enabled: id > 0,
+    enabled: !!id,
   })
 }
 
@@ -87,7 +87,7 @@ export function useCloseShift() {
       id,
       payload,
     }: {
-      id: number
+      id: string
       payload: CloseShiftPayload
     }) => shiftsService.close(id, payload),
     onMutate: ({ id, payload }) => {
@@ -130,11 +130,11 @@ export function useCloseShift() {
 
 // ─── Cash Transactions ────────────────────────────────────────────────────────
 
-export function useShiftCashTransactions(shiftId: number) {
+export function useShiftCashTransactions(shiftId: string) {
   return useQuery({
     queryKey: queryKeys.shifts.cashTransactions(shiftId),
     queryFn: () => shiftsService.listCashTransactions(shiftId),
-    enabled: shiftId > 0,
+    enabled: !!shiftId,
   })
 }
 
@@ -145,7 +145,7 @@ export function useCreateCashTransaction() {
       shiftId,
       payload,
     }: {
-      shiftId: number
+      shiftId: string
       payload: CreateCashTransactionPayload
     }) => shiftsService.createCashTransaction(shiftId, payload),
     onMutate: ({ shiftId, payload }) => {

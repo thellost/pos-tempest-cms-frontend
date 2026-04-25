@@ -164,7 +164,7 @@ function OrdersPage() {
       orderType: (orderType || undefined) as 'dine_in' | 'takeaway' | undefined,
       cashierId: cashierId ? parseInt(cashierId, 10) : undefined,
       customerId: customerId ? parseInt(customerId, 10) : undefined,
-      shiftId: shiftId ? parseInt(shiftId, 10) : undefined,
+      shiftId: shiftId || undefined,
       tableId: tableId ? parseInt(tableId, 10) : undefined,
       dateFrom: dateFrom || undefined,
       dateTo: dateTo || undefined,

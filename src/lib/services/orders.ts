@@ -17,8 +17,8 @@ export type OrderPaymentStatus = 'unpaid' | 'partial' | 'paid' | 'refunded'
 export type OrderType = 'dine_in' | 'takeaway'
 
 export interface OrderItemModifier {
-  id: number
-  order_item_id: number
+  id: string
+  order_item_id: string
   modifier_id: number
   modifier_name: string
   modifier_group_name: string
@@ -26,8 +26,8 @@ export interface OrderItemModifier {
 }
 
 export interface OrderItem {
-  id: number
-  order_id: number
+  id: string
+  order_id: string
   menu_item_id: number
   menu_item_name: string
   quantity: number
@@ -46,9 +46,9 @@ export interface OrderItem {
 }
 
 export interface OrderPayment {
-  id: number
-  order_id: number
-  shift_id: number
+  id: string
+  order_id: string
+  shift_id: string
   payment_method: string
   amount: number
   change_amount: number
@@ -57,8 +57,8 @@ export interface OrderPayment {
 }
 
 export interface OrderDiscount {
-  id: number
-  order_id: number
+  id: string
+  order_id: string
   discount_id: number
   discount_name: string
   discount_type: 'percentage' | 'fixed_amount'
@@ -75,7 +75,7 @@ export interface Order {
   table_id: number | null
   cashier_id: number
   customer_id: number | null
-  shift_id: number
+  shift_id: string
   order_type: OrderType
   status: OrderStatus
   guest_count: number

@@ -438,7 +438,7 @@ function OpenShiftForm({
 // ─── Close Shift Form ─────────────────────────────────────────────────────────
 
 interface CloseShiftFormProps {
-  shiftId: number
+  shiftId: string
   onSuccess: () => void
 }
 

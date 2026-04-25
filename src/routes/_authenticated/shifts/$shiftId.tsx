@@ -88,7 +88,7 @@ const CHART_COLORS = [
 
 function ShiftDetailPage() {
   const { shiftId } = Route.useParams()
-  const id = parseInt(shiftId, 10)
+  const id = shiftId
 
   const [closeDialogOpen, setCloseDialogOpen] = useState(false)
 
@@ -589,7 +589,7 @@ function ShiftDetailPage() {
 
 // ─── Cash Transaction Row ─────────────────────────────────────────────────────
 
-function CashTransactionRow({ tx }: { tx: { id: number; type: string; reason: string; amount: number; note: string | null; created_at: string; user_name: string } }) {
+function CashTransactionRow({ tx }: { tx: { id: string; type: string; reason: string; amount: number; note: string | null; created_at: string; user_name: string } }) {
   const isCashIn = tx.type === 'cash_in'
   return (
     <div className="flex items-start justify-between gap-3 rounded-md border px-3 py-2.5 text-sm">
@@ -698,7 +698,7 @@ function CloseShiftForm({
   shiftId,
   onSuccess,
 }: {
-  shiftId: number
+  shiftId: string
   onSuccess: () => void
 }) {
   const closeMutation = useCloseShift()

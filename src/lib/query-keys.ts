@@ -103,7 +103,7 @@ export type OrderFilters = {
   orderType?: 'dine_in' | 'takeaway'
   cashierId?: number
   customerId?: number
-  shiftId?: number
+  shiftId?: string
   tableId?: number
   dateFrom?: string
   dateTo?: string
@@ -200,9 +200,9 @@ export const queryKeys = {
   shifts: {
     all: ['shifts'] as const,
     list: (filters?: ShiftFilters) => ['shifts', 'list', filters ?? {}] as const,
-    detail: (id: number) => ['shifts', 'detail', id] as const,
-    summary: (id: number) => ['shifts', 'summary', id] as const,
-    cashTransactions: (shiftId: number) =>
+    detail: (id: string) => ['shifts', 'detail', id] as const,
+    summary: (id: string) => ['shifts', 'summary', id] as const,
+    cashTransactions: (shiftId: string) =>
       ['shifts', 'cash-transactions', shiftId] as const,
   },
 
@@ -332,6 +332,6 @@ export const queryKeys = {
       ['statistics', 'payment-methods', filters ?? {}] as const,
     cashFlow: (filters?: StatsFilter) =>
       ['statistics', 'cash-flow', filters ?? {}] as const,
-    shiftReport: (id: number) => ['statistics', 'shift-report', id] as const,
+    shiftReport: (id: string) => ['statistics', 'shift-report', id] as const,
   },
 } as const

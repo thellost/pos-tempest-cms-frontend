@@ -4,7 +4,7 @@ import type { ShiftFilters } from '@/lib/query-keys'
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface Shift {
-  id: number
+  id: string
   user_id: number
   device_id: string
   branch_id: number
@@ -43,8 +43,8 @@ export type CashTransactionReason =
   | 'other'
 
 export interface CashTransaction {
-  id: number
-  shift_id: number
+  id: string
+  shift_id: string
   user_id: number
   type: CashTransactionType
   reason: CashTransactionReason
@@ -119,22 +119,22 @@ export const shiftsService = {
     )
   },
 
-  get: (id: number) => api.get<Shift>(`/api/v1/shifts/${id}`),
+  get: (id: string) => api.get<Shift>(`/api/v1/shifts/${id}`),
 
-  summary: (id: number) =>
+  summary: (id: string) =>
     api.get<ShiftSummary>(`/api/v1/shifts/${id}/summary`),
 
   open: (payload: OpenShiftPayload) =>
     api.post<Shift>('/api/v1/shifts/open', payload),
 
-  close: (id: number, payload: CloseShiftPayload) =>
+  close: (id: string, payload: CloseShiftPayload) =>
     api.post<Shift>(`/api/v1/shifts/${id}/close`, payload),
 
-  listCashTransactions: (shiftId: number) =>
+  listCashTransactions: (shiftId: string) =>
     api.get<CashTransaction[]>(`/api/v1/shifts/${shiftId}/cash-transactions`),
 
   createCashTransaction: (
-    shiftId: number,
+    shiftId: string,
     payload: CreateCashTransactionPayload,
   ) =>
     api.post<CashTransaction>(

@@ -105,7 +105,7 @@ export interface PaymentMethodBreakdown {
 
 /** Nested shift detail within a shift report response. */
 export interface ShiftReportShift {
-  id: number
+  id: string
   user_id: number
   device_id: string
   branch_id: number
@@ -146,8 +146,8 @@ export interface ShiftReport {
     percentage: number
   }>
   cash_transactions: Array<{
-    id: number
-    shift_id: number
+    id: string
+    shift_id: string
     user_id: number
     type: 'cash_in' | 'cash_out'
     reason: string
@@ -243,6 +243,6 @@ export const statisticsService = {
    * Fetches the detailed financial report for a specific shift from
    * `GET /api/v1/statistics/shifts/:id`.
    */
-  getShiftReport: (shiftId: number) =>
+  getShiftReport: (shiftId: string) =>
     api.get<ShiftReport>(`/api/v1/statistics/shifts/${shiftId}`),
 }

@@ -7,22 +7,15 @@ import {
   PackageIcon,
   CreditCardIcon,
 } from 'lucide-react'
-import { usePurchase, useReceivePurchase, useCancelPurchase } from '@/hooks/use-purchases'
-import { useAppForm } from '@/hooks/use-form'
+import { usePurchase, useCancelPurchase } from '@/hooks/use-purchases'
 import { PageHeader } from '@/components/page-header'
 import { StatusBadge } from '@/components/status-badge'
 import { ConfirmDialog } from '@/components/confirm-dialog'
+import { RecordPaymentDialog } from '@/components/purchases/record-payment-dialog'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from '@/components/ui/dialog'
 import {
   Table,
   TableBody,
@@ -78,24 +71,7 @@ function PurchaseDetailPage() {
   const { data: result, isLoading } = usePurchase(id)
   const po = result?.data
 
-  const receiveMutation = useReceivePurchase()
   const cancelMutation = useCancelPurchase()
-
-  // ── Receive form ─────────────────────────────────────────────────────────
-
-  const receiveForm = useAppForm({
-    defaultValues: { paid_amount: 0, notes: '' },
-    onSubmit: async ({ value }) => {
-      await receiveMutation.mutateAsync({
-        id,
-        payload: {
-          paid_amount: Number(value.paid_amount),
-          notes: value.notes?.trim() || undefined,
-        },
-      })
-      setReceiveDialogOpen(false)
-    },
-  })
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -116,10 +92,7 @@ function PurchaseDetailPage() {
   const canReceive = isOrdered || isPartialReceived
   const isTerminal = po.status === 'received' || po.status === 'cancelled'
 
-  const remaining = po.total - (po.paid_amount ?? 0)
   const openReceiveDialog = () => {
-    receiveForm.setFieldValue('paid_amount', remaining > 0 ? remaining : po.total)
-    receiveForm.setFieldValue('notes', '')
     setReceiveDialogOpen(true)
   }
 
@@ -296,63 +269,11 @@ function PurchaseDetailPage() {
       </Card>
 
       {/* ── Mark Received / Make Payment Dialog ── */}
-      <Dialog open={receiveDialogOpen} onOpenChange={setReceiveDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {isPartialReceived ? 'Make Payment' : 'Mark as Received'}
-            </DialogTitle>
-            <DialogDescription>
-              {isPartialReceived
-                ? `Remaining balance: ${formatIDR(remaining)}. Enter the payment amount below.`
-                : `Record payment for ${po.purchase_number}. Inventory will be updated on the first payment.`}
-            </DialogDescription>
-          </DialogHeader>
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              receiveForm.handleSubmit()
-            }}
-            className="space-y-4 pt-2"
-          >
-            <receiveForm.AppField name="paid_amount">
-              {(field) => (
-                <field.NumberField
-                  label="Payment Amount (IDR)"
-                  placeholder="0"
-                  min={1}
-                />
-              )}
-            </receiveForm.AppField>
-
-            <receiveForm.AppField name="notes">
-              {(field) => (
-                <field.TextareaField
-                  label="Notes (optional)"
-                  placeholder="e.g. All items received in good condition"
-                  rows={3}
-                />
-              )}
-            </receiveForm.AppField>
-
-            <div className="flex justify-end gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setReceiveDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <receiveForm.AppForm>
-                <receiveForm.SubscribeButton
-                  label={isPartialReceived ? 'Record Payment' : 'Mark Received'}
-                />
-              </receiveForm.AppForm>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
+      <RecordPaymentDialog
+        purchase={po}
+        open={receiveDialogOpen}
+        onOpenChange={setReceiveDialogOpen}
+      />
 
       {/* ── Cancel PO Confirm Dialog ── */}
       {!isTerminal && (

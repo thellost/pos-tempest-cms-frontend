@@ -34,7 +34,7 @@ export type MovementType =
   | 'transfer'
 
 export interface InventoryMovement {
-  id: number
+  id: string
   inventory_id: number
   user_id: number
   movement_type: MovementType
