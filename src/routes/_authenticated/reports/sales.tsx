@@ -563,7 +563,7 @@ function TopItemsSection({ branchId, dateFrom, dateTo }: TopItemsSectionProps) {
                       </td>
                       <td className="py-2 pr-4 font-medium">{item.menu_item_name}</td>
                       <td className="py-2 pr-4 text-muted-foreground">
-                        {item.category_name ?? <span className="text-muted-foreground/50">—</span>}
+                        —
                       </td>
                       <td className="py-2 pr-4 text-right tabular-nums">
                         {item.quantity_sold.toLocaleString('id-ID')}

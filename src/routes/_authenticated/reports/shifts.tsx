@@ -12,13 +12,18 @@ import {
   MonitorIcon,
   BuildingIcon,
   SearchIcon,
-  ArrowDownCircleIcon,
-  ArrowUpCircleIcon,
   ShoppingBagIcon,
 } from 'lucide-react'
 import { PieChart, Pie, Cell } from 'recharts'
 import { useShiftReport, useShifts } from '@/hooks/use-sales-cash-flow'
 import { useBranches } from '@/hooks/use-branches'
+import {
+  WaterfallFlow,
+  WaterfallRow,
+  WaterfallDivider,
+  WaterfallSectionLabel,
+  WaterfallBalance,
+} from '@/components/waterfall-flow'
 import { PageHeader } from '@/components/page-header'
 import {
   ChartContainer,
@@ -192,8 +197,6 @@ function ShiftReportContent({ shiftId }: ShiftReportContentProps) {
   const report = data.data
   const { shift } = report
   const payment_breakdown = report.payment_breakdown ?? []
-  const cashDiff = shift.cash_difference ?? 0
-  const diffPositive = cashDiff >= 0
 
   // Payment pie data
   const pieData = payment_breakdown.map((m, i) => ({
@@ -265,139 +268,93 @@ function ShiftReportContent({ shiftId }: ShiftReportContentProps) {
           </CardContent>
         </Card>
 
-        {/* ── Cash Drawer ── */}
+        {/* ── Cash Flow Waterfall ── */}
         <Card>
           <CardHeader className="flex flex-row items-center gap-2 pb-2">
             <WalletIcon className="size-5 text-muted-foreground" />
-            <CardTitle className="text-base">Cash Drawer</CardTitle>
+            <CardTitle className="text-base">Cash Flow Waterfall</CardTitle>
           </CardHeader>
           <CardContent>
-            <InfoRow label="Opening Cash" value={formatIDR(shift.opening_cash)} />
-            <Separator className="my-1" />
-            <InfoRow
-              label="Cash Sales"
-              value={
-                <span className="text-emerald-600">
-                  +{formatIDR(
-                    payment_breakdown.find((p) => p.payment_method === 'cash')?.total_amount ?? 0,
+            <WaterfallFlow>
+              <WaterfallRow
+                label="Opening Cash"
+                amount={shift.opening_cash}
+                kind="neutral"
+                isSubstep
+              />
+              <WaterfallDivider />
+              <WaterfallSectionLabel>Order Payments</WaterfallSectionLabel>
+              <WaterfallRow
+                label="Cash payments received"
+                amount={report.total_order_cash_in}
+                kind="in"
+                isSubstep
+              />
+              <WaterfallRow
+                label="Change given to customers"
+                amount={-report.total_order_cash_out}
+                kind="out"
+                isSubstep
+              />
+              <WaterfallRow
+                label="Net order cash"
+                amount={report.total_order_cash_in - report.total_order_cash_out}
+                kind="subtotal"
+              />
+              {(report.cash_transactions?.length ?? 0) > 0 && (
+                <>
+                  <WaterfallDivider />
+                  <WaterfallSectionLabel>Manual Transactions</WaterfallSectionLabel>
+                  {report.cash_transactions!.map((tx) => (
+                    <WaterfallRow
+                      key={tx.id}
+                      label={CASH_TX_REASON_LABELS[tx.reason] ?? tx.reason}
+                      amount={tx.type === 'cash_in' ? tx.amount : -tx.amount}
+                      kind={tx.type === 'cash_in' ? 'in' : 'out'}
+                      isSubstep
+                    />
+                  ))}
+                  {report.total_cash_in > 0 && (
+                    <WaterfallRow
+                      label="Subtotal manual cash in"
+                      amount={report.total_cash_in}
+                      kind="in"
+                    />
                   )}
-                </span>
-              }
-            />
-
-            {/* Individual cash transactions */}
-            {report.cash_transactions?.length > 0 && (
-              <>
-                <Separator className="my-2" />
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-1">
-                  Cash Transactions
-                </p>
-                {report.cash_transactions.map((tx) => {
-                  const isCashIn = tx.type === 'cash_in'
-                  return (
-                    <div key={tx.id}>
-                      <InfoRow
-                        label={
-                          <span className="flex items-center gap-1.5">
-                            {isCashIn ? (
-                              <ArrowDownCircleIcon className="size-3.5 text-emerald-500" />
-                            ) : (
-                              <ArrowUpCircleIcon className="size-3.5 text-destructive" />
-                            )}
-                            {CASH_TX_REASON_LABELS[tx.reason] ?? tx.reason}
-                          </span>
-                        }
-                        value={
-                          <span className={isCashIn ? 'text-emerald-600' : 'text-destructive'}>
-                            {isCashIn ? '+' : '-'}{formatIDR(tx.amount)}
-                          </span>
-                        }
-                      />
-                      <Separator className="my-1" />
-                    </div>
-                  )
-                })}
-                {report.total_cash_in > 0 && (
-                  <InfoRow
-                    label="Total Cash In"
-                    value={
-                      <span className="font-medium text-emerald-600">
-                        +{formatIDR(report.total_cash_in)}
-                      </span>
-                    }
+                  {report.total_cash_out > 0 && (
+                    <WaterfallRow
+                      label="Subtotal manual cash out"
+                      amount={-report.total_cash_out}
+                      kind="out"
+                    />
+                  )}
+                </>
+              )}
+              {report.total_po_expenses > 0 && (
+                <>
+                  <WaterfallDivider />
+                  <WaterfallSectionLabel>Purchase Orders</WaterfallSectionLabel>
+                  <WaterfallRow
+                    label="PO expenses"
+                    amount={-report.total_po_expenses}
+                    kind="out"
                   />
-                )}
-                {report.total_cash_out > 0 && (
-                  <InfoRow
-                    label="Total Cash Out"
-                    value={
-                      <span className="font-medium text-destructive">
-                        -{formatIDR(report.total_cash_out)}
-                      </span>
-                    }
-                  />
-                )}
-              </>
-            )}
+                </>
+              )}
+              <WaterfallDivider accent />
+              <WaterfallRow
+                label="NET CASH MOVEMENT"
+                amount={report.net_cash_movement}
+                kind="result"
+              />
+            </WaterfallFlow>
 
-            {report.total_po_expenses > 0 && (
-              <>
-                <Separator className="my-1" />
-                <InfoRow
-                  label="PO Expenses"
-                  value={
-                    <span className="font-medium text-amber-600">
-                      -{formatIDR(report.total_po_expenses)}
-                    </span>
-                  }
-                />
-              </>
-            )}
-
-            <Separator className="my-2 border-foreground/20" />
-            <InfoRow
-              label="Net Cash Movement"
-              value={
-                <span className={cn('font-semibold', report.net_cash_movement >= 0 ? 'text-emerald-600' : 'text-destructive')}>
-                  {report.net_cash_movement >= 0 ? '+' : ''}{formatIDR(report.net_cash_movement)}
-                </span>
-              }
+            <Separator className="my-4" />
+            <WaterfallBalance
+              expectedCash={shift.expected_cash}
+              closingCash={shift.closing_cash}
+              cashDifference={shift.cash_difference}
             />
-            <Separator className="my-2 border-foreground/20" />
-            <InfoRow
-              label="Expected Cash"
-              value={
-                <span className="font-semibold">
-                  {shift.expected_cash != null ? formatIDR(shift.expected_cash) : '—'}
-                </span>
-              }
-            />
-            <Separator className="my-1" />
-            <InfoRow
-              label="Actual Cash"
-              value={shift.closing_cash != null ? formatIDR(shift.closing_cash) : <span className="text-muted-foreground">Not closed</span>}
-            />
-            <Separator className="my-1" />
-            <InfoRow
-              label="Difference"
-              value={
-                shift.cash_difference != null ? (
-                  <span className={cn('font-semibold', diffPositive ? 'text-emerald-600' : 'text-destructive')}>
-                    {diffPositive ? '+' : ''}{formatIDR(cashDiff)}
-                  </span>
-                ) : '—'
-              }
-            />
-            {shift.cash_difference != null && !diffPositive && (
-              <p className="mt-3 rounded-md bg-destructive/10 px-3 py-2 text-xs text-destructive">
-                Cash drawer is short. Verify count and investigate missing amount.
-              </p>
-            )}
-            {shift.cash_difference != null && diffPositive && cashDiff > 0 && (
-              <p className="mt-3 rounded-md bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
-                Cash drawer has a surplus of {formatIDR(cashDiff)}.
-              </p>
-            )}
           </CardContent>
         </Card>
       </div>

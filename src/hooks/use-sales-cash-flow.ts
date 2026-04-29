@@ -85,6 +85,20 @@ export function useShiftReport(shiftId: string | null) {
   })
 }
 
+// ─── Expense Breakdown Hook ───────────────────────────────────────────────────
+
+export function useExpenseBreakdown(
+  branchId?: number,
+  dateFrom?: string,
+  dateTo?: string,
+) {
+  return useQuery({
+    queryKey: queryKeys.statistics.expenseBreakdown(branchId, dateFrom, dateTo),
+    queryFn: () => salesCashFlowService.getExpenseBreakdown(branchId, dateFrom, dateTo),
+    staleTime: 5 * 60_000,
+  })
+}
+
 // ─── Purchases Read ───────────────────────────────────────────────────────────
 
 export function usePurchases(filters?: PurchaseFilters) {

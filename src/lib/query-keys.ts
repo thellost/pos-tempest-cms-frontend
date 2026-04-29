@@ -332,6 +332,8 @@ export const queryKeys = {
       ['statistics', 'payment-methods', filters ?? {}] as const,
     cashFlow: (filters?: StatsFilter) =>
       ['statistics', 'cash-flow', filters ?? {}] as const,
+    expenseBreakdown: (branchId?: number, dateFrom?: string, dateTo?: string) =>
+      ['statistics', 'expense-breakdown', branchId, dateFrom, dateTo] as const,
     shiftReport: (id: string) => ['statistics', 'shift-report', id] as const,
   },
 } as const

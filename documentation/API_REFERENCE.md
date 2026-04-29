@@ -3862,10 +3862,12 @@ Get a detailed financial report for a specific shift.
     "total_tax": 742500.00,
     "total_service_charge": 337500.00,
     "net_revenue": 5420000.00,
+    "total_order_cash_in": 3500000.00,
+    "total_order_cash_out": 200000.00,
     "total_cash_in": 150000.00,
     "total_cash_out": 320000.00,
     "total_po_expenses": 600000.00,
-    "net_cash_movement": -770000.00,
+    "net_cash_movement": 2530000.00,
     "payment_breakdown": [
       {
         "payment_method": "cash",
@@ -3952,10 +3954,12 @@ Get a detailed financial report for a specific shift.
 
 | Field | Description |
 |-------|-------------|
+| `total_order_cash_in` | Sum of cash payment amounts (`payment_method = 'cash'`) from completed orders in this shift |
+| `total_order_cash_out` | Sum of change given for cash payments in this shift |
 | `total_cash_in` | Sum of all `cash_in` shift transactions during this shift |
 | `total_cash_out` | Sum of all `cash_out` shift transactions during this shift |
 | `total_po_expenses` | Sum of received POs whose `received_at` falls within the shift window |
-| `net_cash_movement` | `total_cash_in − total_cash_out − total_po_expenses` |
+| `net_cash_movement` | `total_order_cash_in − total_order_cash_out + total_cash_in − total_cash_out − total_po_expenses` |
 | `po_expenses` | List of purchase orders received during this shift (omitted if none) |
 
 > **Shift window for POs:** `received_at >= shift.opened_at AND received_at < shift.closed_at` (or `NOW()` for open shifts).

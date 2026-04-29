@@ -34,6 +34,13 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart'
+import {
+  WaterfallFlow,
+  WaterfallRow,
+  WaterfallDivider,
+  WaterfallSectionLabel,
+  WaterfallBalance,
+} from '@/components/waterfall-flow'
 import { cn } from '@/lib/utils'
 
 // ─── Route ────────────────────────────────────────────────────────────────────
@@ -142,10 +149,6 @@ function ShiftDetailPage() {
     )
   }
 
-  const cashDiff = shift?.cash_difference ?? null
-
-  const cashDiffPositive = cashDiff !== null && cashDiff >= 0
-
   return (
     <div className="space-y-6">
       {/* Back + Header */}
@@ -181,7 +184,7 @@ function ShiftDetailPage() {
       </div>
 
       {/* ── Cards grid ─────────────────────────────────────────────────── */}
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         {/* Shift Info */}
         <Card>
           <CardHeader>
@@ -275,161 +278,91 @@ function ShiftDetailPage() {
           </Card>
         )}
 
-        {/* Cash Drawer Summary */}
+        {/* Cash Flow Waterfall */}
         {report && (
-          <Card>
+          <Card className="md:col-span-2">
             <CardHeader>
-              <CardTitle>Cash Drawer</CardTitle>
+              <CardTitle>Cash Flow Waterfall</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3 text-sm">
-              <InfoRow
-                label="Opening Cash"
-                value={formatIDR(shift?.opening_cash)}
-              />
-              <Separator />
-              <InfoRow
-                label="Cash Sales"
-                value={
-                  <span className="text-emerald-600 dark:text-emerald-400">
-                    +{formatIDR(
-                      (report.payment_breakdown ?? []).find(
-                        (p) => p.payment_method === 'cash',
-                      )?.total_amount ?? 0,
-                    )}
-                  </span>
-                }
-              />
-
-              {/* Individual cash transactions */}
-              {cashTransactions.length > 0 && (
-                <>
-                  <Separator />
-                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                    Cash Transactions
-                  </p>
-                  {cashTransactions.map((tx) => {
-                    const isCashIn = tx.type === 'cash_in'
-                    return (
-                      <InfoRow
-                        key={tx.id}
-                        label={
-                          <span className="flex items-center gap-1.5">
-                            {isCashIn ? (
-                              <ArrowDownCircleIcon className="size-3.5 text-emerald-500" />
-                            ) : (
-                              <ArrowUpCircleIcon className="size-3.5 text-destructive" />
-                            )}
-                            {CASH_TX_REASON_LABELS[tx.reason] ?? tx.reason}
-                          </span>
-                        }
-                        value={
-                          <span
-                            className={
-                              isCashIn
-                                ? 'text-emerald-600 dark:text-emerald-400'
-                                : 'text-destructive'
-                            }
-                          >
-                            {isCashIn ? '+' : '-'}
-                            {formatIDR(tx.amount)}
-                          </span>
-                        }
-                      />
-                    )
-                  })}
-                </>
-              )}
-
-              {/* Totals */}
-              {(report.total_cash_in > 0 || report.total_cash_out > 0 || report.total_po_expenses > 0) && (
-                <>
-                  <Separator />
-                  {report.total_cash_in > 0 && (
-                    <InfoRow
-                      label="Total Cash In"
-                      value={
-                        <span className="font-medium text-emerald-600 dark:text-emerald-400">
-                          +{formatIDR(report.total_cash_in)}
-                        </span>
-                      }
-                    />
-                  )}
-                  {report.total_cash_out > 0 && (
-                    <InfoRow
-                      label="Total Cash Out"
-                      value={
-                        <span className="font-medium text-destructive">
-                          -{formatIDR(report.total_cash_out)}
-                        </span>
-                      }
-                    />
-                  )}
-                  {report.total_po_expenses > 0 && (
-                    <InfoRow
-                      label="PO Expenses"
-                      value={
-                        <span className="font-medium text-amber-600 dark:text-amber-400">
-                          -{formatIDR(report.total_po_expenses)}
-                        </span>
-                      }
-                    />
-                  )}
-                </>
-              )}
-              <Separator />
-              <InfoRow
-                label="Net Cash Movement"
-                value={
-                  <span
-                    className={cn(
-                      'font-semibold',
-                      report.net_cash_movement >= 0
-                        ? 'text-emerald-600 dark:text-emerald-400'
-                        : 'text-destructive',
-                    )}
-                  >
-                    {report.net_cash_movement >= 0 ? '+' : ''}
-                    {formatIDR(report.net_cash_movement)}
-                  </span>
-                }
-              />
-
-              <Separator />
-              <InfoRow
-                label="Expected Cash"
-                value={
-                  <span className="font-semibold">
-                    {formatIDR(shift?.expected_cash)}
-                  </span>
-                }
-              />
-              {shift?.closing_cash != null && (
-                <>
-                  <InfoRow
-                    label="Actual Cash"
-                    value={formatIDR(shift.closing_cash)}
+            <CardContent>
+              <WaterfallFlow>
+                {/* Starting point */}
+                <WaterfallRow
+                  label="Opening Cash"
+                  amount={shift?.opening_cash ?? 0}
+                  kind="neutral"
+                  isSubstep
+                />
+                <WaterfallDivider />
+                <WaterfallSectionLabel>Order Payments</WaterfallSectionLabel>
+                <WaterfallRow
+                  label="Cash payments received"
+                  amount={report.total_order_cash_in}
+                  kind="in"
+                  isSubstep
+                />
+                <WaterfallRow
+                  label="Change given to customers"
+                  amount={-report.total_order_cash_out}
+                  kind="out"
+                  isSubstep
+                />
+                <WaterfallRow
+                  label="Net order cash"
+                  amount={report.total_order_cash_in - report.total_order_cash_out}
+                  kind="subtotal"
+                />
+                <WaterfallDivider />
+                <WaterfallSectionLabel>Manual Transactions</WaterfallSectionLabel>
+                {report.cash_transactions.map((tx) => (
+                  <WaterfallRow
+                    key={tx.id}
+                    label={CASH_TX_REASON_LABELS[tx.reason] ?? tx.reason}
+                    amount={tx.type === 'cash_in' ? tx.amount : -tx.amount}
+                    kind={tx.type === 'cash_in' ? 'in' : 'out'}
+                    isSubstep
                   />
-                  <InfoRow
-                    label="Difference"
-                    value={
-                      <span
-                        className={cn(
-                          'font-semibold',
-                          cashDiff === null
-                            ? 'text-muted-foreground'
-                            : cashDiffPositive
-                              ? 'text-emerald-600 dark:text-emerald-400'
-                              : 'text-destructive',
-                        )}
-                      >
-                        {cashDiff !== null
-                          ? `${cashDiff >= 0 ? '+' : ''}${formatIDR(cashDiff)}`
-                          : '—'}
-                      </span>
-                    }
+                ))}
+                {report.total_cash_in > 0 && (
+                  <WaterfallRow
+                    label="Subtotal manual cash in"
+                    amount={report.total_cash_in}
+                    kind="in"
                   />
-                </>
-              )}
+                )}
+                {report.total_cash_out > 0 && (
+                  <WaterfallRow
+                    label="Subtotal manual cash out"
+                    amount={-report.total_cash_out}
+                    kind="out"
+                  />
+                )}
+                {report.total_po_expenses > 0 && (
+                  <>
+                    <WaterfallDivider />
+                    <WaterfallSectionLabel>Purchase Orders</WaterfallSectionLabel>
+                    <WaterfallRow
+                      label="PO expenses"
+                      amount={-report.total_po_expenses}
+                      kind="out"
+                    />
+                  </>
+                )}
+                <WaterfallDivider accent />
+                <WaterfallRow
+                  label="NET CASH MOVEMENT"
+                  amount={report.net_cash_movement}
+                  kind="result"
+                />
+              </WaterfallFlow>
+
+              {/* Balance reconciliation */}
+              <Separator className="my-4" />
+              <WaterfallBalance
+                expectedCash={shift?.expected_cash}
+                closingCash={shift?.closing_cash}
+                cashDifference={shift?.cash_difference}
+              />
             </CardContent>
           </Card>
         )}
@@ -663,7 +596,7 @@ function ShiftDetailSkeleton() {
           <Skeleton className="h-4 w-64" />
         </div>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2">
         {[0, 1, 2].map((i) => (
           <Card key={i}>
             <CardHeader>

@@ -6,13 +6,18 @@ import type { PurchaseFilters, ShiftFilters, StatsFilter, SupplierFilters } from
 export interface DashboardStats {
   today_revenue: number
   yesterday_revenue: number
+  revenue_change_pct: number
   today_orders: number
   yesterday_orders: number
+  orders_change_pct: number
+  avg_order_value: number
+  today_expenses: number
+  yesterday_expenses: number
+  today_net_cash: number
   active_tables: number
   open_shifts: number
   low_stock_items: number
   pending_reservations: number
-  generated_at?: string
 }
 
 // ─── Sales ─────────────────────────────────────────────────────────────────────
@@ -24,6 +29,8 @@ export interface SalesDataPoint {
   total_discount: number
   total_tax: number
   net_revenue: number
+  total_expenses: number
+  net_profit: number
 }
 
 export interface CategoryRevenue {
@@ -37,7 +44,6 @@ export interface CategoryRevenue {
 export interface TopItem {
   menu_item_id: number
   menu_item_name: string
-  category_name?: string | null
   quantity_sold: number
   total_revenue: number
   order_count: number
@@ -98,6 +104,8 @@ export interface ShiftReport {
   net_revenue: number
   total_cash_in: number
   total_cash_out: number
+  total_order_cash_in: number
+  total_order_cash_out: number
   total_po_expenses: number
   net_cash_movement: number
   payment_breakdown: Array<{
@@ -295,19 +303,19 @@ export interface CreateCashTransactionPayload {
 }
 
 export interface ShiftSummary {
-  shift: Shift
+  shift_id: string
   total_orders: number
-  completed_orders: number
-  cancelled_orders: number
-  voided_orders: number
-  gross_revenue: number
-  total_discounts: number
+  total_revenue: number
+  total_discount: number
   total_tax: number
-  total_service_charge: number
+  total_service: number
   net_revenue: number
+  opening_cash: number
+  closing_cash: number | null
+  expected_cash: number | null
+  cash_difference: number | null
   total_cash_in: number
   total_cash_out: number
-  net_cash_movement: number
   payment_breakdown: PaymentBreakdown[]
   cash_transactions: CashTransaction[]
 }
@@ -328,6 +336,15 @@ export interface OpenShiftPayload {
 export interface CloseShiftPayload {
   closing_cash: number
   notes?: string
+}
+
+// ─── Expense Breakdown ───────────────────────────────────────────────────────
+
+export interface ExpenseBreakdownItem {
+  reason: string
+  total_amount: number
+  count: number
+  percentage: number
 }
 
 // ─── Service ───────────────────────────────────────────────────────────────────
@@ -371,6 +388,16 @@ export const salesCashFlowService = {
 
   getShiftReport: (shiftId: string) =>
     api.get<ShiftReport>(`/api/v1/statistics/shifts/${shiftId}`),
+
+  getExpenseBreakdown: (branchId?: number, dateFrom?: string, dateTo?: string) => {
+    const params: Record<string, unknown> = {}
+    if (branchId) params.branch_id = branchId
+    if (dateFrom) params.date_from = dateFrom
+    if (dateTo) params.date_to = dateTo
+    return api.get<ExpenseBreakdownItem[]>(
+      `/api/v1/statistics/expense-breakdown${buildQueryParams(params)}`,
+    )
+  },
 
   // ── Purchases ────────────────────────────────────────────────────────────
 
