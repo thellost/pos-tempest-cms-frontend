@@ -169,8 +169,8 @@ function CashFlowSummaryCard({ branchId }: { branchId?: number }) {
     () =>
       points.reduce(
         (acc, p) => ({
-          totalIncome: acc.totalIncome + (p.total_revenue ?? 0),
-          totalExpense: acc.totalExpense + (p.cash_out ?? 0),
+          totalIncome: acc.totalIncome + (p.total_revenue ?? 0), 
+          totalExpense: acc.totalExpense + (p.cash_out ?? 0) + (p.po_expenses ?? 0),
         }),
         { totalIncome: 0, totalExpense: 0 },
       ),
