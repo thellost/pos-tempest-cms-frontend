@@ -3,7 +3,7 @@ import { EyeIcon, XCircleIcon, CheckCircleIcon } from 'lucide-react'
 import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header'
 import { DataTableRowActions } from '@/components/data-table/data-table-row-actions'
 import { StatusBadge } from '@/components/status-badge'
-import type { Purchase } from '@/lib/services/purchases'
+import type { Purchase } from '@/lib/services/sales-cash-flow'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

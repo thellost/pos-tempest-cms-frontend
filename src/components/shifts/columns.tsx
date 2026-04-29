@@ -4,7 +4,7 @@ import { DataTableColumnHeader } from '@/components/data-table/data-table-column
 import { DataTableRowActions } from '@/components/data-table/data-table-row-actions'
 import { StatusBadge } from '@/components/status-badge'
 import { cn } from '@/lib/utils'
-import type { Shift } from '@/lib/services/shifts'
+import type { Shift } from '@/lib/services/sales-cash-flow'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 

@@ -7,7 +7,7 @@ import {
   PackageIcon,
   CreditCardIcon,
 } from 'lucide-react'
-import { usePurchase, useCancelPurchase } from '@/hooks/use-purchases'
+import { usePurchase, useCancelPurchase } from '@/hooks/use-sales-cash-flow'
 import { PageHeader } from '@/components/page-header'
 import { StatusBadge } from '@/components/status-badge'
 import { ConfirmDialog } from '@/components/confirm-dialog'

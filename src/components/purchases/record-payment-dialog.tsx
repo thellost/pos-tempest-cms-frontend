@@ -8,9 +8,9 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { useAppForm } from '@/hooks/use-form'
-import { useReceivePurchase } from '@/hooks/use-purchases'
+import { useReceivePurchase } from '@/hooks/use-sales-cash-flow'
 import { formatIDR } from '@/components/purchases/columns'
-import type { Purchase } from '@/lib/services/purchases'
+import type { Purchase } from '@/lib/services/sales-cash-flow'
 
 interface RecordPaymentDialogProps {
   purchase: Purchase | null

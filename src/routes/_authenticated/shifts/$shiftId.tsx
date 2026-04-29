@@ -11,10 +11,10 @@ import { PieChart, Pie, Cell } from 'recharts'
 import {
   useShift,
   useCloseShift,
-} from '@/hooks/use-shifts'
-import { useShiftReport } from '@/hooks/use-statistics'
+  useShiftReport,
+} from '@/hooks/use-sales-cash-flow'
 import { useAppForm } from '@/hooks/use-form'
-import type { CloseShiftPayload } from '@/lib/services/shifts'
+import type { CloseShiftPayload } from '@/lib/services/sales-cash-flow'
 import { PageHeader } from '@/components/page-header'
 import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'

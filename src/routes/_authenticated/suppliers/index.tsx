@@ -8,12 +8,12 @@ import {
   useSuppliers,
   useCreateSupplier,
   useUpdateSupplier,
-} from '@/hooks/use-suppliers'
+} from '@/hooks/use-sales-cash-flow'
 import type {
   Supplier,
   CreateSupplierPayload,
   UpdateSupplierPayload,
-} from '@/lib/services/suppliers'
+} from '@/lib/services/sales-cash-flow'
 import { getSupplierColumns } from '@/components/suppliers/columns'
 import { PageHeader } from '@/components/page-header'
 import { DataTable } from '@/components/data-table/data-table'

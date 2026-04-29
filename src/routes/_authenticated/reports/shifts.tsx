@@ -17,8 +17,7 @@ import {
   ShoppingBagIcon,
 } from 'lucide-react'
 import { PieChart, Pie, Cell } from 'recharts'
-import { useShiftReport } from '@/hooks/use-statistics'
-import { useShifts } from '@/hooks/use-shifts'
+import { useShiftReport, useShifts } from '@/hooks/use-sales-cash-flow'
 import { useBranches } from '@/hooks/use-branches'
 import { PageHeader } from '@/components/page-header'
 import {

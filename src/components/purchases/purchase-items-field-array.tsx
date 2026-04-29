@@ -27,7 +27,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
-import type { UnitOfMeasure } from '@/lib/services/purchases'
+import type { UnitOfMeasure } from '@/lib/services/sales-cash-flow'
 
 export type { UnitOfMeasure }
 

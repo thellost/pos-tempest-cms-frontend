@@ -15,7 +15,7 @@ import {
 } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { useAuth } from '@/hooks/use-auth'
-import { useDashboardStats, useSalesStats, useCashFlowStats } from '@/hooks/use-statistics'
+import { useDashboardStats, useSalesStats, useCashFlowStats } from '@/hooks/use-sales-cash-flow'
 import { PageHeader } from '@/components/page-header'
 import { StatCard } from '@/components/stat-card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -170,7 +170,7 @@ function CashFlowSummaryCard({ branchId }: { branchId?: number }) {
       points.reduce(
         (acc, p) => ({
           totalIncome: acc.totalIncome + (p.total_revenue ?? 0), 
-          totalExpense: acc.totalExpense + (p.cash_out ?? 0) + (p.po_expenses ?? 0),
+          totalExpense: acc.totalExpense + (p.cash_out ?? 0),
         }),
         { totalIncome: 0, totalExpense: 0 },
       ),

@@ -3,7 +3,7 @@ import { PencilIcon } from 'lucide-react'
 import { DataTableColumnHeader } from '@/components/data-table/data-table-column-header'
 import { DataTableRowActions } from '@/components/data-table/data-table-row-actions'
 import { StatusBadge } from '@/components/status-badge'
-import type { Supplier } from '@/lib/services/suppliers'
+import type { Supplier } from '@/lib/services/sales-cash-flow'
 
 // ─── Props ────────────────────────────────────────────────────────────────────
 

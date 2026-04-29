@@ -3,11 +3,10 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowLeftIcon } from 'lucide-react'
 import { requireRole } from '@/lib/auth-guards'
 import { useAuth } from '@/hooks/use-auth'
-import { useCreatePurchase } from '@/hooks/use-purchases'
+import { useCreatePurchase, useSuppliers } from '@/hooks/use-sales-cash-flow'
 import { useBranches } from '@/hooks/use-branches'
-import { useSuppliers } from '@/hooks/use-suppliers'
 import { useAppForm } from '@/hooks/use-form'
-import type { CreatePurchasePayload } from '@/lib/services/purchases'
+import type { CreatePurchasePayload } from '@/lib/services/sales-cash-flow'
 import {
   PurchaseItemsFieldArray,
   createPurchaseItemRow,

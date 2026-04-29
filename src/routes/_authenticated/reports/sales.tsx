@@ -23,7 +23,7 @@ import {
   useSalesStats,
   useRevenueByCategoryStats,
   useTopItemsStats,
-} from '@/hooks/use-statistics'
+} from '@/hooks/use-sales-cash-flow'
 import { useBranches } from '@/hooks/use-branches'
 import { PageHeader } from '@/components/page-header'
 import {
