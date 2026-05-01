@@ -79,6 +79,7 @@ export function getContext() {
 
     defaultOptions: {
       queries: {
+        refetchOnWindowFocus: false,
         retry: (failureCount, error) => {
           if (error instanceof ApiError && error.status < 500) {
             return false

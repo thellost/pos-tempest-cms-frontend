@@ -77,7 +77,7 @@ function AuthenticatedLayout() {
   }, [isLoading, isAuthenticated, user, signOut, navigate])
 
   // Show skeleton while session/profile is resolving (isLoading covers both).
-  if (isLoading || !isAuthenticated || !user) return <LayoutSkeleton />
+  if (!user && (isLoading || !isAuthenticated)) return <LayoutSkeleton />
 
   return (
     <SidebarProvider>
