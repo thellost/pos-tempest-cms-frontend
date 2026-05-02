@@ -1,6 +1,7 @@
 import { Link, useNavigate, useRouterState } from '@tanstack/react-router'
 import {
   AlertTriangle,
+  ArrowRightLeft,
   BarChart3,
   BookOpen,
   Calendar,
@@ -183,6 +184,12 @@ const NAV_GROUPS: NavGroup[] = [
         label: 'Expense Report',
         to: '/reports/expenses',
         icon: Receipt,
+        roles: ['admin', 'manager', 'cashier'],
+      },
+      {
+        label: 'Cash Transactions',
+        to: '/reports/cash-transactions',
+        icon: ArrowRightLeft,
         roles: ['admin', 'manager', 'cashier'],
       },
     ],

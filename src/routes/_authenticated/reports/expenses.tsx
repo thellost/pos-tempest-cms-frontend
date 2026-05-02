@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { format, subDays } from 'date-fns'
 import {
   ArrowDownIcon,
@@ -112,6 +112,7 @@ const expenseChartConfig = {
 } satisfies ChartConfig
 
 function ExpenseBreakdownSection({ branchId, dateFrom, dateTo }: ExpenseBreakdownSectionProps) {
+  const navigate = useNavigate()
   const { data, isLoading } = useExpenseBreakdown(branchId, dateFrom, dateTo)
   const items = useMemo(() => (data?.data ?? []).slice().sort((a, b) => b.total_amount - a.total_amount), [data])
 
@@ -120,6 +121,7 @@ function ExpenseBreakdownSection({ branchId, dateFrom, dateTo }: ExpenseBreakdow
 
   const chartData = items.map((item) => ({
     reason: labelForReason(item.reason),
+    rawReason: item.reason,
     total_amount: item.total_amount,
   }))
 
@@ -169,7 +171,7 @@ function ExpenseBreakdownSection({ branchId, dateFrom, dateTo }: ExpenseBreakdow
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Bar chart */}
-        <ChartContainer config={expenseChartConfig} className="h-52 w-full">
+        <ChartContainer config={expenseChartConfig} className="h-52 w-full cursor-pointer">
           <BarChart data={chartData} layout="vertical" margin={{ left: 8, right: 16 }}>
             <CartesianGrid horizontal={false} strokeDasharray="3 3" />
             <XAxis
@@ -194,7 +196,31 @@ function ExpenseBreakdownSection({ branchId, dateFrom, dateTo }: ExpenseBreakdow
                 />
               }
             />
-            <Bar dataKey="total_amount" radius={[0, 4, 4, 0]}>
+            <Bar
+              dataKey="total_amount"
+              radius={[0, 4, 4, 0]}
+              style={{ cursor: 'pointer' }}
+              onClick={(data: { rawReason?: string }) => {
+                if (data.rawReason === 'purchase_order') {
+                  void navigate({
+                    to: '/purchases',
+                    search: { date_from: dateFrom, date_to: dateTo },
+                  })
+                } else {
+                  void navigate({
+                    to: '/reports/cash-transactions',
+                    search: {
+                      reason: data.rawReason,
+                      type: undefined,
+                      shift_id: undefined,
+                      branch_id: undefined,
+                      date_from: dateFrom,
+                      date_to: dateTo,
+                    },
+                  })
+                }
+              }}
+            >
               {chartData.map((_, i) => (
                 <Cell key={i} fill={EXPENSE_COLORS[i % EXPENSE_COLORS.length]} />
               ))}

@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import { format, parseISO, differenceInMinutes } from 'date-fns'
 import {
   ClockIcon,
@@ -305,15 +305,39 @@ function ShiftReportContent({ shiftId }: ShiftReportContentProps) {
                 <>
                   <WaterfallDivider />
                   <WaterfallSectionLabel>Manual Transactions</WaterfallSectionLabel>
-                  {report.cash_transactions!.map((tx) => (
-                    <WaterfallRow
-                      key={tx.id}
-                      label={CASH_TX_REASON_LABELS[tx.reason] ?? tx.reason}
-                      amount={tx.type === 'cash_in' ? tx.amount : -tx.amount}
-                      kind={tx.type === 'cash_in' ? 'in' : 'out'}
-                      isSubstep
-                    />
-                  ))}
+                  {report.cash_transactions!.map((tx) => {
+                    const shiftDate = shift.opened_at
+                      ? format(parseISO(shift.opened_at), 'yyyy-MM-dd')
+                      : undefined
+                    const isPO = tx.reason === 'purchase_order'
+                    const row = (
+                      <WaterfallRow
+                        label={CASH_TX_REASON_LABELS[tx.reason] ?? tx.reason}
+                        amount={tx.type === 'cash_in' ? tx.amount : -tx.amount}
+                        kind={tx.type === 'cash_in' ? 'in' : 'out'}
+                        isSubstep
+                      />
+                    )
+                    return isPO ? (
+                      <Link
+                        key={tx.id}
+                        to="/purchases"
+                        search={{ date_from: shiftDate, date_to: shiftDate }}
+                        className="block rounded hover:bg-muted/50 transition-colors"
+                      >
+                        {row}
+                      </Link>
+                    ) : (
+                      <Link
+                        key={tx.id}
+                        to="/reports/cash-transactions/$transactionId"
+                        params={{ transactionId: tx.id }}
+                        className="block rounded hover:bg-muted/50 transition-colors"
+                      >
+                        {row}
+                      </Link>
+                    )
+                  })}
                   {report.total_cash_in > 0 && (
                     <WaterfallRow
                       label="Subtotal manual cash in"

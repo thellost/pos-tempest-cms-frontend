@@ -357,6 +357,40 @@ export interface CashTransactionBreakdownItem {
   percentage: number
 }
 
+// ─── Global Cash Transactions ─────────────────────────────────────────────────
+
+export interface GlobalCashTransaction {
+  id: string
+  shift_id: string
+  user_id: number
+  type: 'cash_in' | 'cash_out'
+  reason: string
+  amount: number
+  note: string | null
+  created_at: string
+  user_name: string
+  shift_branch_id: number
+  shift_branch_name: string
+}
+
+export interface GlobalCashTransactionMeta {
+  page: number
+  page_size: number
+  total: number
+  total_pages: number
+}
+
+export interface GlobalCashTransactionFilters {
+  shiftId?: string
+  branchId?: number
+  type?: 'cash_in' | 'cash_out'
+  reason?: string
+  dateFrom?: string
+  dateTo?: string
+  page?: number
+  pageSize?: number
+}
+
 // ─── Service ───────────────────────────────────────────────────────────────────
 
 function buildStatsParams(filters: StatsFilter): string {
@@ -418,6 +452,25 @@ export const salesCashFlowService = {
       `/api/v1/statistics/cash-transaction-breakdown${buildQueryParams(params)}`,
     )
   },
+
+  // ── Global Cash Transactions ──────────────────────────────────────────────
+
+  listGlobalCashTransactions: (filters: GlobalCashTransactionFilters = {}) => {
+    const { shiftId, branchId, type, reason, dateFrom, dateTo, page, pageSize } = filters
+    const params: Record<string, unknown> = {}
+    if (shiftId) params.shift_id = shiftId
+    if (branchId) params.branch_id = branchId
+    if (type) params.type = type
+    if (reason) params.reason = reason
+    if (dateFrom) params.date_from = dateFrom
+    if (dateTo) params.date_to = dateTo
+    return api.get<Array<GlobalCashTransaction>>(
+      `/api/v1/cash-transactions${buildQueryParams(params, { page: page ?? 1, pageSize: pageSize ?? 20 })}`,
+    )
+  },
+
+  getGlobalCashTransaction: (id: string) =>
+    api.get<GlobalCashTransaction>(`/api/v1/cash-transactions/${id}`),
 
   // ── Purchases ────────────────────────────────────────────────────────────
 

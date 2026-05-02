@@ -38,7 +38,7 @@ function CreatePurchasePage() {
         actions={
           <Button
             variant="outline"
-            onClick={() => navigate({ to: '/purchases' })}
+            onClick={() => navigate({ to: '/purchases', search: { date_from: undefined, date_to: undefined } })}
           >
             <ArrowLeftIcon className="mr-2 size-4" />
             Back to Purchase Orders

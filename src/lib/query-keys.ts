@@ -171,6 +171,17 @@ export type StatsFilter = {
   limit?: number
 }
 
+export type GlobalCashTransactionFilters = {
+  shiftId?: string
+  branchId?: number
+  type?: 'cash_in' | 'cash_out'
+  reason?: string
+  dateFrom?: string
+  dateTo?: string
+  page?: number
+  pageSize?: number
+}
+
 // ─── Query Key Factory ────────────────────────────────────────────────────────
 
 export const queryKeys = {
@@ -337,5 +348,13 @@ export const queryKeys = {
     cashTransactionBreakdown: (branchId?: number, dateFrom?: string, dateTo?: string) =>
       ['statistics', 'cash-transaction-breakdown', branchId, dateFrom, dateTo] as const,
     shiftReport: (id: string) => ['statistics', 'shift-report', id] as const,
+  },
+
+  // ── Global Cash Transactions ──────────────────────────────────────────────
+  cashTransactions: {
+    all: ['cash-transactions'] as const,
+    list: (filters?: GlobalCashTransactionFilters) =>
+      ['cash-transactions', 'list', filters ?? {}] as const,
+    detail: (id: string) => ['cash-transactions', 'detail', id] as const,
   },
 } as const

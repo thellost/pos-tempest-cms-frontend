@@ -3,16 +3,17 @@ import { toast } from 'sonner'
 import * as Sentry from '@sentry/tanstackstart-react'
 import {
   salesCashFlowService,
-  type CreatePurchasePayload,
-  type ReceivePurchasePayload,
-  type CreateSupplierPayload,
-  type UpdateSupplierPayload,
-  type OpenShiftPayload,
-  type CloseShiftPayload,
   type CreateCashTransactionPayload,
+  type CreatePurchasePayload,
+  type CreateSupplierPayload,
+  type CloseShiftPayload,
+  type OpenShiftPayload,
+  type ReceivePurchasePayload,
+  type UpdateSupplierPayload,
 } from '@/lib/services/sales-cash-flow'
 import {
   queryKeys,
+  type GlobalCashTransactionFilters,
   type PurchaseFilters,
   type ShiftFilters,
   type StatsFilter,
@@ -110,6 +111,25 @@ export function useCashTransactionBreakdown(
     queryKey: queryKeys.statistics.cashTransactionBreakdown(branchId, dateFrom, dateTo),
     queryFn: () =>
       salesCashFlowService.getCashTransactionBreakdown(branchId, dateFrom, dateTo),
+    staleTime: 5 * 60_000,
+  })
+}
+
+// ─── Global Cash Transactions Hooks ──────────────────────────────────────────
+
+export function useGlobalCashTransactions(filters: GlobalCashTransactionFilters = {}) {
+  return useQuery({
+    queryKey: queryKeys.cashTransactions.list(filters),
+    queryFn: () => salesCashFlowService.listGlobalCashTransactions(filters),
+    staleTime: 2 * 60_000,
+  })
+}
+
+export function useGlobalCashTransaction(id: string | null) {
+  return useQuery({
+    queryKey: queryKeys.cashTransactions.detail(id ?? ''),
+    queryFn: () => salesCashFlowService.getGlobalCashTransaction(id!),
+    enabled: !!id,
     staleTime: 5 * 60_000,
   })
 }

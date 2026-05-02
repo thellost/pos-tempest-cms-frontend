@@ -2,7 +2,7 @@
 
 > **Base URL:** `http://localhost:8080`
 > **Content-Type:** `application/json`
-> **Total Endpoints:** 98
+> **Total Endpoints:** 100
 
 ---
 
@@ -1034,6 +1034,95 @@ List all non-order cash transactions recorded against a shift, ordered chronolog
 ```
 
 **Error `404`:** Shift not found.
+
+---
+
+## 9a. Cash Transactions
+
+Global read-only endpoints for browsing `shift_cash_transactions` across all shifts. Useful for expense detail pages without needing a known shift ID.
+
+> **Roles:** admin, manager, cashier, chef, waiter (all staff)
+
+---
+
+### `GET /api/v1/cash-transactions`
+
+Returns a paginated list of cash transactions across all shifts, with optional filters.
+
+**Query Parameters:**
+
+| Parameter   | Type    | Description                                 |
+|-------------|---------|---------------------------------------------|
+| `shift_id`  | UUID    | Filter to a specific shift                  |
+| `branch_id` | integer | Filter to a specific branch                 |
+| `type`      | string  | `cash_in` or `cash_out`                     |
+| `reason`    | string  | e.g. `owner_withdrawal`, `supply_purchase`  |
+| `date_from` | string  | `YYYY-MM-DD` — filter by transaction date   |
+| `date_to`   | string  | `YYYY-MM-DD` — filter by transaction date   |
+| `page`      | integer | Page number (default: 1)                    |
+| `page_size` | integer | Results per page (default: 20)              |
+
+**Response `200`:**
+
+```json
+{
+  "data": [
+    {
+      "id": "3f1a2b4c-...",
+      "shift_id": "aabbccdd-...",
+      "user_id": 3,
+      "type": "cash_out",
+      "reason": "supply_purchase",
+      "amount": 250.00,
+      "note": "Bought cleaning supplies",
+      "created_at": "2025-10-01T09:15:00Z",
+      "user_name": "Alice Manager",
+      "shift_branch_id": 1,
+      "shift_branch_name": "Main Branch"
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "page_size": 20,
+    "total": 45,
+    "total_pages": 3
+  }
+}
+```
+
+---
+
+### `GET /api/v1/cash-transactions/:id`
+
+Returns a single cash transaction by its UUID.
+
+**Path Parameters:**
+
+| Parameter | Type | Description         |
+|-----------|------|---------------------|
+| `id`      | UUID | Cash transaction ID |
+
+**Response `200`:**
+
+```json
+{
+  "data": {
+    "id": "3f1a2b4c-...",
+    "shift_id": "aabbccdd-...",
+    "user_id": 3,
+    "type": "cash_out",
+    "reason": "supply_purchase",
+    "amount": 250.00,
+    "note": "Bought cleaning supplies",
+    "created_at": "2025-10-01T09:15:00Z",
+    "user_name": "Alice Manager",
+    "shift_branch_id": 1,
+    "shift_branch_name": "Main Branch"
+  }
+}
+```
+
+**Error `404`:** Cash transaction not found.
 
 ---
 

@@ -20,6 +20,10 @@ import { requireRole } from '@/lib/auth-guards'
 // ─── Route ────────────────────────────────────────────────────────────────────
 
 export const Route = createFileRoute('/_authenticated/purchases/')({
+  validateSearch: (search: Record<string, unknown>) => ({
+    date_from: typeof search.date_from === 'string' ? search.date_from : undefined,
+    date_to: typeof search.date_to === 'string' ? search.date_to : undefined,
+  }),
   beforeLoad: requireRole(['admin', 'manager', 'cashier']),
   component: PurchasesPage,
 })
@@ -30,6 +34,7 @@ function PurchasesPage() {
   const navigate = useNavigate()
   const isMobile = useIsMobile()
   const { branchId: userBranchId } = useAuth()
+  const { date_from: searchDateFrom, date_to: searchDateTo } = Route.useSearch()
 
   // Pagination
   const [page, setPage] = useState(1)
@@ -41,8 +46,8 @@ function PurchasesPage() {
     supplier_id: '',
     status: '',
   })
-  const [dateFrom, setDateFrom] = useState('')
-  const [dateTo, setDateTo] = useState('')
+  const [dateFrom, setDateFrom] = useState(searchDateFrom ?? '')
+  const [dateTo, setDateTo] = useState(searchDateTo ?? '')
 
   // Action dialogs
   const [receiveTarget, setReceiveTarget] = useState<Purchase | null>(null)

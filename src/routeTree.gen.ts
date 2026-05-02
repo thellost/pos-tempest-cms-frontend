@@ -48,6 +48,8 @@ import { Route as AuthenticatedOrdersOrderIdRouteImport } from './routes/_authen
 import { Route as AuthenticatedMenuItemsCreateRouteImport } from './routes/_authenticated/menu-items/create'
 import { Route as AuthenticatedMenuItemsItemIdRouteImport } from './routes/_authenticated/menu-items/$itemId'
 import { Route as AuthenticatedCustomersCustomerIdRouteImport } from './routes/_authenticated/customers/$customerId'
+import { Route as AuthenticatedReportsCashTransactionsIndexRouteImport } from './routes/_authenticated/reports/cash-transactions/index'
+import { Route as AuthenticatedReportsCashTransactionsTransactionIdRouteImport } from './routes/_authenticated/reports/cash-transactions/$transactionId'
 import { Route as AuthenticatedInventoryInventoryIdMovementsRouteImport } from './routes/_authenticated/inventory/$inventoryId/movements'
 
 const VerifyOtpRoute = VerifyOtpRouteImport.update({
@@ -274,6 +276,18 @@ const AuthenticatedCustomersCustomerIdRoute =
     path: '/customers/$customerId',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedReportsCashTransactionsIndexRoute =
+  AuthenticatedReportsCashTransactionsIndexRouteImport.update({
+    id: '/reports/cash-transactions/',
+    path: '/reports/cash-transactions/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedReportsCashTransactionsTransactionIdRoute =
+  AuthenticatedReportsCashTransactionsTransactionIdRouteImport.update({
+    id: '/reports/cash-transactions/$transactionId',
+    path: '/reports/cash-transactions/$transactionId',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedInventoryInventoryIdMovementsRoute =
   AuthenticatedInventoryInventoryIdMovementsRouteImport.update({
     id: '/inventory/$inventoryId/movements',
@@ -321,6 +335,8 @@ export interface FileRoutesByFullPath {
   '/tables/': typeof AuthenticatedTablesIndexRoute
   '/users/': typeof AuthenticatedUsersIndexRoute
   '/inventory/$inventoryId/movements': typeof AuthenticatedInventoryInventoryIdMovementsRoute
+  '/reports/cash-transactions/$transactionId': typeof AuthenticatedReportsCashTransactionsTransactionIdRoute
+  '/reports/cash-transactions/': typeof AuthenticatedReportsCashTransactionsIndexRoute
 }
 export interface FileRoutesByTo {
   '/forgot-password': typeof ForgotPasswordRoute
@@ -362,6 +378,8 @@ export interface FileRoutesByTo {
   '/tables': typeof AuthenticatedTablesIndexRoute
   '/users': typeof AuthenticatedUsersIndexRoute
   '/inventory/$inventoryId/movements': typeof AuthenticatedInventoryInventoryIdMovementsRoute
+  '/reports/cash-transactions/$transactionId': typeof AuthenticatedReportsCashTransactionsTransactionIdRoute
+  '/reports/cash-transactions': typeof AuthenticatedReportsCashTransactionsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -405,6 +423,8 @@ export interface FileRoutesById {
   '/_authenticated/tables/': typeof AuthenticatedTablesIndexRoute
   '/_authenticated/users/': typeof AuthenticatedUsersIndexRoute
   '/_authenticated/inventory/$inventoryId/movements': typeof AuthenticatedInventoryInventoryIdMovementsRoute
+  '/_authenticated/reports/cash-transactions/$transactionId': typeof AuthenticatedReportsCashTransactionsTransactionIdRoute
+  '/_authenticated/reports/cash-transactions/': typeof AuthenticatedReportsCashTransactionsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -448,6 +468,8 @@ export interface FileRouteTypes {
     | '/tables/'
     | '/users/'
     | '/inventory/$inventoryId/movements'
+    | '/reports/cash-transactions/$transactionId'
+    | '/reports/cash-transactions/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/forgot-password'
@@ -489,6 +511,8 @@ export interface FileRouteTypes {
     | '/tables'
     | '/users'
     | '/inventory/$inventoryId/movements'
+    | '/reports/cash-transactions/$transactionId'
+    | '/reports/cash-transactions'
   id:
     | '__root__'
     | '/_authenticated'
@@ -531,6 +555,8 @@ export interface FileRouteTypes {
     | '/_authenticated/tables/'
     | '/_authenticated/users/'
     | '/_authenticated/inventory/$inventoryId/movements'
+    | '/_authenticated/reports/cash-transactions/$transactionId'
+    | '/_authenticated/reports/cash-transactions/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -818,6 +844,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCustomersCustomerIdRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/reports/cash-transactions/': {
+      id: '/_authenticated/reports/cash-transactions/'
+      path: '/reports/cash-transactions'
+      fullPath: '/reports/cash-transactions/'
+      preLoaderRoute: typeof AuthenticatedReportsCashTransactionsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/reports/cash-transactions/$transactionId': {
+      id: '/_authenticated/reports/cash-transactions/$transactionId'
+      path: '/reports/cash-transactions/$transactionId'
+      fullPath: '/reports/cash-transactions/$transactionId'
+      preLoaderRoute: typeof AuthenticatedReportsCashTransactionsTransactionIdRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/inventory/$inventoryId/movements': {
       id: '/_authenticated/inventory/$inventoryId/movements'
       path: '/inventory/$inventoryId/movements'
@@ -862,6 +902,8 @@ interface AuthenticatedRouteChildren {
   AuthenticatedTablesIndexRoute: typeof AuthenticatedTablesIndexRoute
   AuthenticatedUsersIndexRoute: typeof AuthenticatedUsersIndexRoute
   AuthenticatedInventoryInventoryIdMovementsRoute: typeof AuthenticatedInventoryInventoryIdMovementsRoute
+  AuthenticatedReportsCashTransactionsTransactionIdRoute: typeof AuthenticatedReportsCashTransactionsTransactionIdRoute
+  AuthenticatedReportsCashTransactionsIndexRoute: typeof AuthenticatedReportsCashTransactionsIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -899,6 +941,10 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedUsersIndexRoute: AuthenticatedUsersIndexRoute,
   AuthenticatedInventoryInventoryIdMovementsRoute:
     AuthenticatedInventoryInventoryIdMovementsRoute,
+  AuthenticatedReportsCashTransactionsTransactionIdRoute:
+    AuthenticatedReportsCashTransactionsTransactionIdRoute,
+  AuthenticatedReportsCashTransactionsIndexRoute:
+    AuthenticatedReportsCashTransactionsIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

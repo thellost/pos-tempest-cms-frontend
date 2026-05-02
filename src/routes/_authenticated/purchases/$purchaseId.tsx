@@ -101,7 +101,7 @@ function PurchaseDetailPage() {
       {/* Back + Header */}
       <div className="flex items-start gap-3">
         <Button variant="ghost" size="icon" asChild>
-          <Link to="/purchases">
+          <Link to="/purchases" search={{ date_from: undefined, date_to: undefined }}>
             <ArrowLeftIcon className="size-4" />
           </Link>
         </Button>
