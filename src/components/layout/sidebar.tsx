@@ -179,6 +179,12 @@ const NAV_GROUPS: NavGroup[] = [
         icon: FileText,
         roles: ['admin', 'manager', 'cashier'],
       },
+      {
+        label: 'Expense Report',
+        to: '/reports/expenses',
+        icon: Receipt,
+        roles: ['admin', 'manager', 'cashier'],
+      },
     ],
   },
   {

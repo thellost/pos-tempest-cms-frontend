@@ -40,6 +40,7 @@ import { Route as AuthenticatedShiftsShiftIdRouteImport } from './routes/_authen
 import { Route as AuthenticatedSettingsTaxRouteImport } from './routes/_authenticated/settings/tax'
 import { Route as AuthenticatedReportsShiftsRouteImport } from './routes/_authenticated/reports/shifts'
 import { Route as AuthenticatedReportsSalesRouteImport } from './routes/_authenticated/reports/sales'
+import { Route as AuthenticatedReportsExpensesRouteImport } from './routes/_authenticated/reports/expenses'
 import { Route as AuthenticatedReportsCashFlowRouteImport } from './routes/_authenticated/reports/cash-flow'
 import { Route as AuthenticatedPurchasesCreateRouteImport } from './routes/_authenticated/purchases/create'
 import { Route as AuthenticatedPurchasesPurchaseIdRouteImport } from './routes/_authenticated/purchases/$purchaseId'
@@ -225,6 +226,12 @@ const AuthenticatedReportsSalesRoute =
     path: '/reports/sales',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedReportsExpensesRoute =
+  AuthenticatedReportsExpensesRouteImport.update({
+    id: '/reports/expenses',
+    path: '/reports/expenses',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedReportsCashFlowRoute =
   AuthenticatedReportsCashFlowRouteImport.update({
     id: '/reports/cash-flow',
@@ -289,6 +296,7 @@ export interface FileRoutesByFullPath {
   '/purchases/$purchaseId': typeof AuthenticatedPurchasesPurchaseIdRoute
   '/purchases/create': typeof AuthenticatedPurchasesCreateRoute
   '/reports/cash-flow': typeof AuthenticatedReportsCashFlowRoute
+  '/reports/expenses': typeof AuthenticatedReportsExpensesRoute
   '/reports/sales': typeof AuthenticatedReportsSalesRoute
   '/reports/shifts': typeof AuthenticatedReportsShiftsRoute
   '/settings/tax': typeof AuthenticatedSettingsTaxRoute
@@ -329,6 +337,7 @@ export interface FileRoutesByTo {
   '/purchases/$purchaseId': typeof AuthenticatedPurchasesPurchaseIdRoute
   '/purchases/create': typeof AuthenticatedPurchasesCreateRoute
   '/reports/cash-flow': typeof AuthenticatedReportsCashFlowRoute
+  '/reports/expenses': typeof AuthenticatedReportsExpensesRoute
   '/reports/sales': typeof AuthenticatedReportsSalesRoute
   '/reports/shifts': typeof AuthenticatedReportsShiftsRoute
   '/settings/tax': typeof AuthenticatedSettingsTaxRoute
@@ -371,6 +380,7 @@ export interface FileRoutesById {
   '/_authenticated/purchases/$purchaseId': typeof AuthenticatedPurchasesPurchaseIdRoute
   '/_authenticated/purchases/create': typeof AuthenticatedPurchasesCreateRoute
   '/_authenticated/reports/cash-flow': typeof AuthenticatedReportsCashFlowRoute
+  '/_authenticated/reports/expenses': typeof AuthenticatedReportsExpensesRoute
   '/_authenticated/reports/sales': typeof AuthenticatedReportsSalesRoute
   '/_authenticated/reports/shifts': typeof AuthenticatedReportsShiftsRoute
   '/_authenticated/settings/tax': typeof AuthenticatedSettingsTaxRoute
@@ -413,6 +423,7 @@ export interface FileRouteTypes {
     | '/purchases/$purchaseId'
     | '/purchases/create'
     | '/reports/cash-flow'
+    | '/reports/expenses'
     | '/reports/sales'
     | '/reports/shifts'
     | '/settings/tax'
@@ -453,6 +464,7 @@ export interface FileRouteTypes {
     | '/purchases/$purchaseId'
     | '/purchases/create'
     | '/reports/cash-flow'
+    | '/reports/expenses'
     | '/reports/sales'
     | '/reports/shifts'
     | '/settings/tax'
@@ -494,6 +506,7 @@ export interface FileRouteTypes {
     | '/_authenticated/purchases/$purchaseId'
     | '/_authenticated/purchases/create'
     | '/_authenticated/reports/cash-flow'
+    | '/_authenticated/reports/expenses'
     | '/_authenticated/reports/sales'
     | '/_authenticated/reports/shifts'
     | '/_authenticated/settings/tax'
@@ -749,6 +762,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedReportsSalesRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/reports/expenses': {
+      id: '/_authenticated/reports/expenses'
+      path: '/reports/expenses'
+      fullPath: '/reports/expenses'
+      preLoaderRoute: typeof AuthenticatedReportsExpensesRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/reports/cash-flow': {
       id: '/_authenticated/reports/cash-flow'
       path: '/reports/cash-flow'
@@ -817,6 +837,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedPurchasesPurchaseIdRoute: typeof AuthenticatedPurchasesPurchaseIdRoute
   AuthenticatedPurchasesCreateRoute: typeof AuthenticatedPurchasesCreateRoute
   AuthenticatedReportsCashFlowRoute: typeof AuthenticatedReportsCashFlowRoute
+  AuthenticatedReportsExpensesRoute: typeof AuthenticatedReportsExpensesRoute
   AuthenticatedReportsSalesRoute: typeof AuthenticatedReportsSalesRoute
   AuthenticatedReportsShiftsRoute: typeof AuthenticatedReportsShiftsRoute
   AuthenticatedSettingsTaxRoute: typeof AuthenticatedSettingsTaxRoute
@@ -852,6 +873,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedPurchasesPurchaseIdRoute: AuthenticatedPurchasesPurchaseIdRoute,
   AuthenticatedPurchasesCreateRoute: AuthenticatedPurchasesCreateRoute,
   AuthenticatedReportsCashFlowRoute: AuthenticatedReportsCashFlowRoute,
+  AuthenticatedReportsExpensesRoute: AuthenticatedReportsExpensesRoute,
   AuthenticatedReportsSalesRoute: AuthenticatedReportsSalesRoute,
   AuthenticatedReportsShiftsRoute: AuthenticatedReportsShiftsRoute,
   AuthenticatedSettingsTaxRoute: AuthenticatedSettingsTaxRoute,

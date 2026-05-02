@@ -99,6 +99,21 @@ export function useExpenseBreakdown(
   })
 }
 
+// ─── Cash Transaction Breakdown Hook ─────────────────────────────────────────
+
+export function useCashTransactionBreakdown(
+  branchId?: number,
+  dateFrom?: string,
+  dateTo?: string,
+) {
+  return useQuery({
+    queryKey: queryKeys.statistics.cashTransactionBreakdown(branchId, dateFrom, dateTo),
+    queryFn: () =>
+      salesCashFlowService.getCashTransactionBreakdown(branchId, dateFrom, dateTo),
+    staleTime: 5 * 60_000,
+  })
+}
+
 // ─── Purchases Read ───────────────────────────────────────────────────────────
 
 export function usePurchases(filters?: PurchaseFilters) {

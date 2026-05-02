@@ -347,6 +347,16 @@ export interface ExpenseBreakdownItem {
   percentage: number
 }
 
+// ─── Cash Transaction Breakdown ───────────────────────────────────────────────
+
+export interface CashTransactionBreakdownItem {
+  reason: string
+  type: 'cash_in' | 'cash_out'
+  count: number
+  total_amount: number
+  percentage: number
+}
+
 // ─── Service ───────────────────────────────────────────────────────────────────
 
 function buildStatsParams(filters: StatsFilter): string {
@@ -396,6 +406,16 @@ export const salesCashFlowService = {
     if (dateTo) params.date_to = dateTo
     return api.get<ExpenseBreakdownItem[]>(
       `/api/v1/statistics/expense-breakdown${buildQueryParams(params)}`,
+    )
+  },
+
+  getCashTransactionBreakdown: (branchId?: number, dateFrom?: string, dateTo?: string) => {
+    const params: Record<string, unknown> = {}
+    if (branchId) params.branch_id = branchId
+    if (dateFrom) params.date_from = dateFrom
+    if (dateTo) params.date_to = dateTo
+    return api.get<CashTransactionBreakdownItem[]>(
+      `/api/v1/statistics/cash-transaction-breakdown${buildQueryParams(params)}`,
     )
   },
 
