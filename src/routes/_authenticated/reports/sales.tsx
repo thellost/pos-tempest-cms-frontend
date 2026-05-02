@@ -8,8 +8,8 @@ import {
 } from 'lucide-react'
 import {
   ComposedChart,
-  Area,
   Bar,
+  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -116,18 +116,29 @@ function SalesOverTimeSection({
 
   // API returns a flat array — compute summary client-side
   const points = data?.data ?? []
-  const summary = points.length
-    ? {
-        total_orders: points.reduce((s, p) => s + (p.total_orders ?? 0), 0),
-        total_revenue: points.reduce((s, p) => s + (p.total_revenue ?? 0), 0),
-        average_order_value:
-          points.reduce((s, p) => s + (p.total_revenue ?? 0), 0) /
-          Math.max(1, points.reduce((s, p) => s + (p.total_orders ?? 0), 0)),
-      }
-    : null
+  const summary = useMemo(() => {
+    if (!points.length) return null
+    const total_orders = points.reduce((s, p) => s + p.total_orders, 0)
+    const total_revenue = points.reduce((s, p) => s + p.total_revenue, 0)
+    const net_revenue = points.reduce((s, p) => s + p.net_revenue, 0)
+    const total_expenses = points.reduce((s, p) => s + p.total_expenses, 0)
+    const net_profit = points.reduce((s, p) => s + p.net_profit, 0)
+    const total_tax = points.reduce((s, p) => s + p.total_tax, 0)
+    return {
+      total_orders,
+      total_revenue,
+      net_revenue,
+      total_expenses,
+      net_profit,
+      total_tax,
+      average_order_value: total_revenue / Math.max(1, total_orders),
+    }
+  }, [points])
 
   const chartConfig: ChartConfig = {
     net_revenue: { label: 'Net Revenue', color: '#3b82f6' },
+    total_expenses: { label: 'Expenses', color: '#ef4444' },
+    net_profit: { label: 'Net Profit', color: '#8b5cf6' },
     total_orders: { label: 'Orders', color: '#10b981' },
   }
 
@@ -196,6 +207,8 @@ function SalesOverTimeSection({
                   <ChartTooltipContent
                     formatter={(value, name) => {
                       if (name === 'net_revenue') return [formatIDR(value as number), 'Net Revenue']
+                      if (name === 'total_expenses') return [formatIDR(value as number), 'Expenses']
+                      if (name === 'net_profit') return [formatIDR(value as number), 'Net Profit']
                       if (name === 'total_orders') return [String(value), 'Orders']
                       return [String(value), String(name)]
                     }}
@@ -203,16 +216,32 @@ function SalesOverTimeSection({
                 }
               />
               <ChartLegend content={<ChartLegendContent />} />
-              <Area
+              <Bar
                 yAxisId="revenue"
-                type="monotone"
                 dataKey="net_revenue"
                 name="net_revenue"
-                stroke="var(--color-net_revenue)"
                 fill="var(--color-net_revenue)"
-                fillOpacity={0.15}
-                strokeWidth={2.5}
-                dot={{ r: 3, fill: 'var(--color-net_revenue)', strokeWidth: 0 }}
+                fillOpacity={0.8}
+                radius={[3, 3, 0, 0]}
+                maxBarSize={18}
+              />
+              <Bar
+                yAxisId="revenue"
+                dataKey="total_expenses"
+                name="total_expenses"
+                fill="var(--color-total_expenses)"
+                fillOpacity={0.75}
+                radius={[3, 3, 0, 0]}
+                maxBarSize={18}
+              />
+              <Line
+                yAxisId="revenue"
+                type="monotone"
+                dataKey="net_profit"
+                name="net_profit"
+                stroke="var(--color-net_profit)"
+                strokeWidth={2}
+                dot={{ r: 3, fill: 'var(--color-net_profit)', strokeWidth: 0 }}
                 activeDot={{ r: 5 }}
               />
               <Bar
@@ -220,12 +249,10 @@ function SalesOverTimeSection({
                 dataKey="total_orders"
                 name="total_orders"
                 fill="var(--color-total_orders)"
-                fillOpacity={0.75}
+                fillOpacity={0.5}
                 radius={[3, 3, 0, 0]}
-                maxBarSize={20}
-              >
-                <LabelList dataKey="total_orders" position="top" style={{ fontSize: 9, fill: 'var(--color-total_orders)' }} />
-              </Bar>
+                maxBarSize={12}
+              />
             </ComposedChart>
           </ChartContainer>
         )}
@@ -234,17 +261,24 @@ function SalesOverTimeSection({
 
         {/* Summary row */}
         {isLoading ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            {Array.from({ length: 3 }).map((_, i) => (
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
               <Skeleton key={i} className="h-16 w-full" />
             ))}
           </div>
         ) : summary ? (
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <SummaryItem label="Total Orders" value={String(summary.total_orders)} />
-            <SummaryItem label="Total Revenue" value={formatIDR(summary.total_revenue)} />
+            <SummaryItem label="Net Revenue" value={formatIDR(summary.net_revenue)} />
+            <SummaryItem label="Total Expenses" value={formatIDR(summary.total_expenses)} />
+            <SummaryItem label="Net Profit" value={formatIDR(summary.net_profit)} />
             <SummaryItem
-              label="Average Order Value"
+              label="Tax (info)"
+              value={formatIDR(summary.total_tax)}
+              muted
+            />
+            <SummaryItem
+              label="Avg Order Value"
               value={formatIDR(summary.average_order_value)}
             />
           </div>
@@ -584,11 +618,11 @@ function TopItemsSection({ branchId, dateFrom, dateTo }: TopItemsSectionProps) {
 
 // ─── Stat Summary Item ────────────────────────────────────────────────────────
 
-function SummaryItem({ label, value }: { label: string; value: string }) {
+function SummaryItem({ label, value, muted = false }: { label: string; value: string; muted?: boolean }) {
   return (
     <div className="flex flex-col gap-1">
       <span className="text-xs text-muted-foreground">{label}</span>
-      <span className="text-lg font-semibold tabular-nums">{value}</span>
+      <span className={`text-lg font-semibold tabular-nums${muted ? ' text-muted-foreground' : ''}`}>{value}</span>
     </div>
   )
 }

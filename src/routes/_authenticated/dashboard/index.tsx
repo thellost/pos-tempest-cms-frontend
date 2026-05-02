@@ -165,12 +165,13 @@ function CashFlowSummaryCard({ branchId }: { branchId?: number }) {
   const { data, isLoading } = useCashFlowStats({ branchId, dateFrom, dateTo })
   const points = data?.data ?? []
 
+  // Income = all cash + non-cash + deposits; Expense = change given + withdrawals + PO costs
   const { totalIncome, totalExpense } = useMemo(
     () =>
       points.reduce(
         (acc, p) => ({
-          totalIncome: acc.totalIncome + (p.total_revenue ?? 0), 
-          totalExpense: acc.totalExpense + (p.cash_out ?? 0),
+          totalIncome: acc.totalIncome + p.cash_in + p.non_cash_in + p.shift_cash_in,
+          totalExpense: acc.totalExpense + p.cash_out + p.shift_cash_out + p.po_expenses,
         }),
         { totalIncome: 0, totalExpense: 0 },
       ),
@@ -214,7 +215,7 @@ function CashFlowSummaryCard({ branchId }: { branchId?: number }) {
             <div className="rounded-lg bg-emerald-50 px-4 py-3 dark:bg-emerald-950/30">
               <div className="mb-1 flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
                 <TrendingUpIcon className="size-3.5" />
-                Income
+                Total Income
               </div>
               <div className="text-xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
                 {formatIDR(totalIncome)}
@@ -225,7 +226,7 @@ function CashFlowSummaryCard({ branchId }: { branchId?: number }) {
             <div className="rounded-lg bg-red-50 px-4 py-3 dark:bg-red-950/30">
               <div className="mb-1 flex items-center gap-1.5 text-xs text-red-500">
                 <TrendingDownIcon className="size-3.5" />
-                Spending
+                Total Expense
               </div>
               <div className="text-xl font-bold tabular-nums text-red-500">
                 {formatIDR(totalExpense)}
@@ -273,6 +274,9 @@ function DashboardPage() {
     : undefined
   const ordersTrend = stats
     ? computeTrend(stats.today_orders, stats.yesterday_orders)
+    : undefined
+  const expensesTrend = stats
+    ? computeTrend(stats.today_expenses, stats.yesterday_expenses)
     : undefined
 
   return (
@@ -385,6 +389,35 @@ function DashboardPage() {
               label="Pending Reservations"
               value={stats.pending_reservations.toLocaleString()}
               icon={<CalendarIcon className="size-5" />}
+            />
+          )}
+        </CardLink>
+
+        {/* Today's Expenses */}
+        <CardLink to="/reports/cash-flow">
+          {isLoading || !stats ? (
+            <StatCardSkeleton />
+          ) : (
+            <StatCard
+              label="Today's Expenses"
+              value={formatIDR(stats.today_expenses)}
+              icon={<TrendingDownIcon className="size-5 text-red-500" />}
+              trend={expensesTrend !== undefined ? -expensesTrend : undefined}
+              trendLabel="vs yesterday"
+            />
+          )}
+        </CardLink>
+
+        {/* Today's Net Cash */}
+        <CardLink to="/reports/cash-flow">
+          {isLoading || !stats ? (
+            <StatCardSkeleton />
+          ) : (
+            <StatCard
+              label="Today's Net Cash"
+              value={formatIDR(stats.today_net_cash)}
+              icon={<WalletIcon className="size-5" />}
+              className={stats.today_net_cash < 0 ? 'border-red-200 dark:border-red-900' : undefined}
             />
           )}
         </CardLink>

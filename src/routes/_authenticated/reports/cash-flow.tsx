@@ -4,14 +4,12 @@ import { format, subDays, parseISO, startOfMonth } from 'date-fns'
 import {
   TrendingUpIcon,
   TrendingDownIcon,
-  WalletIcon,
   CreditCardIcon,
   ActivityIcon,
 } from 'lucide-react'
 import {
   ComposedChart,
   Bar,
-  Line,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -97,10 +95,6 @@ function formatShortIDR(value: number | null | undefined): string {
   return `${sign}Rp ${abs}`
 }
 
-function formatPct(value: number): string {
-  return `${value >= 0 ? '+' : ''}${value.toFixed(1)}%`
-}
-
 function defaultDateRange() {
   const today = new Date()
   return {
@@ -133,22 +127,20 @@ function CashFlowSection({ branchId, dateFrom, dateTo }: CashFlowSectionProps) {
   const { data, isLoading } = useCashFlowStats({ branchId, dateFrom, dateTo })
   const rawPoints = data?.data ?? []
 
-  // Enrich each point with effective totals that include shift cash movements and PO expenses
+  // Compute total_income and total_expense per point for the chart
   const points = useMemo(
     () =>
       rawPoints.map((p) => ({
         ...p,
-        effective_cash_in: (p.cash_in ?? 0) + (p.shift_cash_in ?? 0),
-        effective_cash_out: (p.cash_out ?? 0) + (p.shift_cash_out ?? 0) + (p.po_expenses ?? 0),
+        total_income: p.cash_in + p.non_cash_in + p.shift_cash_in,
+        total_expense: p.cash_out + p.shift_cash_out + p.po_expenses,
       })),
     [rawPoints],
   )
 
   const chartConfig: ChartConfig = {
-    effective_cash_in: { label: 'Cash In', color: '#10b981' },
-    non_cash_in: { label: 'Non-Cash In', color: '#3b82f6' },
-    effective_cash_out: { label: 'Cash Out', color: '#ef4444' },
-    net_cash: { label: 'Net Cash', color: '#8b5cf6' },
+    total_income: { label: 'Total Income', color: '#10b981' },
+    total_expense: { label: 'Total Expense', color: '#ef4444' },
   }
 
   // Summary totals
@@ -156,14 +148,10 @@ function CashFlowSection({ branchId, dateFrom, dateTo }: CashFlowSectionProps) {
     () =>
       points.reduce(
         (acc, p) => ({
-          cash_in: acc.cash_in + p.effective_cash_in,
-          non_cash_in: acc.non_cash_in + (p.non_cash_in ?? 0),
-          cash_out: acc.cash_out + p.effective_cash_out,
-          po_expenses: acc.po_expenses + (p.po_expenses ?? 0),
-          total_revenue: acc.total_revenue + (p.total_revenue ?? 0),
-          net_cash: acc.net_cash + (p.net_cash ?? 0),
+          total_income: acc.total_income + p.total_income,
+          total_expense: acc.total_expense + p.total_expense,
         }),
-        { cash_in: 0, non_cash_in: 0, cash_out: 0, po_expenses: 0, total_revenue: 0, net_cash: 0 },
+        { total_income: 0, total_expense: 0 },
       ),
     [points],
   )
@@ -209,10 +197,8 @@ function CashFlowSection({ branchId, dateFrom, dateTo }: CashFlowSectionProps) {
                   <ChartTooltipContent
                     formatter={(value, name) => {
                       const labels: Record<string, string> = {
-                        effective_cash_in: 'Cash In',
-                        non_cash_in: 'Non-Cash In',
-                        effective_cash_out: 'Cash Out',
-                        net_cash: 'Net Cash',
+                        total_income: 'Total Income',
+                        total_expense: 'Total Expense',
                       }
                       return [formatIDR(value as number), labels[name as string] ?? String(name)]
                     }}
@@ -220,47 +206,23 @@ function CashFlowSection({ branchId, dateFrom, dateTo }: CashFlowSectionProps) {
                 }
               />
               <ChartLegend content={<ChartLegendContent />} />
-              {/* Stacked bars: Cash In + Non-Cash In */}
               <Bar
                 yAxisId="amount"
-                dataKey="effective_cash_in"
-                name="effective_cash_in"
-                stackId="income"
-                fill="var(--color-effective_cash_in)"
-                fillOpacity={0.85}
-                radius={[0, 0, 0, 0]}
-                maxBarSize={24}
-              />
-              <Bar
-                yAxisId="amount"
-                dataKey="non_cash_in"
-                name="non_cash_in"
-                stackId="income"
-                fill="var(--color-non_cash_in)"
+                dataKey="total_income"
+                name="total_income"
+                fill="var(--color-total_income)"
                 fillOpacity={0.85}
                 radius={[3, 3, 0, 0]}
                 maxBarSize={24}
               />
-              {/* Cash Out as negative-direction bar (includes shift cash-outs) */}
               <Bar
                 yAxisId="amount"
-                dataKey="effective_cash_out"
-                name="effective_cash_out"
-                fill="var(--color-effective_cash_out)"
+                dataKey="total_expense"
+                name="total_expense"
+                fill="var(--color-total_expense)"
                 fillOpacity={0.75}
                 radius={[3, 3, 0, 0]}
                 maxBarSize={24}
-              />
-              {/* Net Cash as line overlay */}
-              <Line
-                yAxisId="amount"
-                type="monotone"
-                dataKey="net_cash"
-                name="net_cash"
-                stroke="var(--color-net_cash)"
-                strokeWidth={2.5}
-                dot={{ r: 3, fill: 'var(--color-net_cash)', strokeWidth: 0 }}
-                activeDot={{ r: 5 }}
               />
             </ComposedChart>
           </ChartContainer>
@@ -277,71 +239,53 @@ function CashFlowSection({ branchId, dateFrom, dateTo }: CashFlowSectionProps) {
               <thead>
                 <tr className="border-b text-left text-muted-foreground">
                   <th className="pb-2 pr-4 font-medium">Date</th>
-                  <th className="pb-2 pr-4 text-right font-medium">Cash In</th>
-                  <th className="pb-2 pr-4 text-right font-medium">Non-Cash In</th>
-                  <th className="pb-2 pr-4 text-right font-medium">Total Revenue</th>
-                  <th className="pb-2 pr-4 text-right font-medium">PO Expenses</th>
-                  <th className="pb-2 pr-4 text-right font-medium">Cash Out</th>
-                  <th className="pb-2 text-right font-medium">Net Cash</th>
+                  <th className="pb-2 pr-4 text-right font-medium">Total Income</th>
+                  <th className="pb-2 pr-4 text-right font-medium">Total Expense</th>
+                  <th className="pb-2 text-right font-medium">Net</th>
                 </tr>
               </thead>
               <tbody>
-                {points.map((p) => (
-                  <tr key={p.date} className="border-b last:border-0">
-                    <td className="py-1.5 pr-4 text-muted-foreground">
-                      {(() => { try { return format(parseISO(p.date), 'EEE, d MMM yyyy') } catch { return p.date } })()}
-                    </td>
-                    <td className="py-1.5 pr-4 text-right tabular-nums text-emerald-600">
-                      {formatIDR(p.effective_cash_in)}
-                    </td>
-                    <td className="py-1.5 pr-4 text-right tabular-nums text-blue-600">
-                      {formatIDR(p.non_cash_in)}
-                    </td>
-                    <td className="py-1.5 pr-4 text-right tabular-nums font-medium">
-                      {formatIDR(p.total_revenue)}
-                    </td>
-                    <td className="py-1.5 pr-4 text-right tabular-nums text-amber-600">
-                      {p.po_expenses > 0 ? formatIDR(p.po_expenses) : <span className="text-muted-foreground">—</span>}
-                    </td>
-                    <td className="py-1.5 pr-4 text-right tabular-nums text-red-500">
-                      {formatIDR(p.effective_cash_out)}
-                    </td>
-                    <td
-                      className={cn(
-                        'py-1.5 text-right tabular-nums font-semibold',
-                        p.net_cash >= 0 ? 'text-emerald-600' : 'text-red-500',
-                      )}
-                    >
-                      {formatIDR(p.net_cash)}
-                    </td>
-                  </tr>
-                ))}
+                {points.map((p) => {
+                  const net = p.total_income - p.total_expense
+                  return (
+                    <tr key={p.date} className="border-b last:border-0">
+                      <td className="py-1.5 pr-4 text-muted-foreground">
+                        {(() => { try { return format(parseISO(p.date), 'EEE, d MMM yyyy') } catch { return p.date } })()}
+                      </td>
+                      <td className="py-1.5 pr-4 text-right tabular-nums text-emerald-600">
+                        {formatIDR(p.total_income)}
+                      </td>
+                      <td className="py-1.5 pr-4 text-right tabular-nums text-red-500">
+                        {formatIDR(p.total_expense)}
+                      </td>
+                      <td
+                        className={cn(
+                          'py-1.5 text-right tabular-nums font-semibold',
+                          net >= 0 ? 'text-emerald-600' : 'text-red-500',
+                        )}
+                      >
+                        {formatIDR(net)}
+                      </td>
+                    </tr>
+                  )
+                })}
               </tbody>
               <tfoot className="border-t-2">
                 <tr>
                   <td className="pt-2 pr-4 font-semibold">Total</td>
                   <td className="pt-2 pr-4 text-right tabular-nums font-semibold text-emerald-600">
-                    {formatIDR(totals.cash_in)}
-                  </td>
-                  <td className="pt-2 pr-4 text-right tabular-nums font-semibold text-blue-600">
-                    {formatIDR(totals.non_cash_in)}
-                  </td>
-                  <td className="pt-2 pr-4 text-right tabular-nums font-semibold">
-                    {formatIDR(totals.total_revenue)}
-                  </td>
-                  <td className="pt-2 pr-4 text-right tabular-nums font-semibold text-amber-600">
-                    {formatIDR(totals.po_expenses)}
+                    {formatIDR(totals.total_income)}
                   </td>
                   <td className="pt-2 pr-4 text-right tabular-nums font-semibold text-red-500">
-                    {formatIDR(totals.cash_out)}
+                    {formatIDR(totals.total_expense)}
                   </td>
                   <td
                     className={cn(
                       'pt-2 text-right tabular-nums font-bold',
-                      totals.net_cash >= 0 ? 'text-emerald-600' : 'text-red-500',
+                      totals.total_income - totals.total_expense >= 0 ? 'text-emerald-600' : 'text-red-500',
                     )}
                   >
-                    {formatIDR(totals.net_cash)}
+                    {formatIDR(totals.total_income - totals.total_expense)}
                   </td>
                 </tr>
               </tfoot>
@@ -521,21 +465,24 @@ function SummarySection({ branchId, dateFrom, dateTo }: SummarySectionProps) {
   const { data: cashFlowData, isLoading } = useCashFlowStats({ branchId, dateFrom, dateTo })
   const points = cashFlowData?.data ?? []
 
-  // Aggregate totals from cash flow data (expenses = shift cash-outs + received POs)
-  const { totalIncome, totalExpense } = useMemo(
+  const totals = useMemo(
     () =>
       points.reduce(
         (acc, p) => ({
-          totalIncome: acc.totalIncome + (p.total_revenue ?? 0),
-          totalExpense: acc.totalExpense + (p.total_expenses ?? 0),
+          cashIn: acc.cashIn + p.cash_in,
+          nonCashIn: acc.nonCashIn + p.non_cash_in,
+          shiftCashIn: acc.shiftCashIn + p.shift_cash_in,
+          cashOut: acc.cashOut + p.cash_out,
+          poExpenses: acc.poExpenses + p.po_expenses,
+          shiftCashOut: acc.shiftCashOut + p.shift_cash_out,
         }),
-        { totalIncome: 0, totalExpense: 0 },
+        { cashIn: 0, nonCashIn: 0, shiftCashIn: 0, cashOut: 0, poExpenses: 0, shiftCashOut: 0 },
       ),
     [points],
   )
 
-  const netProfit = totalIncome - totalExpense
-  const profitMargin = totalIncome > 0 ? (netProfit / totalIncome) * 100 : 0
+  const totalIncome = totals.cashIn + totals.nonCashIn + totals.shiftCashIn
+  const totalExpense = totals.cashOut + totals.poExpenses + totals.shiftCashOut
 
   // Monthly breakdown — group by YYYY-MM
   const monthlyData = useMemo(() => {
@@ -549,8 +496,8 @@ function SummarySection({ branchId, dateFrom, dateTo }: SummarySectionProps) {
         const key = format(startOfMonth(d), 'yyyy-MM')
         const label = format(startOfMonth(d), 'MMM yyyy')
         if (!months[key]) months[key] = { label, income: 0, expense: 0 }
-        months[key].income += p.total_revenue ?? 0
-        months[key].expense += p.total_expenses ?? 0
+        months[key].income += p.cash_in + p.non_cash_in + p.shift_cash_in
+        months[key].expense += p.cash_out + p.shift_cash_out + p.po_expenses
       } catch {
         /* skip unparseable dates */
       }
@@ -560,143 +507,179 @@ function SummarySection({ branchId, dateFrom, dateTo }: SummarySectionProps) {
 
   const showMonthlyTable = monthlyData.length > 1
 
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        <div className="grid grid-cols-2 gap-4">
+          <Skeleton className="h-28 w-full" />
+          <Skeleton className="h-28 w-full" />
+        </div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          <Skeleton className="h-40 w-full" />
+          <Skeleton className="h-40 w-full" />
+        </div>
+      </div>
+    )
+  }
+
   return (
-    <Card>
-      <CardHeader className="flex flex-row items-center gap-2">
-        <WalletIcon className="size-5 text-muted-foreground" />
-        <CardTitle>Income vs Expense Summary</CardTitle>
-      </CardHeader>
-
-      <CardContent className="space-y-6">
-        {isLoading ? (
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-            {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-24 w-full" />
-            ))}
-          </div>
-        ) : (
-          <>
-            {/* KPI cards */}
-            <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-              <SummaryCard
-                label="Total Income"
-                value={formatIDR(totalIncome)}
-                icon={<TrendingUpIcon className="size-4 text-emerald-500" />}
-                valueClass="text-emerald-600"
-              />
-              <SummaryCard
-                label="Total Expense"
-                value={formatIDR(totalExpense)}
-                icon={<TrendingDownIcon className="size-4 text-red-500" />}
-                valueClass="text-red-500"
-              />
-              <SummaryCard
-                label="Net Profit"
-                value={formatIDR(netProfit)}
-                icon={<WalletIcon className="size-4 text-muted-foreground" />}
-                valueClass={cn(
-                  'font-bold',
-                  netProfit >= 0 ? 'text-emerald-600' : 'text-red-500',
-                )}
-              />
-              <SummaryCard
-                label="Profit Margin"
-                value={formatPct(profitMargin)}
-                icon={<ActivityIcon className="size-4 text-muted-foreground" />}
-                valueClass={cn(
-                  'font-bold',
-                  profitMargin >= 0 ? 'text-emerald-600' : 'text-red-500',
-                )}
-              />
+    <div className="space-y-4">
+      {/* ── Top: Total Income & Total Expense ─────────────────────────────── */}
+      <div className="grid grid-cols-2 gap-4">
+        <Card className="py-0 border-emerald-200 dark:border-emerald-900">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
+              <TrendingUpIcon className="size-3.5" />
+              Total Income
             </div>
+            <p className="mt-2 text-2xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+              {formatIDR(totalIncome)}
+            </p>
+          </CardContent>
+        </Card>
 
-            {/* Monthly comparison table — only if date range spans > 1 month */}
-            {showMonthlyTable && (
-              <>
-                <Separator />
-                <div>
-                  <p className="mb-3 text-sm font-medium text-muted-foreground">
-                    Monthly Comparison
-                  </p>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b text-left text-muted-foreground">
-                          <th className="pb-2 pr-4 font-medium">Month</th>
-                          <th className="pb-2 pr-4 text-right font-medium">Income</th>
-                          <th className="pb-2 pr-4 text-right font-medium">Expense</th>
-                          <th className="pb-2 pr-4 text-right font-medium">Net Profit</th>
-                          <th className="pb-2 text-right font-medium">Margin</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {monthlyData.map((m) => {
-                          const net = m.income - m.expense
-                          const margin = m.income > 0 ? (net / m.income) * 100 : 0
-                          return (
-                            <tr key={m.label} className="border-b last:border-0">
-                              <td className="py-2 pr-4 font-medium">{m.label}</td>
-                              <td className="py-2 pr-4 text-right tabular-nums text-emerald-600">
-                                {formatIDR(m.income)}
-                              </td>
-                              <td className="py-2 pr-4 text-right tabular-nums text-red-500">
-                                {formatIDR(m.expense)}
-                              </td>
-                              <td
-                                className={cn(
-                                  'py-2 pr-4 text-right tabular-nums font-semibold',
-                                  net >= 0 ? 'text-emerald-600' : 'text-red-500',
-                                )}
-                              >
-                                {formatIDR(net)}
-                              </td>
-                              <td className="py-2 text-right">
-                                <Badge
-                                  variant={margin >= 0 ? 'default' : 'destructive'}
-                                  className={cn(
-                                    margin >= 0
-                                      ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
-                                      : '',
-                                  )}
-                                >
-                                  {formatPct(margin)}
-                                </Badge>
-                              </td>
-                            </tr>
-                          )
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </>
-            )}
-          </>
-        )}
-      </CardContent>
-    </Card>
+        <Card className="py-0 border-red-200 dark:border-red-900">
+          <CardContent className="p-5">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-red-500">
+              <TrendingDownIcon className="size-3.5" />
+              Total Expense
+            </div>
+            <p className="mt-2 text-2xl font-bold tabular-nums text-red-500">
+              {formatIDR(totalExpense)}
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* ── Breakdown cards ────────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {/* Income breakdown */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+              <TrendingUpIcon className="size-4" />
+              Income breakdown
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <BreakdownRow label="Cash In" value={totals.cashIn} total={totalIncome} color="emerald" />
+            <BreakdownRow label="Non-Cash In" value={totals.nonCashIn} total={totalIncome} color="emerald" />
+            <BreakdownRow label="Shift Cash In" value={totals.shiftCashIn} total={totalIncome} color="emerald" />
+            <Separator />
+            <div className="flex justify-between text-sm font-semibold">
+              <span>Total</span>
+              <span className="tabular-nums text-emerald-600 dark:text-emerald-400">
+                {formatIDR(totalIncome)}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Expense breakdown */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-sm font-semibold text-red-500">
+              <TrendingDownIcon className="size-4" />
+              Expense breakdown
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <BreakdownRow label="Cash Out" value={totals.cashOut} total={totalExpense} color="red" />
+            <BreakdownRow label="PO Purchases" value={totals.poExpenses} total={totalExpense} color="red" />
+            <BreakdownRow label="Shift Cash Out" value={totals.shiftCashOut} total={totalExpense} color="red" />
+            <Separator />
+            <div className="flex justify-between text-sm font-semibold">
+              <span>Total</span>
+              <span className="tabular-nums text-red-500">
+                {formatIDR(totalExpense)}
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Monthly comparison table — only if date range spans > 1 month */}
+      {showMonthlyTable && (
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <ActivityIcon className="size-4 text-muted-foreground" />
+              Monthly comparison
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b text-left text-muted-foreground">
+                    <th className="pb-2 pr-4 font-medium">Month</th>
+                    <th className="pb-2 pr-4 text-right font-medium">Income</th>
+                    <th className="pb-2 pr-4 text-right font-medium">Expense</th>
+                    <th className="pb-2 text-right font-medium">Net</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {monthlyData.map((m) => {
+                    const net = m.income - m.expense
+                    return (
+                      <tr key={m.label} className="border-b last:border-0">
+                        <td className="py-2 pr-4 font-medium">{m.label}</td>
+                        <td className="py-2 pr-4 text-right tabular-nums text-emerald-600">
+                          {formatIDR(m.income)}
+                        </td>
+                        <td className="py-2 pr-4 text-right tabular-nums text-red-500">
+                          {formatIDR(m.expense)}
+                        </td>
+                        <td
+                          className={cn(
+                            'py-2 text-right tabular-nums font-semibold',
+                            net >= 0 ? 'text-emerald-600' : 'text-red-500',
+                          )}
+                        >
+                          {formatIDR(net)}
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+    </div>
   )
 }
 
-// ─── Summary Card ─────────────────────────────────────────────────────────────
+// ─── Breakdown Row ────────────────────────────────────────────────────────────
 
-interface SummaryCardProps {
+function BreakdownRow({
+  label,
+  value,
+  total,
+  color,
+}: {
   label: string
-  value: string
-  icon?: React.ReactNode
-  valueClass?: string
-}
-
-function SummaryCard({ label, value, icon, valueClass }: SummaryCardProps) {
+  value: number
+  total: number
+  color: 'emerald' | 'red'
+}) {
+  const pct = total > 0 ? (value / total) * 100 : 0
+  const barColor = color === 'emerald' ? 'bg-emerald-500' : 'bg-red-500'
+  const textColor = color === 'emerald' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'
   return (
-    <div className="flex flex-col gap-2 rounded-lg border bg-card p-4">
-      <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-        {icon}
-        {label}
+    <div className="space-y-1">
+      <div className="flex items-center justify-between text-sm">
+        <span className="text-muted-foreground">{label}</span>
+        <span className={cn('tabular-nums font-medium', textColor)}>{formatIDR(value)}</span>
       </div>
-      <span className={cn('text-xl font-bold tabular-nums leading-none', valueClass)}>
-        {value}
-      </span>
+      <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
+        <div
+          className={cn('absolute inset-y-0 left-0 rounded-full', barColor)}
+          style={{ width: `${pct.toFixed(1)}%` }}
+        />
+      </div>
+      <p className="text-right text-[10px] text-muted-foreground">{pct.toFixed(1)}%</p>
     </div>
   )
 }

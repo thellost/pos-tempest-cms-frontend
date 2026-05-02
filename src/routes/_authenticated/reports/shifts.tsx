@@ -145,13 +145,13 @@ function InfoRow({ label, value, className }: { label: ReactNode; value: ReactNo
 function SectionSkeleton() {
   return (
     <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2">
-      {[...Array(4)].map((_, i) => (
+      {Array.from({ length: 4 }, (_card, i) => (
         <Card key={i}>
           <CardHeader>
             <Skeleton className="h-5 w-32" />
           </CardHeader>
           <CardContent className="space-y-2">
-            {[...Array(4)].map((_, j) => (
+            {Array.from({ length: 4 }, (_row, j) => (
               <Skeleton key={j} className="h-4 w-full" />
             ))}
           </CardContent>
