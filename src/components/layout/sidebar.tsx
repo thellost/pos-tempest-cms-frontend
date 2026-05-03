@@ -250,7 +250,11 @@ export function AppSidebar() {
     await signOut()
     // replace: true removes the authenticated pages from history so the
     // browser back button cannot return to them after logout.
-    navigate({ to: '/login', replace: true })
+    navigate({
+      to: '/login',
+      search: { redirect: undefined },
+      replace: true,
+    })
   }
 
   return (
@@ -288,10 +292,20 @@ export function AppSidebar() {
                         isActive={isActive}
                         tooltip={item.label}
                       >
-                        <Link to={item.to as string}>
-                          <Icon />
-                          <span>{item.label}</span>
-                        </Link>
+                        {item.to === '/reports/sales' ? (
+                          <Link
+                            to="/reports/sales"
+                            search={{ date_from: undefined, date_to: undefined }}
+                          >
+                            <Icon />
+                            <span>{item.label}</span>
+                          </Link>
+                        ) : (
+                          <Link to={item.to as string}>
+                            <Icon />
+                            <span>{item.label}</span>
+                          </Link>
+                        )}
                       </SidebarMenuButton>
                     </SidebarMenuItem>
                   )

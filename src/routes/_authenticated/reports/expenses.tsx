@@ -42,6 +42,10 @@ import { requireRole } from '@/lib/auth-guards'
 
 export const Route = createFileRoute('/_authenticated/reports/expenses')({
   beforeLoad: requireRole(['admin', 'manager', 'cashier']),
+  validateSearch: (search: Record<string, unknown>) => ({
+    date_from: typeof search.date_from === 'string' ? search.date_from : undefined,
+    date_to: typeof search.date_to === 'string' ? search.date_to : undefined,
+  }),
   component: ExpenseReportPage,
 })
 
@@ -411,12 +415,13 @@ function CashTxBreakdownSection({ branchId, dateFrom, dateTo }: CashTxBreakdownS
 function ExpenseReportPage() {
   const { data: branchesData } = useBranches()
   const branches = branchesData?.data ?? []
+  const search = Route.useSearch()
 
   const defaults = defaultDateRange()
   const [branchId, setBranchId] = useState<number | undefined>(undefined)
   const [datePreset, setDatePreset] = useState('30')
-  const [dateFrom, setDateFrom] = useState(defaults.dateFrom)
-  const [dateTo, setDateTo] = useState(defaults.dateTo)
+  const [dateFrom, setDateFrom] = useState(search.date_from ?? defaults.dateFrom)
+  const [dateTo, setDateTo] = useState(search.date_to ?? defaults.dateTo)
 
   function handlePresetChange(days: string) {
     setDatePreset(days)

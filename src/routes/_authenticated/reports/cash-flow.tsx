@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react'
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { format, subDays, parseISO, startOfMonth } from 'date-fns'
 import {
   TrendingUpIcon,
@@ -124,6 +124,7 @@ interface CashFlowSectionProps {
 }
 
 function CashFlowSection({ branchId, dateFrom, dateTo }: CashFlowSectionProps) {
+  const navigate = useNavigate()
   const { data, isLoading } = useCashFlowStats({ branchId, dateFrom, dateTo })
   const rawPoints = data?.data ?? []
 
@@ -214,6 +215,15 @@ function CashFlowSection({ branchId, dateFrom, dateTo }: CashFlowSectionProps) {
                 fillOpacity={0.85}
                 radius={[3, 3, 0, 0]}
                 maxBarSize={24}
+                style={{ cursor: 'pointer' }}
+                onClick={(data: { date?: string }) => {
+                  if (data.date) {
+                    void navigate({
+                      to: '/reports/sales',
+                      search: { date_from: data.date, date_to: data.date },
+                    })
+                  }
+                }}
               />
               <Bar
                 yAxisId="amount"
@@ -223,6 +233,15 @@ function CashFlowSection({ branchId, dateFrom, dateTo }: CashFlowSectionProps) {
                 fillOpacity={0.75}
                 radius={[3, 3, 0, 0]}
                 maxBarSize={24}
+                style={{ cursor: 'pointer' }}
+                onClick={(data: { date?: string }) => {
+                  if (data.date) {
+                    void navigate({
+                      to: '/reports/expenses',
+                      search: { date_from: data.date, date_to: data.date },
+                    })
+                  }
+                }}
               />
             </ComposedChart>
           </ChartContainer>

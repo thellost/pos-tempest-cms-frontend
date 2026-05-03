@@ -53,6 +53,10 @@ import { cn } from '@/lib/utils'
 
 export const Route = createFileRoute('/_authenticated/reports/sales')({
   beforeLoad: requireRole(['admin', 'manager', 'cashier']),
+  validateSearch: (search: Record<string, unknown>) => ({
+    date_from: typeof search.date_from === 'string' ? search.date_from : undefined,
+    date_to: typeof search.date_to === 'string' ? search.date_to : undefined,
+  }),
   component: SalesReportPage,
 })
 
@@ -631,10 +635,11 @@ function SummaryItem({ label, value, muted = false }: { label: string; value: st
 
 function SalesReportPage() {
   const defaults = defaultDateRange()
+  const search = Route.useSearch()
 
   const [branchId, setBranchId] = useState<number | undefined>(undefined)
-  const [dateFrom, setDateFrom] = useState<string>(defaults.dateFrom)
-  const [dateTo, setDateTo] = useState<string>(defaults.dateTo)
+  const [dateFrom, setDateFrom] = useState<string>(search.date_from ?? defaults.dateFrom)
+  const [dateTo, setDateTo] = useState<string>(search.date_to ?? defaults.dateTo)
   const [groupBy, setGroupBy] = useState<'day' | 'week' | 'month'>('day')
 
   const { data: branchesData } = useBranches({ pageSize: 100 })

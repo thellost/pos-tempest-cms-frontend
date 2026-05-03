@@ -178,7 +178,6 @@ function CashFlowSummaryCard({ branchId }: { branchId?: number }) {
     [points],
   )
 
-  const net = totalIncome - totalExpense
   const incomeRatio =
     totalIncome + totalExpense > 0
       ? (totalIncome / (totalIncome + totalExpense)) * 100
@@ -212,7 +211,11 @@ function CashFlowSummaryCard({ branchId }: { branchId?: number }) {
             <p className="text-xs text-muted-foreground">Last 7 days</p>
 
             {/* Income */}
-            <div className="rounded-lg bg-emerald-50 px-4 py-3 dark:bg-emerald-950/30">
+            <Link
+              to="/reports/sales"
+              search={{ date_from: dateFrom, date_to: dateTo }}
+              className="block cursor-pointer rounded-lg bg-emerald-50 px-4 py-3 transition-opacity hover:opacity-80 dark:bg-emerald-950/30"
+            >
               <div className="mb-1 flex items-center gap-1.5 text-xs text-emerald-600 dark:text-emerald-400">
                 <TrendingUpIcon className="size-3.5" />
                 Total Income
@@ -220,10 +223,14 @@ function CashFlowSummaryCard({ branchId }: { branchId?: number }) {
               <div className="text-xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
                 {formatIDR(totalIncome)}
               </div>
-            </div>
+            </Link>
 
             {/* Spending */}
-            <div className="rounded-lg bg-red-50 px-4 py-3 dark:bg-red-950/30">
+            <Link
+              to="/reports/expenses"
+              search={{ date_from: dateFrom, date_to: dateTo }}
+              className="block cursor-pointer rounded-lg bg-red-50 px-4 py-3 transition-opacity hover:opacity-80 dark:bg-red-950/30"
+            >
               <div className="mb-1 flex items-center gap-1.5 text-xs text-red-500">
                 <TrendingDownIcon className="size-3.5" />
                 Total Expense
@@ -231,7 +238,7 @@ function CashFlowSummaryCard({ branchId }: { branchId?: number }) {
               <div className="text-xl font-bold tabular-nums text-red-500">
                 {formatIDR(totalExpense)}
               </div>
-            </div>
+            </Link>
 
             {/* Income/expense ratio bar */}
             <div className="overflow-hidden rounded-full bg-red-200 h-2 dark:bg-red-900/50">
@@ -239,20 +246,6 @@ function CashFlowSummaryCard({ branchId }: { branchId?: number }) {
                 className="h-full rounded-full bg-emerald-500 transition-all duration-500"
                 style={{ width: `${Math.min(Math.max(incomeRatio, 0), 100)}%` }}
               />
-            </div>
-
-            {/* Net */}
-            <div className="rounded-lg border px-4 py-3">
-              <div className="mb-1 text-xs text-muted-foreground">Net</div>
-              <div
-                className={cn(
-                  'text-xl font-bold tabular-nums',
-                  net >= 0 ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500',
-                )}
-              >
-                {net >= 0 ? '+' : ''}
-                {formatIDR(net)}
-              </div>
             </div>
           </>
         )}
@@ -394,7 +387,11 @@ function DashboardPage() {
         </CardLink>
 
         {/* Today's Expenses */}
-        <CardLink to="/reports/cash-flow">
+        <Link
+          to="/reports/expenses"
+          search={{ date_from: format(new Date(), 'yyyy-MM-dd'), date_to: format(new Date(), 'yyyy-MM-dd') }}
+          className="block rounded-xl transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
           {isLoading || !stats ? (
             <StatCardSkeleton />
           ) : (
@@ -406,22 +403,9 @@ function DashboardPage() {
               trendLabel="vs yesterday"
             />
           )}
-        </CardLink>
+        </Link>
 
-        {/* Today's Net Cash */}
-        <CardLink to="/reports/cash-flow">
-          {isLoading || !stats ? (
-            <StatCardSkeleton />
-          ) : (
-            <StatCard
-              label="Today's Net Cash"
-              value={formatIDR(stats.today_net_cash)}
-              icon={<WalletIcon className="size-5" />}
-              className={stats.today_net_cash < 0 ? 'border-red-200 dark:border-red-900' : undefined}
-            />
-          )}
-        </CardLink>
-      </div>
+        </div>
     </div>
   )
 }
