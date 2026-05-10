@@ -121,6 +121,7 @@ export const ordersService = {
       dateFrom,
       dateTo,
       search,
+      hasDiscount,
     } = filters ?? {}
     const params: Record<string, unknown> = {}
     if (branchId) params.branch_id = branchId
@@ -134,6 +135,7 @@ export const ordersService = {
     if (dateFrom) params.date_from = dateFrom
     if (dateTo) params.date_to = dateTo
     if (search) params.search = search
+    if (hasDiscount !== undefined) params.has_discount = hasDiscount
     return api.get<Order[]>(
       `/api/v1/orders${buildQueryParams(params, { page: page ?? 1, pageSize: pageSize ?? 20 })}`,
     )

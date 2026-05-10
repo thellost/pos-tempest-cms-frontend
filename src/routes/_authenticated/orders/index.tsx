@@ -59,6 +59,11 @@ const ORDER_TYPE_OPTIONS = [
   { value: 'takeaway', label: 'Takeaway' },
 ]
 
+const DISCOUNT_OPTIONS = [
+  { value: 'true', label: 'With Discount' },
+  { value: 'false', label: 'Without Discount' },
+]
+
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 function OrdersPage() {
@@ -88,6 +93,7 @@ function OrdersPage() {
   const [tableId, setTableId] = useState('')
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
+  const [hasDiscount, setHasDiscount] = useState('')
 
   // Filter option data
   const { data: branchesData } = useBranches({ pageSize: 100 })
@@ -168,6 +174,12 @@ function OrdersPage() {
       tableId: tableId ? parseInt(tableId, 10) : undefined,
       dateFrom: dateFrom || undefined,
       dateTo: dateTo || undefined,
+      hasDiscount:
+        hasDiscount === 'true'
+          ? true
+          : hasDiscount === 'false'
+            ? false
+            : undefined,
       page,
       pageSize,
     }),
@@ -183,6 +195,7 @@ function OrdersPage() {
       tableId,
       dateFrom,
       dateTo,
+      hasDiscount,
       page,
       pageSize,
     ],
@@ -206,7 +219,8 @@ function OrdersPage() {
     shiftId ||
     tableId ||
     dateFrom ||
-    dateTo
+    dateTo ||
+    hasDiscount
   )
 
   function clearFilters() {
@@ -221,6 +235,7 @@ function OrdersPage() {
     setTableId('')
     setDateFrom('')
     setDateTo('')
+    setHasDiscount('')
     setPage(1)
   }
 
@@ -368,6 +383,30 @@ function OrdersPage() {
                 <SelectContent>
                   <SelectItem value="_all">All types</SelectItem>
                   {ORDER_TYPE_OPTIONS.map((o) => (
+                    <SelectItem key={o.value} value={o.value}>
+                      {o.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Discount */}
+            <div className="space-y-1.5">
+              <Label className="text-xs">Discount</Label>
+              <Select
+                value={hasDiscount || '_all'}
+                onValueChange={(v) => {
+                  setHasDiscount(v === '_all' ? '' : v)
+                  setPage(1)
+                }}
+              >
+                <SelectTrigger className="h-9">
+                  <SelectValue placeholder="All orders" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="_all">All orders</SelectItem>
+                  {DISCOUNT_OPTIONS.map((o) => (
                     <SelectItem key={o.value} value={o.value}>
                       {o.label}
                     </SelectItem>

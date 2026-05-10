@@ -2505,6 +2505,7 @@ Change reservation status.
 | `date_from` | string | Start date `YYYY-MM-DD` |
 | `date_to` | string | End date `YYYY-MM-DD` |
 | `search` | string | Search by order number |
+| `has_discount` | bool | `true` = orders with discount, `false` = orders without |
 | `page` | int | Page number |
 | `page_size` | int | Items per page |
 
@@ -3953,7 +3954,7 @@ Breakdown of all `shift_cash_transactions` grouped by `(reason, type)` across a 
     {
       "date": "2026-03-01",
       "cash_in": 1500000.00,
-      "cash_out": 300000.00,
+      "cash_out": 0,
       "shift_cash_in": 100000.00,
       "shift_cash_out": 250000.00,
       "po_expenses": 450000.00,
@@ -3965,7 +3966,7 @@ Breakdown of all `shift_cash_transactions` grouped by `(reason, type)` across a 
     {
       "date": "2026-03-02",
       "cash_in": 1800000.00,
-      "cash_out": 400000.00,
+      "cash_out": 0,
       "shift_cash_in": 50000.00,
       "shift_cash_out": 200000.00,
       "po_expenses": 0.00,
@@ -3983,7 +3984,7 @@ Breakdown of all `shift_cash_transactions` grouped by `(reason, type)` across a 
 | Field | Description |
 |-------|-------------|
 | `cash_in` | Net cash retained from cash orders (`amount − change`) |
-| `cash_out` | Informational: change given from cash orders (NOT subtracted from net_cash) |
+| `cash_out` | Always `0` — change tracking removed; field kept for backwards compatibility |
 | `shift_cash_in` | Non-order cash deposits (`cash_in` shift transactions) |
 | `shift_cash_out` | Non-order cash withdrawals/expenses (`cash_out` shift transactions)  |
 | `po_expenses` | Total of purchase orders with `status = "received"` on this date |
@@ -4032,7 +4033,7 @@ Get a detailed financial report for a specific shift.
     "total_service_charge": 337500.00,
     "net_revenue": 5420000.00,
     "total_order_cash_in": 3300000.00,
-    "total_order_cash_out": 200000.00,
+    "total_order_cash_out": 0,
     "total_cash_in": 150000.00,
     "total_cash_out": 320000.00,
     "total_po_expenses": 600000.00,
@@ -4123,8 +4124,8 @@ Get a detailed financial report for a specific shift.
 
 | Field | Description |
 |-------|-------------|
-| `total_order_cash_in` | **Net** cash retained from cash orders (`amount − change`) |
-| `total_order_cash_out` | Informational: change given for cash payments (NOT subtracted from net_cash_movement) |
+| `total_order_cash_in` | Net cash retained from cash orders (`amount − change`) |
+| `total_order_cash_out` | Always `0` — change tracking removed; field kept for backwards compatibility |
 | `total_cash_in` | Sum of all `cash_in` shift transactions during this shift |
 | `total_cash_out` | Sum of all `cash_out` shift transactions during this shift |
 | `total_po_expenses` | Sum of received POs whose `received_at` falls within the shift window |

@@ -108,6 +108,7 @@ export type OrderFilters = {
   dateFrom?: string
   dateTo?: string
   search?: string
+  hasDiscount?: boolean
   page?: number
   pageSize?: number
 }
