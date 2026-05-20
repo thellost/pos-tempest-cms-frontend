@@ -191,6 +191,7 @@ List all branches with pagination.
       "opening_time": "08:00",
       "closing_time": "22:00",
       "auto_shift": true,
+      "cash_in_flag_feature": false,
       "created_at": "2026-01-15T08:00:00Z",
       "updated_at": "2026-02-20T10:30:00Z"
     },
@@ -207,6 +208,7 @@ List all branches with pagination.
       "opening_time": "09:00",
       "closing_time": "23:00",
       "auto_shift": true,
+      "cash_in_flag_feature": false,
       "created_at": "2026-01-20T09:00:00Z",
       "updated_at": "2026-01-20T09:00:00Z"
     }
@@ -251,6 +253,7 @@ Get a single branch by ID.
     "opening_time": "08:00",
     "closing_time": "22:00",
     "auto_shift": true,
+    "cash_in_flag_feature": false,
     "created_at": "2026-01-15T08:00:00Z",
     "updated_at": "2026-02-20T10:30:00Z"
   }
@@ -288,7 +291,8 @@ Create a new branch.
   "timezone": "Asia/Jakarta",
   "opening_time": "08:00",
   "closing_time": "22:00",
-  "auto_shift": true
+  "auto_shift": true,
+  "cash_in_flag_feature": false
 }
 ```
 
@@ -304,6 +308,7 @@ Create a new branch.
 | `opening_time` | string | ❌ | HH:MM 24h (defaults to `08:00`), used by auto-shift scheduler |
 | `closing_time` | string | ❌ | HH:MM 24h (defaults to `22:00`), used by auto-shift scheduler |
 | `auto_shift` | bool | ❌ | defaults to `true`; when true the scheduler auto-opens/closes shifts |
+| `cash_in_flag_feature` | bool | ❌ | defaults to `false`; toggles the cash-in shift transaction UI for this branch |
 
 **Response `201 Created`:**
 ```json
@@ -322,6 +327,7 @@ Create a new branch.
     "opening_time": "08:00",
     "closing_time": "22:00",
     "auto_shift": true,
+    "cash_in_flag_feature": false,
     "created_at": "2026-03-03T14:00:00Z",
     "updated_at": "2026-03-03T14:00:00Z"
   }
@@ -357,6 +363,7 @@ Update a branch. Only send fields you want to change.
 | `opening_time` | string | ❌ | HH:MM 24h |
 | `closing_time` | string | ❌ | HH:MM 24h |
 | `auto_shift` | bool | ❌ | enable/disable scheduler for this branch |
+| `cash_in_flag_feature` | bool | ❌ | toggles the cash-in shift transaction UI for this branch |
 
 **Response `200 OK`:**
 ```json
@@ -375,6 +382,7 @@ Update a branch. Only send fields you want to change.
     "opening_time": "08:00",
     "closing_time": "22:00",
     "auto_shift": true,
+    "cash_in_flag_feature": false,
     "created_at": "2026-01-15T08:00:00Z",
     "updated_at": "2026-03-03T14:30:00Z"
   }
@@ -854,16 +862,16 @@ Get the financial summary for a shift.
         "shift_id": "9b1f0d8c-1b2a-4e3f-8c6d-1234567890ab",
         "user_id": 2,
         "type": "cash_out",
-        "reason": "owner_withdrawal",
+        "reason": "pengeluaran_pribadi",
         "amount": 200000.00,
-        "note": "Owner took cash for supplies",
+        "note": "Pengeluaran pribadi owner",
         "created_at": "2026-03-03T10:30:00Z",
         "user_name": "Sarah Cashier"
       }
     ],
     "cash_transaction_breakdown": [
       {
-        "reason": "owner_withdrawal",
+        "reason": "pengeluaran_pribadi",
         "type": "cash_out",
         "count": 1,
         "total_amount": 200000.00
@@ -953,9 +961,9 @@ Record a non-order cash movement (e.g., owner withdrawal, petty cash, cash depos
 ```json
 {
   "type": "cash_out",
-  "reason": "owner_withdrawal",
+  "reason": "pengeluaran_pribadi",
   "amount": 200000.00,
-  "note": "Owner took cash for supplies"
+  "note": "Pengeluaran pribadi owner"
 }
 ```
 
@@ -975,9 +983,9 @@ Record a non-order cash movement (e.g., owner withdrawal, petty cash, cash depos
     "shift_id": "9b1f0d8c-1b2a-4e3f-8c6d-1234567890ab",
     "user_id": 2,
     "type": "cash_out",
-    "reason": "owner_withdrawal",
+    "reason": "pengeluaran_pribadi",
     "amount": 200000.00,
-    "note": "Owner took cash for supplies",
+    "note": "Pengeluaran pribadi owner",
     "created_at": "2026-03-03T10:30:00Z",
     "user_name": "Sarah Cashier"
   }
@@ -1012,9 +1020,9 @@ List all non-order cash transactions recorded against a shift, ordered chronolog
       "shift_id": "9b1f0d8c-1b2a-4e3f-8c6d-1234567890ab",
       "user_id": 2,
       "type": "cash_out",
-      "reason": "owner_withdrawal",
+      "reason": "pengeluaran_pribadi",
       "amount": 200000.00,
-      "note": "Owner took cash for supplies",
+      "note": "Pengeluaran pribadi owner",
       "created_at": "2026-03-03T10:30:00Z",
       "user_name": "Sarah Cashier"
     },
@@ -1056,7 +1064,7 @@ Returns a paginated list of cash transactions across all shifts, with optional f
 | `shift_id`  | UUID    | Filter to a specific shift                  |
 | `branch_id` | integer | Filter to a specific branch                 |
 | `type`      | string  | `cash_in` or `cash_out`                     |
-| `reason`    | string  | e.g. `owner_withdrawal`, `supply_purchase`  |
+| `reason`    | string  | e.g. `owner_withdrawal`, `pengeluaran_pribadi`, `supply_purchase`, `gaji` |
 | `date_from` | string  | `YYYY-MM-DD` — filter by transaction date   |
 | `date_to`   | string  | `YYYY-MM-DD` — filter by transaction date   |
 | `page`      | integer | Page number (default: 1)                    |
@@ -3823,7 +3831,7 @@ Get the full change history for a specific record.
       "percentage": 28.33
     },
     {
-      "reason": "owner_withdrawal",
+      "reason": "pengeluaran_pribadi",
       "total_amount": 500000.00,
       "count": 5,
       "percentage": 16.67
@@ -3835,7 +3843,7 @@ Get the full change history for a specific record.
       "percentage": 11.67
     },
     {
-      "reason": "staff_advance",
+      "reason": "gaji",
       "total_amount": 100000.00,
       "count": 2,
       "percentage": 3.33
@@ -3851,9 +3859,11 @@ Get the full change history for a specific record.
 | Value | Source |
 |-------|--------|
 | `purchase_order` | Purchase orders with `status = "received"` |
+| `owner_withdrawal` | Manual cash-out: owner withdrawal (legacy) |
+| `pengeluaran_pribadi` | Manual cash-out: pengeluaran pribadi owner |
 | `supply_purchase` | Manual cash-out: ad-hoc supply buy |
-| `owner_withdrawal` | Manual cash-out: owner withdrawal |
-| `staff_advance` | Manual cash-out: staff advance |
+| `staff_advance` | Manual cash-out: staff advance (legacy) |
+| `gaji` | Manual cash-out: gaji karyawan |
 | `petty_cash` | Manual cash-out: petty cash |
 | `tip_out` | Manual cash-out: tip distribution |
 | `cash_deposit` | Manual cash-out: cash deposit |
@@ -3889,7 +3899,7 @@ Breakdown of all `shift_cash_transactions` grouped by `(reason, type)` across a 
       "percentage": 38.24
     },
     {
-      "reason": "owner_withdrawal",
+      "reason": "pengeluaran_pribadi",
       "type": "cash_out",
       "count": 3,
       "total_amount": 500000.00,
@@ -4275,9 +4285,11 @@ Get a detailed financial report for a specific shift.
 ### Cash Transaction Reason
 | Value | Description |
 |-------|-------------|
-| `owner_withdrawal` | Owner withdrawing cash from drawer |
+| `owner_withdrawal` | Owner withdrawing cash from drawer (legacy) |
+| `pengeluaran_pribadi` | Owner withdrawing cash from drawer (pengeluaran pribadi) |
 | `supply_purchase` | Cash paid out for a supply/vendor purchase |
-| `staff_advance` | Cash advance given to a staff member |
+| `staff_advance` | Cash advance given to a staff member (legacy) |
+| `gaji` | Staff salary payment (gaji karyawan) |
 | `petty_cash` | Petty cash disbursement |
 | `tip_out` | Tip payout to staff |
 | `cash_deposit` | Cash deposited into drawer |

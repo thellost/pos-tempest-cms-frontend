@@ -207,6 +207,7 @@ function BranchForm({ branch, onSuccess }: BranchFormProps) {
       opening_time: branch?.opening_time ?? '08:00',
       closing_time: branch?.closing_time ?? '22:00',
       auto_shift: branch?.auto_shift ?? true,
+      cash_in_flag_feature: branch?.cash_in_flag_feature ?? false,
       is_active: branch?.is_active ?? true,
     },
     onSubmit: async ({ value }) => {
@@ -221,6 +222,7 @@ function BranchForm({ branch, onSuccess }: BranchFormProps) {
         opening_time: value.opening_time,
         closing_time: value.closing_time,
         auto_shift: value.auto_shift,
+        cash_in_flag_feature: value.cash_in_flag_feature,
       }
 
       if (isEdit && branch) {
@@ -372,6 +374,16 @@ function BranchForm({ branch, onSuccess }: BranchFormProps) {
           <field.SwitchField
             label="Auto Shift"
             description="Automatically open and close shifts based on opening/closing times."
+          />
+        )}
+      </form.AppField>
+
+      {/* Cash-In Feature */}
+      <form.AppField name="cash_in_flag_feature">
+        {(field) => (
+          <field.SwitchField
+            label="Cash-In Feature"
+            description="Enable gaji and pengeluaran pribadi transactions for this branch."
           />
         )}
       </form.AppField>

@@ -15,6 +15,7 @@ export interface Branch {
   opening_time: string   // HH:MM 24h
   closing_time: string   // HH:MM 24h
   auto_shift: boolean
+  cash_in_flag_feature: boolean
   is_active: boolean
   created_at: string
   updated_at: string
@@ -31,6 +32,7 @@ export interface CreateBranchPayload {
   opening_time?: string  // HH:MM 24h
   closing_time?: string  // HH:MM 24h
   auto_shift?: boolean
+  cash_in_flag_feature?: boolean
 }
 
 export type UpdateBranchPayload = Partial<CreateBranchPayload> & {
