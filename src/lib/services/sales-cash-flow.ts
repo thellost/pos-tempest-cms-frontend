@@ -274,8 +274,10 @@ export interface Shift {
 export type CashTransactionType = 'cash_in' | 'cash_out'
 
 export type CashTransactionReason =
+  | 'pengeluaran_pribadi'
   | 'owner_withdrawal'
   | 'supply_purchase'
+  | 'gaji'
   | 'staff_advance'
   | 'petty_cash'
   | 'tip_out'

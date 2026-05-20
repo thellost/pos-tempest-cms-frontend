@@ -100,8 +100,10 @@ function labelForPaymentMethod(method: string): string {
 }
 
 const CASH_TX_REASON_LABELS: Record<string, string> = {
+  pengeluaran_pribadi: 'Pengeluaran Pribadi',
   owner_withdrawal: 'Owner Withdrawal',
   supply_purchase: 'Supply Purchase',
+  gaji: 'Gaji',
   staff_advance: 'Staff Advance',
   petty_cash: 'Petty Cash',
   tip_out: 'Tip Out',

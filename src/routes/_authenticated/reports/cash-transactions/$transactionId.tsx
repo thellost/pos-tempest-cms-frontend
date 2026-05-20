@@ -34,7 +34,9 @@ export const Route = createFileRoute(
 const REASON_LABELS: Record<string, string> = {
   purchase_order: 'Purchase Order',
   supply_purchase: 'Supply Purchase',
+  pengeluaran_pribadi: 'Pengeluaran Pribadi',
   owner_withdrawal: 'Owner Withdrawal',
+  gaji: 'Gaji',
   staff_advance: 'Staff Advance',
   petty_cash: 'Petty Cash',
   tip_out: 'Tip Out',
