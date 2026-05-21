@@ -64,6 +64,7 @@ export type CategoryFilters = {
 }
 
 export type MenuItemFilters = {
+  branchId?: number
   categoryId?: number
   pricingType?: 'fixed' | 'weight_based'
   isAvailable?: boolean

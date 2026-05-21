@@ -5,6 +5,7 @@ import type { CategoryFilters } from '@/lib/query-keys'
 
 export interface Category {
   id: number
+  branch_id: number
   parent_id: number | null
   name: string
   description: string | null
@@ -21,6 +22,7 @@ export interface CategoryTree extends Category {
 }
 
 export interface CreateCategoryPayload {
+  branch_id?: number
   parent_id?: number | null
   name: string
   description?: string
@@ -30,6 +32,7 @@ export interface CreateCategoryPayload {
 }
 
 export interface UpdateCategoryPayload {
+  branch_id?: number
   parent_id?: number | null
   name?: string
   description?: string

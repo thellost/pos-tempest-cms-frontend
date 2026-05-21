@@ -54,7 +54,7 @@ function AuditLogsPage() {
 
   // Filters
   const [userId, setUserId] = useState('')
-  const [branchId, setBranchId] = useState('')
+  const [branchId, setBranchId] = useState('1')
   const [action, setAction] = useState('')
   const [tableName, setTableName] = useState('')
   const [dateFrom, setDateFrom] = useState('')
@@ -114,7 +114,7 @@ function AuditLogsPage() {
 
   function clearFilters() {
     setUserId('')
-    setBranchId('')
+    setBranchId('1')
     setAction('')
     setTableName('')
     setDateFrom('')

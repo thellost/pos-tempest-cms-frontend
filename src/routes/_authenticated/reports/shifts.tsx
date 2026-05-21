@@ -619,7 +619,7 @@ interface ShiftSelectorProps {
 }
 
 function ShiftSelector({ selectedShiftId, onSelect }: ShiftSelectorProps) {
-  const [branchId, setBranchId] = useState<number | undefined>(undefined)
+  const [branchId, setBranchId] = useState<number | undefined>(1)
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
 

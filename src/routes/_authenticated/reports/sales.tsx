@@ -637,7 +637,7 @@ function SalesReportPage() {
   const defaults = defaultDateRange()
   const search = Route.useSearch()
 
-  const [branchId, setBranchId] = useState<number | undefined>(undefined)
+  const [branchId, setBranchId] = useState<number | undefined>(1)
   const [dateFrom, setDateFrom] = useState<string>(search.date_from ?? defaults.dateFrom)
   const [dateTo, setDateTo] = useState<string>(search.date_to ?? defaults.dateTo)
   const [groupBy, setGroupBy] = useState<'day' | 'week' | 'month'>('day')

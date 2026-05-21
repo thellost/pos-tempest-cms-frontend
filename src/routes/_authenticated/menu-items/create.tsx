@@ -1,7 +1,9 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { ArrowLeftIcon } from 'lucide-react'
 import { requireRole } from '@/lib/auth-guards'
+import { useAuth } from '@/hooks/use-auth'
+import { useBranches } from '@/hooks/use-branches'
 import { useCreateMenuItem } from '@/hooks/use-menu-items'
 import { useCategoryTree } from '@/hooks/use-categories'
 import { useAppForm } from '@/hooks/use-form'
@@ -64,6 +66,12 @@ export function MenuItemForm({ onSuccess }: MenuItemFormProps) {
   const [ingredients, setIngredients] = useState<IngredientRow[]>([])
   const createMutation = useCreateMenuItem()
   const { data: categoryTreeData } = useCategoryTree()
+  const { branchId: userBranchId } = useAuth()
+  const { data: branchesData } = useBranches({ pageSize: 100 })
+  const branchOptions = useMemo(
+    () => (branchesData?.data ?? []).map((b) => ({ value: b.id, label: b.name })),
+    [branchesData],
+  )
 
   // Flatten category tree for combobox
   const categoryOptions = buildCategoryOptions(categoryTreeData?.data)
@@ -82,6 +90,7 @@ export function MenuItemForm({ onSuccess }: MenuItemFormProps) {
       cost: 0 as number,
       min_order_qty: 1 as number,
       // Classification
+      branch_id: userBranchId ?? (null as number | null),
       category_id: null as number | null,
       sort_order: 0 as number,
       preparation_time_minutes: null as number | null,
@@ -102,6 +111,7 @@ export function MenuItemForm({ onSuccess }: MenuItemFormProps) {
         price: Number(value.price),
         cost: Number(value.cost) || 0,
         min_order_qty: Number(value.min_order_qty) || 1,
+        branch_id: value.branch_id ?? undefined,
         category_id: value.category_id ?? undefined,
         sort_order: Number(value.sort_order) || 0,
         preparation_time_minutes:
@@ -353,6 +363,23 @@ export function MenuItemForm({ onSuccess }: MenuItemFormProps) {
         <TabsContent value="classification">
           <Card>
             <CardContent className="space-y-4 pt-6">
+              <form.AppField
+                name="branch_id"
+                validators={{
+                  onChange: ({ value }) => (!value ? 'Branch is required' : undefined),
+                }}
+              >
+                {(field) => (
+                  <field.ComboboxField
+                    label="Branch *"
+                    options={branchOptions}
+                    placeholder="Select branch…"
+                    searchPlaceholder="Search branches…"
+                    emptyMessage="No branches found."
+                  />
+                )}
+              </form.AppField>
+
               <form.AppField name="category_id">
                 {(field) => (
                   <field.ComboboxField

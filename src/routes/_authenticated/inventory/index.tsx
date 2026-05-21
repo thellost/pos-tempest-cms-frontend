@@ -50,7 +50,7 @@ function InventoryPage() {
 
   // Filters
   const [filterValues, setFilterValues] = useState<Record<string, string>>({
-    branch_id: userBranchId ? String(userBranchId) : '',
+    branch_id: userBranchId ? String(userBranchId) : '1',
     search: '',
   })
 
@@ -155,7 +155,7 @@ function InventoryPage() {
 
   const handleFilterClear = () => {
     setFilterValues({
-      branch_id: '',
+      branch_id: '1',
       search: '',
     })
     setPage(1)

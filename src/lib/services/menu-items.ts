@@ -34,6 +34,7 @@ export interface ModifierGroup {
 /** Shape returned by list endpoint (no modifier_groups) */
 export interface MenuItem {
   id: number
+  branch_id: number
   category_id: number | null
   name: string
   description: string | null
@@ -81,6 +82,7 @@ export interface IngredientPayload {
 }
 
 export interface CreateMenuItemPayload {
+  branch_id?: number
   category_id?: number | null
   name: string
   description?: string | null
@@ -133,6 +135,7 @@ export const menuItemsService = {
     return api.get<MenuItem[]>(
       `/api/v1/menu-items${buildQueryParams(
         {
+          branch_id: rest.branchId,
           category_id: rest.categoryId,
           pricing_type: rest.pricingType,
           is_available: rest.isAvailable,

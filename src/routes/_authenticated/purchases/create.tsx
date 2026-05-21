@@ -99,7 +99,7 @@ function PurchaseOrderForm({ onSuccess }: PurchaseOrderFormProps) {
   const form = useAppForm({
     defaultValues: {
       supplier_id: null as number | null,
-      branch_id: userBranchId ?? (null as number | null),
+      branch_id: userBranchId ?? 1,
       notes: '',
       tax_amount: 0 as number,
     },

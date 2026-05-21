@@ -82,7 +82,7 @@ function OrdersPage() {
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebounce(search, 300)
   const [branchId, setBranchId] = useState(
-    userBranchId ? String(userBranchId) : '',
+    userBranchId ? String(userBranchId) : '1',
   )
   const [status, setStatus] = useState('')
   const [paymentStatus, setPaymentStatus] = useState('')
@@ -225,7 +225,7 @@ function OrdersPage() {
 
   function clearFilters() {
     setSearch('')
-    setBranchId(userBranchId ? String(userBranchId) : '')
+    setBranchId(userBranchId ? String(userBranchId) : '1')
     setStatus('')
     setPaymentStatus('')
     setOrderType('')

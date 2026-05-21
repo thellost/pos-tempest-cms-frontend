@@ -708,7 +708,7 @@ function BreakdownRow({
 function CashFlowReportPage() {
   const defaults = defaultDateRange()
 
-  const [branchId, setBranchId] = useState<number | undefined>(undefined)
+  const [branchId, setBranchId] = useState<number | undefined>(1)
   const [dateFrom, setDateFrom] = useState<string>(defaults.dateFrom)
   const [dateTo, setDateTo] = useState<string>(defaults.dateTo)
 

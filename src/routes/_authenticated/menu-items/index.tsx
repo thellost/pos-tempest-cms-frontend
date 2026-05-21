@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { PlusIcon } from 'lucide-react'
+import { useAuth } from '@/hooks/use-auth'
+import { useBranches } from '@/hooks/use-branches'
 import { requireRole } from '@/lib/auth-guards'
 import {
   useMenuItems,
@@ -30,6 +32,8 @@ export const Route = createFileRoute('/_authenticated/menu-items/')({
 function MenuItemsPage() {
   const navigate = useNavigate()
   const isMobile = useIsMobile()
+  const { branchId: userBranchId } = useAuth()
+  const { data: branchesData } = useBranches({ pageSize: 100 })
 
   // Pagination
   const [page, setPage] = useState(1)
@@ -38,6 +42,7 @@ function MenuItemsPage() {
   // Filters
   const [filterValues, setFilterValues] = useState<Record<string, string>>({
     search: '',
+    branch_id: userBranchId ? String(userBranchId) : '1',
     category_id: '',
     pricing_type: '',
     is_available: '',
@@ -54,6 +59,9 @@ function MenuItemsPage() {
   const queryFilters = useMemo(
     () => ({
       search: filterValues.search || undefined,
+      branchId: filterValues.branch_id
+        ? parseInt(filterValues.branch_id, 10)
+        : undefined,
       categoryId: filterValues.category_id
         ? parseInt(filterValues.category_id, 10)
         : undefined,
@@ -89,6 +97,12 @@ function MenuItemsPage() {
     flatten(categoryTreeData?.data)
     return flat
   }, [categoryTreeData])
+
+  const branchOptions = useMemo(
+    () =>
+      (branchesData?.data ?? []).map((b) => ({ value: String(b.id), label: b.name })),
+    [branchesData],
+  )
 
   const handleToggleAvailability = async (item: MenuItem) => {
     setTogglingId(item.id)
@@ -127,7 +141,7 @@ function MenuItemsPage() {
   }
 
   const handleClearFilters = () => {
-    setFilterValues({ search: '', category_id: '', pricing_type: '', is_available: '' })
+    setFilterValues({ search: '', branch_id: userBranchId ? String(userBranchId) : '1', category_id: '', pricing_type: '', is_available: '' })
     setPage(1)
   }
 
@@ -162,6 +176,13 @@ function MenuItemsPage() {
                 key: 'search',
                 type: 'search',
                 placeholder: 'Search name, SKU, barcode…',
+              },
+              {
+                key: 'branch_id',
+                type: 'select',
+                label: 'Branch',
+                allLabel: 'All Branches',
+                options: branchOptions,
               },
               {
                 key: 'category_id',

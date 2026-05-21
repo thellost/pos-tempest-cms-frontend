@@ -420,7 +420,7 @@ function ExpenseReportPage() {
   const search = Route.useSearch()
 
   const defaults = defaultDateRange()
-  const [branchId, setBranchId] = useState<number | undefined>(undefined)
+  const [branchId, setBranchId] = useState<number | undefined>(1)
   const [datePreset, setDatePreset] = useState('30')
   const [dateFrom, setDateFrom] = useState(search.date_from ?? defaults.dateFrom)
   const [dateTo, setDateTo] = useState(search.date_to ?? defaults.dateTo)

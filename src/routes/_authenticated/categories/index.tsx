@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { requireRole } from '@/lib/auth-guards'
+import { useAuth } from '@/hooks/use-auth'
+import { useBranches } from '@/hooks/use-branches'
 import {
   ChevronRightIcon,
   FolderIcon,
@@ -74,6 +76,13 @@ function CategoriesPage() {
   const [parentIdForNew, setParentIdForNew] = useState<number | null>(null)
   const [deleteTarget, setDeleteTarget] = useState<Category | null>(null)
   const [deleteOpen, setDeleteOpen] = useState(false)
+
+  const { branchId: userBranchId } = useAuth()
+  const { data: branchesData } = useBranches({ pageSize: 100 })
+  const branchOptions = useMemo(
+    () => (branchesData?.data ?? []).map((b) => ({ value: b.id, label: b.name })),
+    [branchesData],
+  )
 
   const { data: treeData, isLoading } = useCategoryTree()
   // Flat list for parent combobox (exclude the category being edited)
@@ -187,6 +196,8 @@ function CategoriesPage() {
               key={editingCategory?.id ?? `new-${parentIdForNew}`}
               category={editingCategory ?? undefined}
               defaultParentId={parentIdForNew}
+              defaultBranchId={userBranchId}
+              branchOptions={branchOptions}
               allCategories={flatList}
               editingId={editingCategory?.id}
               onSuccess={closeDialog}
@@ -381,6 +392,8 @@ function CategoryTreeNode({
 interface CategoryFormProps {
   category?: Category
   defaultParentId?: number | null
+  defaultBranchId?: number | null
+  branchOptions: { value: number; label: string }[]
   allCategories: Category[]
   editingId?: number
   onSuccess: () => void
@@ -389,6 +402,8 @@ interface CategoryFormProps {
 function CategoryForm({
   category,
   defaultParentId,
+  defaultBranchId,
+  branchOptions,
   allCategories,
   editingId,
   onSuccess,
@@ -424,6 +439,7 @@ function CategoryForm({
 
   const form = useAppForm({
     defaultValues: {
+      branch_id: category?.branch_id ?? defaultBranchId ?? (null as number | null),
       parent_id: category?.parent_id ?? defaultParentId ?? (0 as number | null),
       name: category?.name ?? '',
       description: category?.description ?? '',
@@ -439,6 +455,7 @@ function CategoryForm({
 
       if (isEdit && category) {
         const payload: UpdateCategoryPayload = {
+          branch_id: value.branch_id ?? undefined,
           parent_id: parentId,
           name: value.name,
           description: value.description || undefined,
@@ -452,6 +469,7 @@ function CategoryForm({
         )
       } else {
         const payload: CreateCategoryPayload = {
+          branch_id: value.branch_id ?? undefined,
           parent_id: parentId,
           name: value.name,
           description: value.description || undefined,
@@ -471,6 +489,24 @@ function CategoryForm({
         form.handleSubmit()
       }}
     >
+      {/* Branch */}
+      <form.AppField
+        name="branch_id"
+        validators={{
+          onChange: ({ value }) => (!value ? 'Branch is required' : undefined),
+        }}
+      >
+        {(field) => (
+          <field.ComboboxField
+            label="Branch"
+            options={branchOptions}
+            placeholder="Select branch…"
+            searchPlaceholder="Search branches…"
+            emptyMessage="No branches found."
+          />
+        )}
+      </form.AppField>
+
       {/* Parent Category */}
       <form.AppField name="parent_id">
         {(field) => (

@@ -1427,6 +1427,7 @@ Flat list of all categories.
   "data": [
     {
       "id": 1,
+      "branch_id": 1,
       "parent_id": null,
       "name": "Food",
       "description": "All food items",
@@ -1438,6 +1439,7 @@ Flat list of all categories.
     },
     {
       "id": 2,
+      "branch_id": 1,
       "parent_id": 1,
       "name": "Appetizers",
       "description": null,
@@ -1449,6 +1451,7 @@ Flat list of all categories.
     },
     {
       "id": 3,
+      "branch_id": 1,
       "parent_id": 1,
       "name": "Main Course",
       "description": null,
@@ -1460,6 +1463,7 @@ Flat list of all categories.
     },
     {
       "id": 4,
+      "branch_id": 1,
       "parent_id": null,
       "name": "Beverages",
       "description": "All drinks",
@@ -1494,6 +1498,7 @@ Nested tree structure with children.
   "data": [
     {
       "id": 1,
+      "branch_id": 1,
       "parent_id": null,
       "name": "Food",
       "description": "All food items",
@@ -1505,6 +1510,7 @@ Nested tree structure with children.
       "children": [
         {
           "id": 2,
+          "branch_id": 1,
           "parent_id": 1,
           "name": "Appetizers",
           "description": null,
@@ -1517,6 +1523,7 @@ Nested tree structure with children.
         },
         {
           "id": 3,
+          "branch_id": 1,
           "parent_id": 1,
           "name": "Main Course",
           "description": null,
@@ -1531,6 +1538,7 @@ Nested tree structure with children.
     },
     {
       "id": 4,
+      "branch_id": 1,
       "parent_id": null,
       "name": "Beverages",
       "description": "All drinks",
@@ -1562,6 +1570,7 @@ Nested tree structure with children.
 **Request Body:**
 ```json
 {
+  "branch_id": 1,
   "parent_id": 1,
   "name": "Desserts",
   "description": "Sweet treats",
@@ -1572,6 +1581,7 @@ Nested tree structure with children.
 
 | Field | Type | Required | Validation |
 |-------|------|----------|------------|
+| `branch_id` | int | ❌ | defaults to auth user's branch |
 | `parent_id` | int | ❌ | null for root category, or an existing category ID |
 | `name` | string | ✅ | max 100 chars |
 | `description` | string | ❌ | — |
@@ -1597,6 +1607,7 @@ Nested tree structure with children.
 
 | Field | Type | Required | Validation |
 |-------|------|----------|------------|
+| `branch_id` | int | ❌ | reassign category to a different branch |
 | `parent_id` | int | ❌ | cannot be self or descendant |
 | `name` | string | ❌ | max 100 chars |
 | `description` | string | ❌ | — |
@@ -1640,6 +1651,7 @@ List menu items with optional filters.
 
 | Parameter | Type | Description |
 |-----------|------|-------------|
+| `branch_id` | int | Filter by branch |
 | `category_id` | int | Filter by category |
 | `pricing_type` | string | `fixed` or `weight_based` |
 | `is_available` | bool | Filter by availability |
@@ -1655,6 +1667,7 @@ List menu items with optional filters.
   "data": [
     {
       "id": 1,
+      "branch_id": 1,
       "category_id": 3,
       "name": "Nasi Goreng Spesial",
       "description": "Fried rice with egg, chicken, and vegetables",
@@ -1676,6 +1689,7 @@ List menu items with optional filters.
     },
     {
       "id": 2,
+      "branch_id": 1,
       "category_id": 3,
       "name": "Wagyu Steak",
       "description": "Premium A5 wagyu beef",
@@ -1719,6 +1733,7 @@ Get a single menu item **with modifier groups and ingredients attached**.
   "success": true,
   "data": {
     "id": 1,
+    "branch_id": 1,
     "category_id": 3,
     "name": "Nasi Goreng Spesial",
     "description": "Fried rice with egg, chicken, and vegetables",
@@ -1860,6 +1875,7 @@ Create a menu item. Optionally include `ingredients` to define the recipe (which
 **Request Body:**
 ```json
 {
+  "branch_id": 1,
   "category_id": 3,
   "name": "Mie Goreng",
   "description": "Stir-fried noodles with vegetables",
@@ -1882,10 +1898,11 @@ Create a menu item. Optionally include `ingredients` to define the recipe (which
 
 | Field | Type | Required | Validation |
 |-------|------|----------|------------|
+| `branch_id` | int | ❌ | defaults to auth user's branch |
 | `category_id` | int | ❌ | — |
 | `name` | string | ✅ | max 150 chars |
 | `description` | string | ❌ | — |
-| `sku` | string | ❌ | max 50, unique |
+| `sku` | string | ❌ | max 50, unique per branch |
 | `barcode` | string | ❌ | max 50 |
 | `image_url` | string | ❌ | max 500 |
 | `pricing_type` | string | ✅ | `fixed` or `weight_based` |
@@ -1922,10 +1939,11 @@ Update a menu item. Only send fields you want to change. Include `ingredients` t
 
 | Field | Type | Required | Validation |
 |-------|------|----------|------------|
+| `branch_id` | int | ❌ | — |
 | `category_id` | int | ❌ | — |
 | `name` | string | ❌ | max 150 chars |
 | `description` | string | ❌ | — |
-| `sku` | string | ❌ | max 50, unique |
+| `sku` | string | ❌ | max 50, unique per branch |
 | `barcode` | string | ❌ | max 50 |
 | `image_url` | string | ❌ | max 500 |
 | `pricing_type` | string | ❌ | `fixed` or `weight_based` |

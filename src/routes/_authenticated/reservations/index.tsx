@@ -101,7 +101,7 @@ function ReservationsPage() {
 
   // ── Filters ──────────────────────────────────────────────────────────────────
   const [filterValues, setFilterValues] = useState<Record<string, string>>({
-    branch_id: userBranchId ? String(userBranchId) : '',
+    branch_id: userBranchId ? String(userBranchId) : '1',
     table_id: '',
     status: '',
   })
@@ -218,7 +218,7 @@ function ReservationsPage() {
 
   const handleClearFilters = () => {
     setFilterValues({
-      branch_id: userBranchId ? String(userBranchId) : '',
+    branch_id: userBranchId ? String(userBranchId) : '1',
       table_id: '',
       status: '',
     })

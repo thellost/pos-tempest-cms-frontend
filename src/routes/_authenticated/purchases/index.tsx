@@ -42,7 +42,7 @@ function PurchasesPage() {
 
   // Filters
   const [filterValues, setFilterValues] = useState<Record<string, string>>({
-    branch_id: userBranchId ? String(userBranchId) : '',
+    branch_id: userBranchId ? String(userBranchId) : '1',
     supplier_id: '',
     status: '',
   })
@@ -123,7 +123,7 @@ function PurchasesPage() {
 
   const handleClearFilters = () => {
     setFilterValues({
-      branch_id: userBranchId ? String(userBranchId) : '',
+    branch_id: userBranchId ? String(userBranchId) : '1',
       supplier_id: '',
       status: '',
     })

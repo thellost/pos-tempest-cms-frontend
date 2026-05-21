@@ -102,7 +102,7 @@ function TablesPage() {
 
   // Branch selection (admins see all; managers may be locked to theirs)
   const [selectedBranchId, setSelectedBranchId] = useState<string>(
-    userBranchId ? String(userBranchId) : '',
+    userBranchId ? String(userBranchId) : '1',
   )
 
   // Dialog states

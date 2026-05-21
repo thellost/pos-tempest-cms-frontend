@@ -37,7 +37,7 @@ function UsersPage() {
   // Filter state
   const [filterValues, setFilterValues] = useState<Record<string, string>>({
     search: '',
-    branch_id: '',
+    branch_id: '1',
     role_id: '',
     is_active: '',
   })
@@ -101,7 +101,7 @@ function UsersPage() {
   }
 
   const handleClearFilters = () => {
-    setFilterValues({ search: '', branch_id: '', role_id: '', is_active: '' })
+    setFilterValues({ search: '', branch_id: '1', role_id: '', is_active: '' })
     setPage(1)
   }
 

@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { format, subDays, parseISO } from 'date-fns'
 import {
@@ -16,6 +16,7 @@ import {
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid } from 'recharts'
 import { useAuth } from '@/hooks/use-auth'
 import { useDashboardStats, useSalesStats, useCashFlowStats } from '@/hooks/use-sales-cash-flow'
+import { useBranches } from '@/hooks/use-branches'
 import { PageHeader } from '@/components/page-header'
 import { StatCard } from '@/components/stat-card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -26,7 +27,13 @@ import {
   ChartTooltipContent,
   type ChartConfig,
 } from '@/components/ui/chart'
-import { Badge } from '@/components/ui/badge'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 
 // ─── Route ────────────────────────────────────────────────────────────────────
@@ -258,7 +265,10 @@ function CashFlowSummaryCard({ branchId }: { branchId?: number }) {
 
 function DashboardPage() {
   const { user } = useAuth()
-  const { data, isLoading } = useDashboardStats(undefined)
+  const [branchId, setBranchId] = useState<number | undefined>(1)
+  const { data, isLoading } = useDashboardStats(branchId)
+  const { data: branchesData } = useBranches({ pageSize: 100 })
+  const branches = branchesData?.data ?? []
 
   const stats = data?.data
 
@@ -279,17 +289,30 @@ function DashboardPage() {
           title="Dashboard"
           description={`Welcome back, ${user?.name ?? 'there'}. Here's what's happening today.`}
         />
-        <Badge variant="secondary" className="shrink-0 text-xs font-normal mt-1">
-          All Branches
-        </Badge>
+        <Select
+          value={branchId ? String(branchId) : 'all'}
+          onValueChange={(v) => setBranchId(v === 'all' ? undefined : Number(v))}
+        >
+          <SelectTrigger className="w-[180px] shrink-0 mt-1">
+            <SelectValue placeholder="Select branch" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All branches</SelectItem>
+            {branches.map((b) => (
+              <SelectItem key={b.id} value={String(b.id)}>
+                {b.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* ── Top row: Revenue chart + Cash flow ───────────────────────────── */}
       <div className="grid grid-cols-1 items-stretch gap-4 lg:grid-cols-3">
         <div className="flex h-full flex-col lg:col-span-2">
-          <RevenueChartCard branchId={undefined} />
+          <RevenueChartCard branchId={branchId} />
         </div>
-        <CashFlowSummaryCard branchId={undefined} />
+        <CashFlowSummaryCard branchId={branchId} />
       </div>
 
       {/* ── Bottom row: 6 KPI stat cards ─────────────────────────────────── */}

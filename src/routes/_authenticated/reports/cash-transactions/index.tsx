@@ -36,7 +36,7 @@ export const Route = createFileRoute('/_authenticated/reports/cash-transactions/
         : undefined,
     shift_id: typeof search.shift_id === 'string' ? search.shift_id : undefined,
     branch_id:
-      typeof search.branch_id === 'string' ? Number(search.branch_id) : undefined,
+      typeof search.branch_id === 'string' ? Number(search.branch_id) : 1,
     date_from: typeof search.date_from === 'string' ? search.date_from : undefined,
     date_to: typeof search.date_to === 'string' ? search.date_to : undefined,
   }),

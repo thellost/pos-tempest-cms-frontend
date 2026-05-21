@@ -48,7 +48,7 @@ function ShiftsPage() {
 
   // Filters
   const [filterValues, setFilterValues] = useState<Record<string, string>>({
-    branch_id: userBranchId ? String(userBranchId) : '',
+    branch_id: userBranchId ? String(userBranchId) : '1',
     device_id: '',
     status: '',
   })
@@ -133,7 +133,7 @@ function ShiftsPage() {
 
   const handleClearFilters = () => {
     setFilterValues({
-      branch_id: userBranchId ? String(userBranchId) : '',
+    branch_id: userBranchId ? String(userBranchId) : '1',
       device_id: '',
       status: '',
     })

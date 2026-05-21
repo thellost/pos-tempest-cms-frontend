@@ -50,7 +50,7 @@ function DevicesPage() {
 
   // Filter state — default to user's branch so the backend requirement is met
   const [filterValues, setFilterValues] = useState<Record<string, string>>({
-    branch_id: userBranchId ? String(userBranchId) : '',
+    branch_id: userBranchId ? String(userBranchId) : '1',
   })
 
   // Register / edit dialog
@@ -114,7 +114,7 @@ function DevicesPage() {
   }
 
   const handleClearFilters = () => {
-    setFilterValues({ branch_id: '' })
+    setFilterValues({ branch_id: '1' })
     setPage(1)
   }
 
