@@ -19,6 +19,7 @@ import {
   useExpenseBreakdown,
 } from '@/hooks/use-sales-cash-flow'
 import { useBranches } from '@/hooks/use-branches'
+import { useCashTransactionReasonLabels } from '@/hooks/use-cash-reasons'
 import { PageHeader } from '@/components/page-header'
 import {
   ChartContainer,
@@ -51,20 +52,6 @@ export const Route = createFileRoute('/_authenticated/reports/expenses')({
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const REASON_LABELS: Record<string, string> = {
-  purchase_order: 'Purchase Order',
-  supply_purchase: 'Supply Purchase',
-  pengeluaran_pribadi: 'Pengeluaran Pribadi',
-  owner_withdrawal: 'Owner Withdrawal',
-  gaji: 'Gaji',
-  staff_advance: 'Staff Advance',
-  petty_cash: 'Petty Cash',
-  tip_out: 'Tip Out',
-  cash_deposit: 'Cash Deposit',
-  change_refill: 'Change Refill',
-  other: 'Other',
-}
-
 const EXPENSE_COLORS = [
   '#ef4444',
   '#f97316',
@@ -93,10 +80,6 @@ function formatIDR(value: number | null | undefined): string {
   return `Rp ${new Intl.NumberFormat('id-ID').format(Math.round(value))}`
 }
 
-function labelForReason(reason: string): string {
-  return REASON_LABELS[reason] ?? reason.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-}
-
 function defaultDateRange() {
   const today = new Date()
   return {
@@ -120,6 +103,7 @@ const expenseChartConfig = {
 function ExpenseBreakdownSection({ branchId, dateFrom, dateTo }: ExpenseBreakdownSectionProps) {
   const navigate = useNavigate()
   const { data, isLoading } = useExpenseBreakdown(branchId, dateFrom, dateTo)
+  const { labelForReason } = useCashTransactionReasonLabels(branchId)
   const items = useMemo(() => (data?.data ?? []).slice().sort((a, b) => b.total_amount - a.total_amount), [data])
 
   const grandTotal = useMemo(() => items.reduce((sum, i) => sum + i.total_amount, 0), [items])
@@ -294,12 +278,14 @@ function CashTxBreakdownTable({
   color,
   items,
   emptyMsg,
+  labelForReason,
 }: {
   title: string
   icon: React.ReactNode
   color: string
   items: Array<{ reason: string; count: number; total_amount: number; percentage: number }>
   emptyMsg: string
+  labelForReason: (key: string) => string
 }) {
   const grandTotal = items.reduce((sum, i) => sum + i.total_amount, 0)
   const grandCount = items.reduce((sum, i) => sum + i.count, 0)
@@ -356,6 +342,7 @@ function CashTxBreakdownTable({
 
 function CashTxBreakdownSection({ branchId, dateFrom, dateTo }: CashTxBreakdownSectionProps) {
   const { data, isLoading } = useCashTransactionBreakdown(branchId, dateFrom, dateTo)
+  const { labelForReason } = useCashTransactionReasonLabels(branchId)
   const items = data?.data ?? []
 
   const cashOutItems = useMemo(
@@ -399,6 +386,7 @@ function CashTxBreakdownSection({ branchId, dateFrom, dateTo }: CashTxBreakdownS
           color={CASH_OUT_COLOR}
           items={cashOutItems}
           emptyMsg="No cash-out transactions for this period."
+          labelForReason={labelForReason}
         />
         <CashTxBreakdownTable
           title="Cash In (Deposits)"
@@ -406,6 +394,7 @@ function CashTxBreakdownSection({ branchId, dateFrom, dateTo }: CashTxBreakdownS
           color={CASH_IN_COLOR}
           items={cashInItems}
           emptyMsg="No cash-in transactions for this period."
+          labelForReason={labelForReason}
         />
       </div>
     </div>

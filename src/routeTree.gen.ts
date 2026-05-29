@@ -32,6 +32,7 @@ import { Route as AuthenticatedDevicesIndexRouteImport } from './routes/_authent
 import { Route as AuthenticatedDashboardIndexRouteImport } from './routes/_authenticated/dashboard/index'
 import { Route as AuthenticatedCustomersIndexRouteImport } from './routes/_authenticated/customers/index'
 import { Route as AuthenticatedCategoriesIndexRouteImport } from './routes/_authenticated/categories/index'
+import { Route as AuthenticatedCashReasonsIndexRouteImport } from './routes/_authenticated/cash-reasons/index'
 import { Route as AuthenticatedBranchesIndexRouteImport } from './routes/_authenticated/branches/index'
 import { Route as AuthenticatedAuditLogsIndexRouteImport } from './routes/_authenticated/audit-logs/index'
 import { Route as AuthenticatedUsersCreateRouteImport } from './routes/_authenticated/users/create'
@@ -180,6 +181,12 @@ const AuthenticatedCategoriesIndexRoute =
     path: '/categories/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedCashReasonsIndexRoute =
+  AuthenticatedCashReasonsIndexRouteImport.update({
+    id: '/cash-reasons/',
+    path: '/cash-reasons/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const AuthenticatedBranchesIndexRoute =
   AuthenticatedBranchesIndexRouteImport.update({
     id: '/branches/',
@@ -319,6 +326,7 @@ export interface FileRoutesByFullPath {
   '/users/create': typeof AuthenticatedUsersCreateRoute
   '/audit-logs/': typeof AuthenticatedAuditLogsIndexRoute
   '/branches/': typeof AuthenticatedBranchesIndexRoute
+  '/cash-reasons/': typeof AuthenticatedCashReasonsIndexRoute
   '/categories/': typeof AuthenticatedCategoriesIndexRoute
   '/customers/': typeof AuthenticatedCustomersIndexRoute
   '/dashboard/': typeof AuthenticatedDashboardIndexRoute
@@ -362,6 +370,7 @@ export interface FileRoutesByTo {
   '/users/create': typeof AuthenticatedUsersCreateRoute
   '/audit-logs': typeof AuthenticatedAuditLogsIndexRoute
   '/branches': typeof AuthenticatedBranchesIndexRoute
+  '/cash-reasons': typeof AuthenticatedCashReasonsIndexRoute
   '/categories': typeof AuthenticatedCategoriesIndexRoute
   '/customers': typeof AuthenticatedCustomersIndexRoute
   '/dashboard': typeof AuthenticatedDashboardIndexRoute
@@ -407,6 +416,7 @@ export interface FileRoutesById {
   '/_authenticated/users/create': typeof AuthenticatedUsersCreateRoute
   '/_authenticated/audit-logs/': typeof AuthenticatedAuditLogsIndexRoute
   '/_authenticated/branches/': typeof AuthenticatedBranchesIndexRoute
+  '/_authenticated/cash-reasons/': typeof AuthenticatedCashReasonsIndexRoute
   '/_authenticated/categories/': typeof AuthenticatedCategoriesIndexRoute
   '/_authenticated/customers/': typeof AuthenticatedCustomersIndexRoute
   '/_authenticated/dashboard/': typeof AuthenticatedDashboardIndexRoute
@@ -452,6 +462,7 @@ export interface FileRouteTypes {
     | '/users/create'
     | '/audit-logs/'
     | '/branches/'
+    | '/cash-reasons/'
     | '/categories/'
     | '/customers/'
     | '/dashboard/'
@@ -495,6 +506,7 @@ export interface FileRouteTypes {
     | '/users/create'
     | '/audit-logs'
     | '/branches'
+    | '/cash-reasons'
     | '/categories'
     | '/customers'
     | '/dashboard'
@@ -539,6 +551,7 @@ export interface FileRouteTypes {
     | '/_authenticated/users/create'
     | '/_authenticated/audit-logs/'
     | '/_authenticated/branches/'
+    | '/_authenticated/cash-reasons/'
     | '/_authenticated/categories/'
     | '/_authenticated/customers/'
     | '/_authenticated/dashboard/'
@@ -732,6 +745,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedCategoriesIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/cash-reasons/': {
+      id: '/_authenticated/cash-reasons/'
+      path: '/cash-reasons'
+      fullPath: '/cash-reasons/'
+      preLoaderRoute: typeof AuthenticatedCashReasonsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/branches/': {
       id: '/_authenticated/branches/'
       path: '/branches'
@@ -886,6 +906,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedUsersCreateRoute: typeof AuthenticatedUsersCreateRoute
   AuthenticatedAuditLogsIndexRoute: typeof AuthenticatedAuditLogsIndexRoute
   AuthenticatedBranchesIndexRoute: typeof AuthenticatedBranchesIndexRoute
+  AuthenticatedCashReasonsIndexRoute: typeof AuthenticatedCashReasonsIndexRoute
   AuthenticatedCategoriesIndexRoute: typeof AuthenticatedCategoriesIndexRoute
   AuthenticatedCustomersIndexRoute: typeof AuthenticatedCustomersIndexRoute
   AuthenticatedDashboardIndexRoute: typeof AuthenticatedDashboardIndexRoute
@@ -924,6 +945,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedUsersCreateRoute: AuthenticatedUsersCreateRoute,
   AuthenticatedAuditLogsIndexRoute: AuthenticatedAuditLogsIndexRoute,
   AuthenticatedBranchesIndexRoute: AuthenticatedBranchesIndexRoute,
+  AuthenticatedCashReasonsIndexRoute: AuthenticatedCashReasonsIndexRoute,
   AuthenticatedCategoriesIndexRoute: AuthenticatedCategoriesIndexRoute,
   AuthenticatedCustomersIndexRoute: AuthenticatedCustomersIndexRoute,
   AuthenticatedDashboardIndexRoute: AuthenticatedDashboardIndexRoute,

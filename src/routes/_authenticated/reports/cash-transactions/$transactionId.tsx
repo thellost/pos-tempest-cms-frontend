@@ -11,6 +11,7 @@ import {
   UserIcon,
 } from 'lucide-react'
 import { useGlobalCashTransaction } from '@/hooks/use-sales-cash-flow'
+import { useCashTransactionReasonLabels } from '@/hooks/use-cash-reasons'
 import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -29,31 +30,11 @@ export const Route = createFileRoute(
   component: CashTransactionDetailPage,
 })
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const REASON_LABELS: Record<string, string> = {
-  purchase_order: 'Purchase Order',
-  supply_purchase: 'Supply Purchase',
-  pengeluaran_pribadi: 'Pengeluaran Pribadi',
-  owner_withdrawal: 'Owner Withdrawal',
-  gaji: 'Gaji',
-  staff_advance: 'Staff Advance',
-  petty_cash: 'Petty Cash',
-  tip_out: 'Tip Out',
-  cash_deposit: 'Cash Deposit',
-  change_refill: 'Change Refill',
-  other: 'Other',
-}
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatIDR(value: number | null | undefined): string {
   if (value == null || isNaN(value)) return '—'
   return `Rp ${new Intl.NumberFormat('id-ID').format(Math.round(value))}`
-}
-
-function labelForReason(reason: string): string {
-  return REASON_LABELS[reason] ?? reason.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
 function formatDateTime(iso: string | null | undefined): string {
@@ -93,6 +74,7 @@ function CashTransactionDetailPage() {
   const { transactionId } = Route.useParams()
   const { data, isLoading, isError } = useGlobalCashTransaction(transactionId)
   const tx = data?.data
+  const { labelForReason } = useCashTransactionReasonLabels(tx?.shift_branch_id)
 
   return (
     <div className="space-y-6 p-6">

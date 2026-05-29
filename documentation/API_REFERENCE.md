@@ -2,7 +2,7 @@
 
 > **Base URL:** `http://localhost:8080`
 > **Content-Type:** `application/json`
-> **Total Endpoints:** 100
+> **Total Endpoints:** 105
 
 ---
 
@@ -17,6 +17,7 @@
 7. [Users](#7-users)
 8. [Devices](#8-devices)
 9. [Shifts](#9-shifts)
+  - [9a. Cash Transactions](#9a-cash-transactions)
 10. [Floor Areas](#10-floor-areas)
 11. [Tables](#11-tables)
 12. [Categories](#12-categories)
@@ -33,7 +34,8 @@
 23. [Purchases](#23-purchases)
 24. [Audit Logs (Read-Only)](#24-audit-logs-read-only)
 25. [Statistics](#25-statistics)
-26. [Enum Reference](#26-enum-reference)
+26. [Cash Transaction Reasons](#26-cash-transaction-reasons)
+27. [Enum Reference](#27-enum-reference)
 
 ---
 
@@ -4164,7 +4166,200 @@ Get a detailed financial report for a specific shift.
 
 ---
 
-## 26. Enum Reference
+## 26. Cash Transaction Reasons
+
+Branch-scoped lookup of cash transaction reason keys to display labels. Each branch can define its own reasons for cash-in / cash-out.
+
+> **Roles:** admin, manager, cashier
+
+---
+
+### `GET /api/v1/cash-transaction-reasons`
+
+Returns a paginated list of cash transaction reasons with optional filters. Non-admin users are automatically scoped to their branch.
+
+**Query Parameters:**
+
+| Parameter   | Type    | Description                                                    |
+|-------------|---------|----------------------------------------------------------------|
+| `branch_id` | integer | Filter to a specific branch (admin only; others auto-scoped)   |
+| `type`      | string  | `cash_in`, `cash_out`, or empty for both                       |
+| `is_active` | boolean | Filter by active status (`true` / `false`)                     |
+| `page`      | integer | Page number (default: 1)                                       |
+| `page_size` | integer | Results per page (default: 20, max: 100)                       |
+
+**Response `200 OK`:**
+
+```json
+{
+  "success": true,
+  "data": [
+    {
+      "id": 1,
+      "branch_id": 1,
+      "key": "owner_withdrawal",
+      "label": "Owner Withdrawal",
+      "type": "cash_out",
+      "is_active": true,
+      "sort_order": 0,
+      "created_at": "2026-01-15T08:00:00Z",
+      "updated_at": "2026-01-15T08:00:00Z"
+    },
+    {
+      "id": 2,
+      "branch_id": 1,
+      "key": "supply_purchase",
+      "label": "Supply Purchase",
+      "type": "cash_out",
+      "is_active": true,
+      "sort_order": 1,
+      "created_at": "2026-01-15T08:00:00Z",
+      "updated_at": "2026-01-15T08:00:00Z"
+    },
+    {
+      "id": 3,
+      "branch_id": 1,
+      "key": "change_refill",
+      "label": "Change Refill",
+      "type": "cash_in",
+      "is_active": true,
+      "sort_order": 2,
+      "created_at": "2026-01-15T08:00:00Z",
+      "updated_at": "2026-01-15T08:00:00Z"
+    },
+    {
+      "id": 4,
+      "branch_id": 1,
+      "key": "other",
+      "label": "Other",
+      "type": null,
+      "is_active": true,
+      "sort_order": 99,
+      "created_at": "2026-01-15T08:00:00Z",
+      "updated_at": "2026-01-15T08:00:00Z"
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "page_size": 20,
+    "total": 4,
+    "total_pages": 1
+  }
+}
+```
+
+---
+
+### `GET /api/v1/cash-transaction-reasons/:id`
+
+Returns a single cash transaction reason by its ID.
+
+**Path Parameters:**
+
+| Parameter | Type    | Description |
+|-----------|---------|-------------|
+| `id`      | integer | Reason ID   |
+
+**Response `200 OK`:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "id": 1,
+    "branch_id": 1,
+    "key": "owner_withdrawal",
+    "label": "Owner Withdrawal",
+    "type": "cash_out",
+    "is_active": true,
+    "sort_order": 0,
+    "created_at": "2026-01-15T08:00:00Z",
+    "updated_at": "2026-01-15T08:00:00Z"
+  }
+}
+```
+
+**Error `404`:** Cash transaction reason not found.
+
+---
+
+### `POST /api/v1/cash-transaction-reasons`
+
+Create a new cash transaction reason.
+
+**Request Body:**
+
+```json
+{
+  "key": "staff_advance",
+  "label": "Staff Advance",
+  "type": "cash_out",
+  "sort_order": 5
+}
+```
+
+| Field       | Type    | Required | Validation                         |
+|-------------|---------|----------|------------------------------------|
+| `key`       | string  | ✅       | max 100 chars, unique per branch   |
+| `label`     | string  | ✅       | max 200 chars                      |
+| `type`      | string  | ❌       | `cash_in` or `cash_out` (null = applies to both) |
+| `branch_id` | integer | ❌       | Auto-filled from auth user's branch |
+| `sort_order`| integer | ❌       | Default: 0                          |
+
+**Response `201 Created`:** Returns the created cash transaction reason object.
+
+**Error `409`:** Reason key already exists for this branch.
+
+---
+
+### `PUT /api/v1/cash-transaction-reasons/:id`
+
+Update a cash transaction reason. All fields are optional (partial update).
+
+**Request Body:**
+
+```json
+{
+  "label": "Staff Salary Advance",
+  "is_active": true
+}
+```
+
+| Field       | Type    | Required | Validation                         |
+|-------------|---------|----------|------------------------------------|
+| `key`       | string  | ❌       | max 100 chars, must be unique per branch |
+| `label`     | string  | ❌       | max 200 chars                      |
+| `type`      | string  | ❌       | `cash_in`, `cash_out`, or empty string to clear (set to both) |
+| `sort_order`| integer | ❌       |                                    |
+| `is_active` | boolean | ❌       |                                    |
+
+**Response `200 OK`:** Returns the updated cash transaction reason object.
+
+**Error `404`:** Cash transaction reason not found.
+**Error `409`:** Reason key already exists for this branch.
+
+---
+
+### `DELETE /api/v1/cash-transaction-reasons/:id`
+
+Soft-delete (deactivate) a cash transaction reason.
+
+**Response `200 OK`:**
+
+```json
+{
+  "success": true,
+  "data": {
+    "message": "cash transaction reason deleted"
+  }
+}
+```
+
+**Error `404`:** Cash transaction reason not found.
+
+---
+
+## 27. Enum Reference
 
 ### Role Types
 | Value | Description |

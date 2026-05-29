@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import { PieChart, Pie, Cell } from 'recharts'
 import { useShiftReport, useShifts } from '@/hooks/use-sales-cash-flow'
+import { useCashTransactionReasonLabels } from '@/hooks/use-cash-reasons'
 import { useBranches } from '@/hooks/use-branches'
 import {
   WaterfallFlow,
@@ -97,19 +98,6 @@ function labelForPaymentMethod(method: string): string {
     bank_transfer: 'Bank Transfer',
   }
   return labels[method] ?? method.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
-}
-
-const CASH_TX_REASON_LABELS: Record<string, string> = {
-  pengeluaran_pribadi: 'Pengeluaran Pribadi',
-  owner_withdrawal: 'Owner Withdrawal',
-  supply_purchase: 'Supply Purchase',
-  gaji: 'Gaji',
-  staff_advance: 'Staff Advance',
-  petty_cash: 'Petty Cash',
-  tip_out: 'Tip Out',
-  cash_deposit: 'Cash Deposit',
-  change_refill: 'Change Refill',
-  other: 'Other',
 }
 
 function formatDateTime(iso: string | null | undefined): string {
@@ -199,6 +187,7 @@ function ShiftReportContent({ shiftId }: ShiftReportContentProps) {
   const report = data.data
   const { shift } = report
   const payment_breakdown = report.payment_breakdown ?? []
+  const { labelForReason } = useCashTransactionReasonLabels(shift.branch_id)
 
   // Payment pie data
   const pieData = payment_breakdown.map((m, i) => ({
@@ -314,7 +303,7 @@ function ShiftReportContent({ shiftId }: ShiftReportContentProps) {
                     const isPO = tx.reason === 'purchase_order'
                     const row = (
                       <WaterfallRow
-                        label={CASH_TX_REASON_LABELS[tx.reason] ?? tx.reason}
+                        label={labelForReason(tx.reason)}
                         amount={tx.type === 'cash_in' ? tx.amount : -tx.amount}
                         kind={tx.type === 'cash_in' ? 'in' : 'out'}
                         isSubstep

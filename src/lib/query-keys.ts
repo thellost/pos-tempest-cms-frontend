@@ -184,6 +184,14 @@ export type GlobalCashTransactionFilters = {
   pageSize?: number
 }
 
+export type CashTransactionReasonFilters = {
+  branch_id?: number
+  type?: 'cash_in' | 'cash_out' | null
+  is_active?: boolean
+  page?: number
+  page_size?: number
+}
+
 // ─── Query Key Factory ────────────────────────────────────────────────────────
 
 export const queryKeys = {
@@ -358,5 +366,14 @@ export const queryKeys = {
     list: (filters?: GlobalCashTransactionFilters) =>
       ['cash-transactions', 'list', filters ?? {}] as const,
     detail: (id: string) => ['cash-transactions', 'detail', id] as const,
+  },
+
+  // ── Cash Transaction Reasons ─────────────────────────────────────────────
+  cashTransactionReasons: {
+    all: ['cash-transaction-reasons'] as const,
+    list: (filters?: CashTransactionReasonFilters) =>
+      ['cash-transaction-reasons', 'list', filters ?? {}] as const,
+    detail: (id: number) => ['cash-transaction-reasons', 'detail', id] as const,
+    labels: (branch_id?: number) => ['cash-transaction-reasons', 'labels', branch_id] as const,
   },
 } as const

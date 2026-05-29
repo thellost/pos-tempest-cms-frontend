@@ -13,6 +13,7 @@ import {
   useCloseShift,
   useShiftReport,
 } from '@/hooks/use-sales-cash-flow'
+import { useCashTransactionReasonLabels } from '@/hooks/use-cash-reasons'
 import { useAppForm } from '@/hooks/use-form'
 import type { CloseShiftPayload } from '@/lib/services/sales-cash-flow'
 import { PageHeader } from '@/components/page-header'
@@ -72,19 +73,6 @@ const PAYMENT_LABELS: Record<string, string> = {
   bank_transfer: 'Bank Transfer',
 }
 
-const CASH_TX_REASON_LABELS: Record<string, string> = {
-  pengeluaran_pribadi: 'Pengeluaran Pribadi',
-  owner_withdrawal: 'Owner Withdrawal',
-  supply_purchase: 'Supply Purchase',
-  gaji: 'Gaji',
-  staff_advance: 'Staff Advance',
-  petty_cash: 'Petty Cash',
-  tip_out: 'Tip Out',
-  cash_deposit: 'Cash Deposit',
-  change_refill: 'Change Refill',
-  other: 'Other',
-}
-
 const CHART_COLORS = [
   '#3b82f6',
   '#10b981',
@@ -109,6 +97,8 @@ function ShiftDetailPage() {
   const cashTransactions = report?.cash_transactions ?? []
 
   const isLoading = shiftLoading || reportLoading
+
+  const { labelForReason } = useCashTransactionReasonLabels(shift?.branch_id)
 
   // ── Pie chart data ──────────────────────────────────────────────────────────
 
@@ -319,7 +309,7 @@ function ShiftDetailPage() {
                 {report.cash_transactions.map((tx) => (
                   <WaterfallRow
                     key={tx.id}
-                    label={CASH_TX_REASON_LABELS[tx.reason] ?? tx.reason}
+                    label={labelForReason(tx.reason)}
                     amount={tx.type === 'cash_in' ? tx.amount : -tx.amount}
                     kind={tx.type === 'cash_in' ? 'in' : 'out'}
                     isSubstep

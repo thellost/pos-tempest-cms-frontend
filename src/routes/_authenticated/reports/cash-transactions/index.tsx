@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { useGlobalCashTransactions } from '@/hooks/use-sales-cash-flow'
 import { useBranches } from '@/hooks/use-branches'
+import { useCashTransactionReasonLabels } from '@/hooks/use-cash-reasons'
 import { PageHeader } from '@/components/page-header'
 import {
   Select,
@@ -44,33 +45,11 @@ export const Route = createFileRoute('/_authenticated/reports/cash-transactions/
   component: CashTransactionsPage,
 })
 
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const REASON_LABELS: Record<string, string> = {
-  purchase_order: 'Purchase Order',
-  supply_purchase: 'Supply Purchase',
-  pengeluaran_pribadi: 'Pengeluaran Pribadi',
-  owner_withdrawal: 'Owner Withdrawal',
-  gaji: 'Gaji',
-  staff_advance: 'Staff Advance',
-  petty_cash: 'Petty Cash',
-  tip_out: 'Tip Out',
-  cash_deposit: 'Cash Deposit',
-  change_refill: 'Change Refill',
-  other: 'Other',
-}
-
-const ALL_REASONS = Object.keys(REASON_LABELS)
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatIDR(value: number | null | undefined): string {
   if (value == null || isNaN(value)) return '—'
   return `Rp ${new Intl.NumberFormat('id-ID').format(Math.round(value))}`
-}
-
-function labelForReason(reason: string): string {
-  return REASON_LABELS[reason] ?? reason.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
 function formatDateTime(iso: string | null | undefined): string {
@@ -115,6 +94,8 @@ function CashTransactionsPage() {
   const transactions = data?.data ?? []
   const meta = data?.meta
 
+  const { labelForReason, reasonOptions } = useCashTransactionReasonLabels(filterBranchId)
+
   function handleFilterChange() {
     setPage(1)
   }
@@ -151,8 +132,8 @@ function CashTransactionsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">All reasons</SelectItem>
-                {ALL_REASONS.map((r) => (
-                  <SelectItem key={r} value={r}>{REASON_LABELS[r]}</SelectItem>
+                {reasonOptions.map((r) => (
+                  <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
