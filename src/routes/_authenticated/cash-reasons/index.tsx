@@ -48,7 +48,7 @@ export const Route = createFileRoute('/_authenticated/cash-reasons/')({
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const TYPE_OPTIONS = [
-  { value: '', label: 'Both (cash in & out)' },
+  { value: 'both', label: 'Both (cash in & out)' },
   { value: 'cash_in', label: 'Cash In only' },
   { value: 'cash_out', label: 'Cash Out only' },
 ]
@@ -260,13 +260,15 @@ function CashReasonForm({
         reason?.branch_id ?? (isAdmin ? (null as number | null) : userBranchId),
       key: reason?.key ?? '',
       label: reason?.label ?? '',
-      type: (reason?.type ?? '') as CashTransactionReasonType | '',
+      type: (reason?.type ?? 'both') as string,
       sort_order: reason?.sort_order ?? 0,
       is_active: reason?.is_active ?? true,
     },
     onSubmit: async ({ value }) => {
       const typeValue =
-        value.type === '' ? (null as unknown as undefined) : value.type
+        value.type === 'both'
+          ? (null as unknown as undefined)
+          : (value.type as CashTransactionReasonType | undefined)
 
       if (isEdit && reason) {
         const payload: UpdateCashTransactionReasonPayload = {
