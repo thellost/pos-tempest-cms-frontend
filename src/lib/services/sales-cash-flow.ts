@@ -378,11 +378,6 @@ export interface GlobalCashTransaction {
   is_active: boolean
 }
 
-export interface CashTransactionActionPayload {
-  id: string
-  action: 'cancel' | 'reactivate'
-}
-
 export interface GlobalCashTransactionMeta {
   page: number
   page_size: number
@@ -482,8 +477,11 @@ export const salesCashFlowService = {
   getGlobalCashTransaction: (id: string) =>
     api.get<GlobalCashTransaction>(`/api/v1/cash-transactions/${id}`),
 
-  cancelOrReactivateCashTransaction: (payload: CashTransactionActionPayload) =>
-    api.post<{ message: string }>('/api/v1/cash-transactions', payload),
+  cancelCashTransaction: (id: string) =>
+    api.post<{ message: string }>(`/api/v1/cash-transactions/${id}/cancel`),
+
+  reactivateCashTransaction: (id: string) =>
+    api.post<{ message: string }>(`/api/v1/cash-transactions/${id}/reactivate`),
 
   // ── Purchases ────────────────────────────────────────────────────────────
 

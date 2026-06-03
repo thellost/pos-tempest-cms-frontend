@@ -446,7 +446,7 @@ export function useCancelCashTransaction() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ id }: { id: string; shiftId?: string }) =>
-      salesCashFlowService.cancelOrReactivateCashTransaction({ id, action: 'cancel' }),
+      salesCashFlowService.cancelCashTransaction(id),
     onMutate: ({ id }) => {
       Sentry.addBreadcrumb({
         category: 'mutation',
@@ -485,7 +485,7 @@ export function useReactivateCashTransaction() {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: ({ id }: { id: string; shiftId?: string }) =>
-      salesCashFlowService.cancelOrReactivateCashTransaction({ id, action: 'reactivate' }),
+      salesCashFlowService.reactivateCashTransaction(id),
     onMutate: ({ id }) => {
       Sentry.addBreadcrumb({
         category: 'mutation',

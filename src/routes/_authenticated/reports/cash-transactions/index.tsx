@@ -6,9 +6,7 @@ import {
   ArrowLeftIcon,
   ArrowRightIcon,
   ArrowUpIcon,
-  BanIcon,
   ExternalLinkIcon,
-  RefreshCwIcon,
 } from 'lucide-react'
 import { useCancelCashTransaction, useGlobalCashTransactions, useReactivateCashTransaction } from '@/hooks/use-sales-cash-flow'
 import { useAuth } from '@/hooks/use-auth'
@@ -327,29 +325,27 @@ function CashTransactionsPage() {
                       {isAdmin && (
                         tx.is_active ? (
                           <Button
-                            variant="ghost"
+                            variant="destructive"
                             size="sm"
-                            className="h-7 px-2 text-destructive hover:text-destructive cursor-pointer"
+                            className="h-7 text-xs cursor-pointer"
                             disabled={cancelMutation.isPending}
                             onClick={() =>
                               cancelMutation.mutate({ id: tx.id, shiftId: tx.shift_id })
                             }
                           >
-                            <BanIcon className="size-3.5" />
-                            <span className="sr-only">Cancel transaction</span>
+                            {cancelMutation.isPending ? 'Canceling…' : 'Cancel'}
                           </Button>
                         ) : (
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
-                            className="h-7 px-2 cursor-pointer"
+                            className="h-7 text-xs cursor-pointer"
                             disabled={reactivateMutation.isPending}
                             onClick={() =>
                               reactivateMutation.mutate({ id: tx.id, shiftId: tx.shift_id })
                             }
                           >
-                            <RefreshCwIcon className="size-3.5" />
-                            <span className="sr-only">Reactivate transaction</span>
+                            {reactivateMutation.isPending ? 'Reactivating…' : 'Reactivate'}
                           </Button>
                         )
                       )}

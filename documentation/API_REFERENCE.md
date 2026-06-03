@@ -1142,20 +1142,19 @@ Returns a single cash transaction by its UUID.
 
 ---
 
-### `POST /api/v1/cash-transactions`
+### `POST /api/v1/cash-transactions/:id/cancel`
 
 > **Roles:** admin
 
-Cancel or reactivate a cash transaction. Works on any shift (open or closed).
+Soft-delete a cash transaction by setting `is_active` to `false`. Works on any shift (open or closed). Idempotent — canceling an already-canceled transaction returns `400`.
 
-**Request Body:**
+**Path Parameters:**
 
-| Field    | Type   | Description                                      |
-|----------|--------|--------------------------------------------------|
-| `id`     | UUID   | Cash transaction ID                              |
-| `action` | string | `"cancel"` to set `is_active = false` or `"reactivate"` to set `is_active = true` |
+| Parameter | Type | Description         |
+|-----------|------|---------------------|
+| `id`      | UUID | Cash transaction ID |
 
-**Response `200 OK` — Cancel:**
+**Response `200 OK`:**
 ```json
 {
   "success": true,
@@ -1165,7 +1164,27 @@ Cancel or reactivate a cash transaction. Works on any shift (open or closed).
 }
 ```
 
-**Response `200 OK` — Reactivate:**
+**Error `400`:** Already canceled.
+
+**Error `403`:** Not admin.
+
+**Error `404`:** Cash transaction not found.
+
+---
+
+### `POST /api/v1/cash-transactions/:id/reactivate`
+
+> **Roles:** admin
+
+Restore a previously canceled cash transaction by setting `is_active` back to `true`. Idempotent — reactivating an already-active transaction returns `400`.
+
+**Path Parameters:**
+
+| Parameter | Type | Description         |
+|-----------|------|---------------------|
+| `id`      | UUID | Cash transaction ID |
+
+**Response `200 OK`:**
 ```json
 {
   "success": true,
@@ -1175,7 +1194,7 @@ Cancel or reactivate a cash transaction. Works on any shift (open or closed).
 }
 ```
 
-**Error `400`:** Already canceled (when canceling) or already active (when reactivating).
+**Error `400`:** Already active.
 
 **Error `403`:** Not admin.
 
