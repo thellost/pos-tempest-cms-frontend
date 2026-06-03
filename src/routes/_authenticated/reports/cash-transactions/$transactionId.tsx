@@ -1,16 +1,19 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import { format, parseISO } from 'date-fns'
 import {
   ArrowDownIcon,
   ArrowLeftIcon,
   ArrowUpIcon,
+  BanIcon,
   BuildingIcon,
   CalendarIcon,
   ClipboardListIcon,
   HashIcon,
+  RefreshCwIcon,
   UserIcon,
 } from 'lucide-react'
-import { useGlobalCashTransaction } from '@/hooks/use-sales-cash-flow'
+import { useCancelCashTransaction, useGlobalCashTransaction, useReactivateCashTransaction } from '@/hooks/use-sales-cash-flow'
+import { useAuth } from '@/hooks/use-auth'
 import { useCashTransactionReasonLabels } from '@/hooks/use-cash-reasons'
 import { PageHeader } from '@/components/page-header'
 import { Button } from '@/components/ui/button'
@@ -75,6 +78,13 @@ function CashTransactionDetailPage() {
   const { data, isLoading, isError } = useGlobalCashTransaction(transactionId)
   const tx = data?.data
   const { labelForReason } = useCashTransactionReasonLabels(tx?.shift_branch_id)
+  const { role } = useAuth()
+  const isAdmin = role === 'admin'
+
+  const cancelMutation = useCancelCashTransaction()
+  const reactivateMutation = useReactivateCashTransaction()
+
+  const isBusy = cancelMutation.isPending || reactivateMutation.isPending
 
   return (
     <div className="space-y-6 p-6">
@@ -170,6 +180,21 @@ function CashTransactionDetailPage() {
                 icon={<CalendarIcon className="size-3.5" />}
                 value={formatDateTime(tx.created_at)}
               />
+              <Separator className="my-1" />
+              <InfoRow
+                label="Status"
+                value={
+                  tx.is_active ? (
+                    <Badge variant="secondary" className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-400">
+                      Active
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary" className="border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400">
+                      Canceled
+                    </Badge>
+                  )
+                }
+              />
             </CardContent>
           </Card>
 
@@ -214,7 +239,7 @@ function CashTransactionDetailPage() {
                 }
               />
               <Separator className="my-1" />
-              <div className="pt-3">
+              <div className="pt-3 space-y-2">
                 <Button variant="outline" size="sm" className="w-full" asChild>
                   <Link
                     to="/reports/cash-transactions"
@@ -223,6 +248,35 @@ function CashTransactionDetailPage() {
                     View all transactions in this shift
                   </Link>
                 </Button>
+                {isAdmin && (
+                  tx.is_active ? (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      className="w-full cursor-pointer"
+                      disabled={isBusy}
+                      onClick={() =>
+                        cancelMutation.mutate({ id: tx.id, shiftId: tx.shift_id })
+                      }
+                    >
+                      <BanIcon className="size-3.5 mr-1" />
+                      {cancelMutation.isPending ? 'Canceling…' : 'Cancel Transaction'}
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full cursor-pointer"
+                      disabled={isBusy}
+                      onClick={() =>
+                        reactivateMutation.mutate({ id: tx.id, shiftId: tx.shift_id })
+                      }
+                    >
+                      <RefreshCwIcon className="size-3.5 mr-1" />
+                      {reactivateMutation.isPending ? 'Reactivating…' : 'Reactivate Transaction'}
+                    </Button>
+                  )
+                )}
               </div>
             </CardContent>
           </Card>

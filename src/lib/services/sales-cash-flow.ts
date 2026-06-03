@@ -1,5 +1,5 @@
-import { api, buildQueryParams } from '@/lib/api-client'
 import type { PurchaseFilters, ShiftFilters, StatsFilter, SupplierFilters } from '@/lib/query-keys'
+import { api, buildQueryParams } from '@/lib/api-client'
 
 // ─── Dashboard ─────────────────────────────────────────────────────────────────
 
@@ -124,6 +124,7 @@ export interface ShiftReport {
     note: string | null
     created_at: string
     user_name: string
+    is_active: boolean
   }>
   po_expenses?: Array<{
     id: number
@@ -197,7 +198,7 @@ export interface Purchase {
   ordered_by_name: string
   received_by_name: string | null
   branch_name: string
-  items?: PurchaseItem[]
+  items?: Array<PurchaseItem>
 }
 
 export interface CreatePurchaseItemPayload {
@@ -212,7 +213,7 @@ export interface CreatePurchasePayload {
   branch_id: number
   notes?: string
   tax_amount?: number
-  items: CreatePurchaseItemPayload[]
+  items: Array<CreatePurchaseItemPayload>
 }
 
 export interface ReceivePurchasePayload {
@@ -295,6 +296,7 @@ export interface CashTransaction {
   note: string | null
   created_at: string
   user_name: string
+  is_active: boolean
 }
 
 export interface CreateCashTransactionPayload {
@@ -318,8 +320,8 @@ export interface ShiftSummary {
   cash_difference: number | null
   total_cash_in: number
   total_cash_out: number
-  payment_breakdown: PaymentBreakdown[]
-  cash_transactions: CashTransaction[]
+  payment_breakdown: Array<PaymentBreakdown>
+  cash_transactions: Array<CashTransaction>
 }
 
 export interface PaymentBreakdown {
@@ -373,6 +375,12 @@ export interface GlobalCashTransaction {
   user_name: string
   shift_branch_id: number
   shift_branch_name: string
+  is_active: boolean
+}
+
+export interface CashTransactionActionPayload {
+  id: string
+  action: 'cancel' | 'reactivate'
 }
 
 export interface GlobalCashTransactionMeta {
@@ -414,23 +422,23 @@ export const salesCashFlowService = {
   },
 
   getSales: (filters: StatsFilter = {}) =>
-    api.get<SalesDataPoint[]>(`/api/v1/statistics/sales${buildStatsParams(filters)}`),
+    api.get<Array<SalesDataPoint>>(`/api/v1/statistics/sales${buildStatsParams(filters)}`),
 
   getRevenueByCategory: (filters: StatsFilter = {}) =>
-    api.get<CategoryRevenue[]>(
+    api.get<Array<CategoryRevenue>>(
       `/api/v1/statistics/revenue-by-category${buildStatsParams(filters)}`,
     ),
 
   getTopItems: (filters: StatsFilter = {}) =>
-    api.get<TopItem[]>(`/api/v1/statistics/top-items${buildStatsParams(filters)}`),
+    api.get<Array<TopItem>>(`/api/v1/statistics/top-items${buildStatsParams(filters)}`),
 
   getPaymentMethods: (filters: StatsFilter = {}) =>
-    api.get<PaymentMethodBreakdown[]>(
+    api.get<Array<PaymentMethodBreakdown>>(
       `/api/v1/statistics/payment-methods${buildStatsParams(filters)}`,
     ),
 
   getCashFlow: (filters: StatsFilter = {}) =>
-    api.get<CashFlowDataPoint[]>(`/api/v1/statistics/cash-flow${buildStatsParams(filters)}`),
+    api.get<Array<CashFlowDataPoint>>(`/api/v1/statistics/cash-flow${buildStatsParams(filters)}`),
 
   getShiftReport: (shiftId: string) =>
     api.get<ShiftReport>(`/api/v1/statistics/shifts/${shiftId}`),
@@ -440,7 +448,7 @@ export const salesCashFlowService = {
     if (branchId) params.branch_id = branchId
     if (dateFrom) params.date_from = dateFrom
     if (dateTo) params.date_to = dateTo
-    return api.get<ExpenseBreakdownItem[]>(
+    return api.get<Array<ExpenseBreakdownItem>>(
       `/api/v1/statistics/expense-breakdown${buildQueryParams(params)}`,
     )
   },
@@ -450,7 +458,7 @@ export const salesCashFlowService = {
     if (branchId) params.branch_id = branchId
     if (dateFrom) params.date_from = dateFrom
     if (dateTo) params.date_to = dateTo
-    return api.get<CashTransactionBreakdownItem[]>(
+    return api.get<Array<CashTransactionBreakdownItem>>(
       `/api/v1/statistics/cash-transaction-breakdown${buildQueryParams(params)}`,
     )
   },
@@ -474,6 +482,9 @@ export const salesCashFlowService = {
   getGlobalCashTransaction: (id: string) =>
     api.get<GlobalCashTransaction>(`/api/v1/cash-transactions/${id}`),
 
+  cancelOrReactivateCashTransaction: (payload: CashTransactionActionPayload) =>
+    api.post<{ message: string }>('/api/v1/cash-transactions', payload),
+
   // ── Purchases ────────────────────────────────────────────────────────────
 
   listPurchases: (filters?: PurchaseFilters) => {
@@ -485,7 +496,7 @@ export const salesCashFlowService = {
     if (status) params.status = status
     if (dateFrom) params.date_from = dateFrom
     if (dateTo) params.date_to = dateTo
-    return api.get<Purchase[]>(
+    return api.get<Array<Purchase>>(
       `/api/v1/purchases${buildQueryParams(params, { page: page ?? 1, pageSize: pageSize ?? 20 })}`,
     )
   },
@@ -505,7 +516,7 @@ export const salesCashFlowService = {
 
   listSuppliers: (filters?: SupplierFilters) => {
     const { page, pageSize } = filters ?? {}
-    return api.get<Supplier[]>(
+    return api.get<Array<Supplier>>(
       `/api/v1/suppliers${buildQueryParams({}, { page: page ?? 1, pageSize: pageSize ?? 20 })}`,
     )
   },
@@ -531,7 +542,7 @@ export const salesCashFlowService = {
       dateFrom,
       dateTo,
     } = filters ?? {}
-    return api.get<Shift[]>(
+    return api.get<Array<Shift>>(
       `/api/v1/shifts${buildQueryParams(
         {
           ...(branchId !== undefined ? { branch_id: branchId } : {}),
@@ -558,7 +569,7 @@ export const salesCashFlowService = {
     api.post<Shift>(`/api/v1/shifts/${id}/close`, payload),
 
   listCashTransactions: (shiftId: string) =>
-    api.get<CashTransaction[]>(`/api/v1/shifts/${shiftId}/cash-transactions`),
+    api.get<Array<CashTransaction>>(`/api/v1/shifts/${shiftId}/cash-transactions`),
 
   createCashTransaction: (
     shiftId: string,

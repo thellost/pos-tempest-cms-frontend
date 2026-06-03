@@ -1,23 +1,25 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import * as Sentry from '@sentry/tanstackstart-react'
+import type {CloseShiftPayload, CreateCashTransactionPayload, CreatePurchasePayload, CreateSupplierPayload, OpenShiftPayload, ReceivePurchasePayload, UpdateSupplierPayload} from '@/lib/services/sales-cash-flow';
+import type {GlobalCashTransactionFilters, PurchaseFilters, ShiftFilters, StatsFilter, SupplierFilters} from '@/lib/query-keys';
 import {
-  salesCashFlowService,
-  type CreateCashTransactionPayload,
-  type CreatePurchasePayload,
-  type CreateSupplierPayload,
-  type CloseShiftPayload,
-  type OpenShiftPayload,
-  type ReceivePurchasePayload,
-  type UpdateSupplierPayload,
+  
+  
+  
+  
+  
+  
+  
+  salesCashFlowService
 } from '@/lib/services/sales-cash-flow'
 import {
-  queryKeys,
-  type GlobalCashTransactionFilters,
-  type PurchaseFilters,
-  type ShiftFilters,
-  type StatsFilter,
-  type SupplierFilters,
+  
+  
+  
+  
+  
+  queryKeys
 } from '@/lib/query-keys'
 
 // ─── Dashboard KPI Hook ───────────────────────────────────────────────────────
@@ -434,6 +436,84 @@ export function useCreateCashTransaction() {
           amount: payload.amount,
           error: err.message,
         },
+      })
+      toast.error(err.message)
+    },
+  })
+}
+
+export function useCancelCashTransaction() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id }: { id: string; shiftId?: string }) =>
+      salesCashFlowService.cancelOrReactivateCashTransaction({ id, action: 'cancel' }),
+    onMutate: ({ id }) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'cancelCashTransaction started',
+        level: 'info',
+        data: { id },
+      })
+    },
+    onSuccess: (_, { shiftId }) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'cancelCashTransaction succeeded',
+        level: 'info',
+      })
+      queryClient.invalidateQueries({ queryKey: queryKeys.cashTransactions.all })
+      if (shiftId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.shifts.cashTransactions(shiftId) })
+        queryClient.invalidateQueries({ queryKey: queryKeys.shifts.summary(shiftId) })
+        queryClient.invalidateQueries({ queryKey: queryKeys.statistics.shiftReport(shiftId) })
+      }
+      toast.success('Cash transaction canceled')
+    },
+    onError: (err: Error, { id }) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'cancelCashTransaction failed',
+        level: 'error',
+        data: { id, error: err.message },
+      })
+      toast.error(err.message)
+    },
+  })
+}
+
+export function useReactivateCashTransaction() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ id }: { id: string; shiftId?: string }) =>
+      salesCashFlowService.cancelOrReactivateCashTransaction({ id, action: 'reactivate' }),
+    onMutate: ({ id }) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'reactivateCashTransaction started',
+        level: 'info',
+        data: { id },
+      })
+    },
+    onSuccess: (_, { shiftId }) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'reactivateCashTransaction succeeded',
+        level: 'info',
+      })
+      queryClient.invalidateQueries({ queryKey: queryKeys.cashTransactions.all })
+      if (shiftId) {
+        queryClient.invalidateQueries({ queryKey: queryKeys.shifts.cashTransactions(shiftId) })
+        queryClient.invalidateQueries({ queryKey: queryKeys.shifts.summary(shiftId) })
+        queryClient.invalidateQueries({ queryKey: queryKeys.statistics.shiftReport(shiftId) })
+      }
+      toast.success('Cash transaction reactivated')
+    },
+    onError: (err: Error, { id }) => {
+      Sentry.addBreadcrumb({
+        category: 'mutation',
+        message: 'reactivateCashTransaction failed',
+        level: 'error',
+        data: { id, error: err.message },
       })
       toast.error(err.message)
     },

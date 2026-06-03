@@ -1,21 +1,27 @@
 import { useState } from 'react'
-import { createFileRoute, Link } from '@tanstack/react-router'
+import { Link, createFileRoute } from '@tanstack/react-router'
 import {
-  ArrowLeftIcon,
-  LockIcon,
   ArrowDownCircleIcon,
+  ArrowLeftIcon,
   ArrowUpCircleIcon,
+  BanIcon,
+  LockIcon,
+  RefreshCwIcon,
   ShoppingBagIcon,
 } from 'lucide-react'
-import { PieChart, Pie, Cell } from 'recharts'
+import { Cell, Pie, PieChart } from 'recharts'
+import type { CloseShiftPayload } from '@/lib/services/sales-cash-flow'
+import type {ChartConfig} from '@/components/ui/chart';
 import {
-  useShift,
+  useCancelCashTransaction,
   useCloseShift,
+  useReactivateCashTransaction,
+  useShift,
   useShiftReport,
 } from '@/hooks/use-sales-cash-flow'
+import { useAuth } from '@/hooks/use-auth'
 import { useCashTransactionReasonLabels } from '@/hooks/use-cash-reasons'
 import { useAppForm } from '@/hooks/use-form'
-import type { CloseShiftPayload } from '@/lib/services/sales-cash-flow'
 import { PageHeader } from '@/components/page-header'
 import { StatusBadge } from '@/components/status-badge'
 import { Button } from '@/components/ui/button'
@@ -30,17 +36,17 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import {
+  
   ChartContainer,
   ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
+  ChartTooltipContent
 } from '@/components/ui/chart'
 import {
+  WaterfallBalance,
+  WaterfallDivider,
   WaterfallFlow,
   WaterfallRow,
-  WaterfallDivider,
   WaterfallSectionLabel,
-  WaterfallBalance,
 } from '@/components/waterfall-flow'
 import { cn } from '@/lib/utils'
 
@@ -99,16 +105,21 @@ function ShiftDetailPage() {
   const isLoading = shiftLoading || reportLoading
 
   const { labelForReason } = useCashTransactionReasonLabels(shift?.branch_id)
+  const { role } = useAuth()
+  const isAdmin = role === 'admin'
+
+  const cancelMutation = useCancelCashTransaction()
+  const reactivateMutation = useReactivateCashTransaction()
 
   // ── Pie chart data ──────────────────────────────────────────────────────────
 
-  const chartData: {
+  const chartData: Array<{
     name: string
     value: number
     count: number
     percentage: number
     fill: string
-  }[] =
+  }> =
     report?.payment_breakdown?.map((item, i) => ({
       name: item.payment_method,
       value: item.total_amount,
@@ -450,7 +461,18 @@ function ShiftDetailPage() {
           ) : (
             <div className="space-y-2">
               {cashTransactions.map((tx) => (
-                <CashTransactionRow key={tx.id} tx={tx} />
+                <CashTransactionRow
+                  key={tx.id}
+                  tx={tx}
+                  isAdmin={isAdmin}
+                  isBusy={cancelMutation.isPending || reactivateMutation.isPending}
+                  onCancel={(txId) =>
+                    cancelMutation.mutate({ id: txId, shiftId: id })
+                  }
+                  onReactivate={(txId) =>
+                    reactivateMutation.mutate({ id: txId, shiftId: id })
+                  }
+                />
               ))}
             </div>
           )}
@@ -514,10 +536,25 @@ function ShiftDetailPage() {
 
 // ─── Cash Transaction Row ─────────────────────────────────────────────────────
 
-function CashTransactionRow({ tx }: { tx: { id: string; type: string; reason: string; amount: number; note: string | null; created_at: string; user_name: string } }) {
+function CashTransactionRow({
+  tx,
+  isAdmin = false,
+  onCancel,
+  onReactivate,
+  isBusy = false,
+}: {
+  tx: { id: string; type: string; reason: string; amount: number; note: string | null; created_at: string; user_name: string; is_active: boolean }
+  isAdmin?: boolean
+  onCancel?: (id: string) => void
+  onReactivate?: (id: string) => void
+  isBusy?: boolean
+}) {
   const isCashIn = tx.type === 'cash_in'
   return (
-    <div className="flex items-start justify-between gap-3 rounded-md border px-3 py-2.5 text-sm">
+    <div className={cn(
+      'flex items-start justify-between gap-3 rounded-md border px-3 py-2.5 text-sm',
+      !tx.is_active && 'opacity-60',
+    )}>
       <div className="flex min-w-0 items-start gap-2.5">
         {isCashIn ? (
           <ArrowDownCircleIcon className="mt-0.5 size-4 shrink-0 text-emerald-500" />
@@ -532,9 +569,14 @@ function CashTransactionRow({ tx }: { tx: { id: string; type: string; reason: st
             >
               {isCashIn ? 'Cash In' : 'Cash Out'}
             </Badge>
-            <span className="font-medium">
+            <span className={cn('font-medium', !tx.is_active && 'line-through')}>
               {CASH_TX_REASON_LABELS[tx.reason] ?? tx.reason}
             </span>
+            {!tx.is_active && (
+              <Badge variant="secondary" className="border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400 text-xs">
+                Canceled
+              </Badge>
+            )}
           </div>
           {tx.note && (
             <p className="mt-0.5 truncate text-xs text-muted-foreground">
@@ -546,17 +588,44 @@ function CashTransactionRow({ tx }: { tx: { id: string; type: string; reason: st
           </p>
         </div>
       </div>
-      <span
-        className={cn(
-          'shrink-0 font-semibold tabular-nums',
-          isCashIn
-            ? 'text-emerald-600 dark:text-emerald-400'
-            : 'text-destructive',
+      <div className="flex items-center gap-1.5 shrink-0">
+        {isAdmin && (
+          tx.is_active ? (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 text-destructive hover:text-destructive cursor-pointer"
+              disabled={isBusy}
+              onClick={() => onCancel?.(tx.id)}
+            >
+              <BanIcon className="size-3.5" />
+              <span className="sr-only">Cancel transaction</span>
+            </Button>
+          ) : (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-7 px-2 cursor-pointer"
+              disabled={isBusy}
+              onClick={() => onReactivate?.(tx.id)}
+            >
+              <RefreshCwIcon className="size-3.5" />
+              <span className="sr-only">Reactivate transaction</span>
+            </Button>
+          )
         )}
-      >
-        {isCashIn ? '+' : '-'}
-        {formatIDR(tx.amount)}
-      </span>
+        <span
+          className={cn(
+            'font-semibold tabular-nums',
+            isCashIn
+              ? 'text-emerald-600 dark:text-emerald-400'
+              : 'text-destructive',
+          )}
+        >
+          {isCashIn ? '+' : '-'}
+          {formatIDR(tx.amount)}
+        </span>
+      </div>
     </div>
   )
 }

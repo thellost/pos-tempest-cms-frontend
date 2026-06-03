@@ -988,6 +988,7 @@ Record a non-order cash movement (e.g., owner withdrawal, petty cash, cash depos
     "reason": "pengeluaran_pribadi",
     "amount": 200000.00,
     "note": "Pengeluaran pribadi owner",
+    "is_active": true,
     "created_at": "2026-03-03T10:30:00Z",
     "user_name": "Sarah Cashier"
   }
@@ -1025,6 +1026,7 @@ List all non-order cash transactions recorded against a shift, ordered chronolog
       "reason": "pengeluaran_pribadi",
       "amount": 200000.00,
       "note": "Pengeluaran pribadi owner",
+      "is_active": true,
       "created_at": "2026-03-03T10:30:00Z",
       "user_name": "Sarah Cashier"
     },
@@ -1036,6 +1038,7 @@ List all non-order cash transactions recorded against a shift, ordered chronolog
       "reason": "change_refill",
       "amount": 100000.00,
       "note": "Added change supply",
+      "is_active": true,
       "created_at": "2026-03-03T11:15:00Z",
       "user_name": "Sarah Cashier"
     }
@@ -1069,6 +1072,7 @@ Returns a paginated list of cash transactions across all shifts, with optional f
 | `reason`    | string  | e.g. `owner_withdrawal`, `pengeluaran_pribadi`, `supply_purchase`, `gaji` |
 | `date_from` | string  | `YYYY-MM-DD` — filter by transaction date   |
 | `date_to`   | string  | `YYYY-MM-DD` — filter by transaction date   |
+| `is_active` | boolean | Filter by active status (admin only; non-admin always sees `true`) |
 | `page`      | integer | Page number (default: 1)                    |
 | `page_size` | integer | Results per page (default: 20)              |
 
@@ -1085,6 +1089,7 @@ Returns a paginated list of cash transactions across all shifts, with optional f
       "reason": "supply_purchase",
       "amount": 250.00,
       "note": "Bought cleaning supplies",
+      "is_active": true,
       "created_at": "2025-10-01T09:15:00Z",
       "user_name": "Alice Manager",
       "shift_branch_id": 1,
@@ -1124,6 +1129,7 @@ Returns a single cash transaction by its UUID.
     "reason": "supply_purchase",
     "amount": 250.00,
     "note": "Bought cleaning supplies",
+    "is_active": true,
     "created_at": "2025-10-01T09:15:00Z",
     "user_name": "Alice Manager",
     "shift_branch_id": 1,
@@ -1131,6 +1137,47 @@ Returns a single cash transaction by its UUID.
   }
 }
 ```
+
+**Error `404`:** Cash transaction not found.
+
+---
+
+### `POST /api/v1/cash-transactions`
+
+> **Roles:** admin
+
+Cancel or reactivate a cash transaction. Works on any shift (open or closed).
+
+**Request Body:**
+
+| Field    | Type   | Description                                      |
+|----------|--------|--------------------------------------------------|
+| `id`     | UUID   | Cash transaction ID                              |
+| `action` | string | `"cancel"` to set `is_active = false` or `"reactivate"` to set `is_active = true` |
+
+**Response `200 OK` — Cancel:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "cash transaction canceled"
+  }
+}
+```
+
+**Response `200 OK` — Reactivate:**
+```json
+{
+  "success": true,
+  "data": {
+    "message": "cash transaction reactivated"
+  }
+}
+```
+
+**Error `400`:** Already canceled (when canceling) or already active (when reactivating).
+
+**Error `403`:** Not admin.
 
 **Error `404`:** Cash transaction not found.
 

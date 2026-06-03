@@ -1,14 +1,17 @@
 import { useState } from 'react'
-import { createFileRoute, Link, useNavigate } from '@tanstack/react-router'
+import { Link, createFileRoute, useNavigate } from '@tanstack/react-router'
 import { format, parseISO, subDays } from 'date-fns'
 import {
+  ArrowDownIcon,
   ArrowLeftIcon,
   ArrowRightIcon,
-  ArrowDownIcon,
   ArrowUpIcon,
+  BanIcon,
   ExternalLinkIcon,
+  RefreshCwIcon,
 } from 'lucide-react'
-import { useGlobalCashTransactions } from '@/hooks/use-sales-cash-flow'
+import { useCancelCashTransaction, useGlobalCashTransactions, useReactivateCashTransaction } from '@/hooks/use-sales-cash-flow'
+import { useAuth } from '@/hooks/use-auth'
 import { useBranches } from '@/hooks/use-branches'
 import { useCashTransactionReasonLabels } from '@/hooks/use-cash-reasons'
 import { PageHeader } from '@/components/page-header'
@@ -33,7 +36,7 @@ export const Route = createFileRoute('/_authenticated/reports/cash-transactions/
     reason: typeof search.reason === 'string' ? search.reason : undefined,
     type:
       search.type === 'cash_in' || search.type === 'cash_out'
-        ? (search.type as 'cash_in' | 'cash_out')
+        ? (search.type)
         : undefined,
     shift_id: typeof search.shift_id === 'string' ? search.shift_id : undefined,
     branch_id:
@@ -95,6 +98,11 @@ function CashTransactionsPage() {
   const meta = data?.meta
 
   const { labelForReason, reasonOptions } = useCashTransactionReasonLabels(filterBranchId)
+  const { role } = useAuth()
+  const isAdmin = role === 'admin'
+
+  const cancelMutation = useCancelCashTransaction()
+  const reactivateMutation = useReactivateCashTransaction()
 
   function handleFilterChange() {
     setPage(1)
@@ -240,16 +248,20 @@ function CashTransactionsPage() {
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Note</th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Cashier</th>
                 <th className="px-4 py-3 text-left font-medium text-muted-foreground">Branch</th>
+                <th className="px-4 py-3 text-left font-medium text-muted-foreground">Status</th>
                 <th className="px-4 py-3"></th>
               </tr>
             </thead>
             <tbody>
               {transactions.map((tx) => (
-                <tr key={tx.id} className="border-b last:border-0 hover:bg-muted/30 transition-colors">
+                <tr key={tx.id} className={cn(
+                  'border-b last:border-0 hover:bg-muted/30 transition-colors',
+                  !tx.is_active && 'opacity-60',
+                )}>
                   <td className="px-4 py-3 tabular-nums text-muted-foreground">
                     {formatDateTime(tx.created_at)}
                   </td>
-                  <td className="px-4 py-3 font-medium">
+                  <td className={cn('px-4 py-3 font-medium', !tx.is_active && 'line-through')}>
                     {labelForReason(tx.reason)}
                   </td>
                   <td className="px-4 py-3">
@@ -281,25 +293,67 @@ function CashTransactionsPage() {
                   <td className="px-4 py-3">{tx.user_name}</td>
                   <td className="px-4 py-3 text-muted-foreground">{tx.shift_branch_name}</td>
                   <td className="px-4 py-3">
-                    <Button variant="ghost" size="sm" asChild className="h-7 px-2">
-                      {tx.reason === 'purchase_order' ? (
-                        <Link
-                          to="/purchases"
-                          search={{ date_from: tx.created_at ? tx.created_at.slice(0, 10) : undefined, date_to: tx.created_at ? tx.created_at.slice(0, 10) : undefined }}
-                        >
-                          <ExternalLinkIcon className="size-3.5" />
-                          <span className="sr-only">View purchase orders</span>
-                        </Link>
-                      ) : (
-                        <Link
-                          to="/reports/cash-transactions/$transactionId"
-                          params={{ transactionId: tx.id }}
-                        >
-                          <ExternalLinkIcon className="size-3.5" />
-                          <span className="sr-only">View detail</span>
-                        </Link>
+                    {tx.is_active ? (
+                      <Badge variant="secondary" className="border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-400 text-xs">
+                        Active
+                      </Badge>
+                    ) : (
+                      <Badge variant="secondary" className="border-red-200 bg-red-50 text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-400 text-xs">
+                        Canceled
+                      </Badge>
+                    )}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="sm" asChild className="h-7 px-2">
+                        {tx.reason === 'purchase_order' ? (
+                          <Link
+                            to="/purchases"
+                            search={{ date_from: tx.created_at ? tx.created_at.slice(0, 10) : undefined, date_to: tx.created_at ? tx.created_at.slice(0, 10) : undefined }}
+                          >
+                            <ExternalLinkIcon className="size-3.5" />
+                            <span className="sr-only">View purchase orders</span>
+                          </Link>
+                        ) : (
+                          <Link
+                            to="/reports/cash-transactions/$transactionId"
+                            params={{ transactionId: tx.id }}
+                          >
+                            <ExternalLinkIcon className="size-3.5" />
+                            <span className="sr-only">View detail</span>
+                          </Link>
+                        )}
+                      </Button>
+                      {isAdmin && (
+                        tx.is_active ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-destructive hover:text-destructive cursor-pointer"
+                            disabled={cancelMutation.isPending}
+                            onClick={() =>
+                              cancelMutation.mutate({ id: tx.id, shiftId: tx.shift_id })
+                            }
+                          >
+                            <BanIcon className="size-3.5" />
+                            <span className="sr-only">Cancel transaction</span>
+                          </Button>
+                        ) : (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 cursor-pointer"
+                            disabled={reactivateMutation.isPending}
+                            onClick={() =>
+                              reactivateMutation.mutate({ id: tx.id, shiftId: tx.shift_id })
+                            }
+                          >
+                            <RefreshCwIcon className="size-3.5" />
+                            <span className="sr-only">Reactivate transaction</span>
+                          </Button>
+                        )
                       )}
-                    </Button>
+                    </div>
                   </td>
                 </tr>
               ))}

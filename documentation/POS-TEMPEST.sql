@@ -1,4 +1,4 @@
--- Schema reflects migrations up to 007_add_cash_transaction_reasons.sql applied
+-- Schema reflects migrations up to 008_add_inventory_stock_trigger.sql applied
 SET search_path TO pos_tempest;
 
 CREATE TYPE "role_type" AS ENUM (
@@ -182,6 +182,7 @@ CREATE TABLE "shift_cash_transactions" (
   "reason" text NOT NULL,
   "amount" decimal(14,2) NOT NULL,
   "note" text,
+  "is_active" boolean NOT NULL DEFAULT true,
   "created_at" timestamp NOT NULL DEFAULT (now())
 );
 
@@ -766,6 +767,8 @@ COMMENT ON COLUMN "shift_cash_transactions"."amount" IS 'Always positive. Direct
 
 COMMENT ON COLUMN "shift_cash_transactions"."note" IS 'Free-text details e.g. "Bought ice from nearby store", "Owner took 500k"';
 
+COMMENT ON COLUMN "shift_cash_transactions"."is_active" IS 'Soft-delete flag for admin cancel/reactivate';
+
 COMMENT ON TABLE "cash_transaction_reasons" IS 'Branch-scoped lookup of cash transaction reason keys to display labels. Each branch can define its own reasons for cash-in / cash-out.';
 
 COMMENT ON COLUMN "cash_transaction_reasons"."type" IS 'Filters which transaction type this reason applies to: cash_in, cash_out, or NULL for both. NULL is used for generic reasons like "Other" that should appear in both cash-in and cash-out tabs.';
@@ -1081,3 +1084,107 @@ ALTER TABLE "inventory_movements" ALTER COLUMN "reference_id" TYPE text USING re
 GRANT USAGE, SELECT ON SEQUENCE inventory_movements_id_seq TO authenticated;
 GRANT USAGE, SELECT ON SEQUENCE inventory_movements_id_seq TO service_role;
 GRANT USAGE, SELECT ON SEQUENCE inventory_movements_id_seq TO powersync_role;
+
+-- ─── Triggers: authority inventory stock from movement ledger ─────────────
+-- Two triggers work together so inventories.stock_quantity always equals
+-- SUM(quantity_change) from the inventory_movements ledger, regardless of
+-- sync ordering:
+--
+--   Trigger 1 (AFTER inventory_movements): recomputes stock when a movement
+--     row is inserted, updated, or deleted. Catches the normal path.
+--
+--   Trigger 2 (BEFORE inventories): final gatekeeper — overrides whatever
+--     stock value the client pushes with the ledger sum. Catches the stale-
+--     sync path where an UPDATE arrives after the corresponding movement.
+--
+-- The inventories.stock_quantity column is effectively a read-only cache.
+
+-- ─── Trigger 1: recompute stock AFTER any movement change ──────────────────
+CREATE OR REPLACE FUNCTION recompute_stock_from_movements()
+RETURNS TRIGGER AS $$
+DECLARE
+  target_id integer;
+BEGIN
+  target_id := COALESCE(NEW.inventory_id, OLD.inventory_id);
+  UPDATE inventories
+  SET stock_quantity = (
+    SELECT COALESCE(SUM(quantity_change), 0)
+    FROM inventory_movements
+    WHERE inventory_id = target_id
+  ),
+  updated_at = now()
+  WHERE id = target_id;
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_movements_recompute_stock ON inventory_movements;
+CREATE TRIGGER trg_movements_recompute_stock
+AFTER INSERT OR UPDATE OR DELETE ON inventory_movements
+FOR EACH ROW EXECUTE FUNCTION recompute_stock_from_movements();
+
+-- ─── Trigger 2: gatekeeper — override stale inventory UPDATEs ──────────────
+CREATE OR REPLACE FUNCTION recompute_stock_quantity()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.stock_quantity = (
+    SELECT COALESCE(SUM(quantity_change), 0)
+    FROM inventory_movements
+    WHERE inventory_id = NEW.id
+  );
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS trg_inventories_stock_quantity ON inventories;
+CREATE TRIGGER trg_inventories_stock_quantity
+BEFORE INSERT OR UPDATE ON inventories
+FOR EACH ROW EXECUTE FUNCTION recompute_stock_quantity();
+
+-- ─── pg_cron: periodic inventory cleanup ─────────────────────────────────────
+-- Deletes accidental duplicate movement rows and syncs any inventory that
+-- drifts from its ledger. Runs every 15 minutes.
+
+CREATE EXTENSION IF NOT EXISTS pg_cron;
+
+CREATE OR REPLACE FUNCTION cron_inventory_cleanup()
+RETURNS text AS $$
+DECLARE
+  deleted_count  integer;
+  synced_count   integer;
+BEGIN
+  WITH ranked AS (
+    SELECT id,
+      ROW_NUMBER() OVER (
+        PARTITION BY inventory_id, quantity_change, quantity_before, quantity_after
+        ORDER BY created_at DESC, id DESC
+      ) AS rn
+    FROM inventory_movements
+  )
+  DELETE FROM inventory_movements
+  WHERE id IN (SELECT id FROM ranked WHERE rn > 1);
+
+  GET DIAGNOSTICS deleted_count = ROW_COUNT;
+
+  WITH drifted AS (
+    UPDATE inventories i
+    SET stock_quantity = sub.ledger_sum, updated_at = now()
+    FROM (
+      SELECT inventory_id, SUM(quantity_change) AS ledger_sum
+      FROM inventory_movements
+      GROUP BY inventory_id
+    ) sub
+    WHERE i.id = sub.inventory_id
+      AND i.stock_quantity IS DISTINCT FROM sub.ledger_sum
+    RETURNING i.id
+  )
+  SELECT COUNT(*) INTO synced_count FROM drifted;
+
+  RETURN format('Cleanup complete: %s duplicate(s) deleted, %s stock(s) synced at %s',
+    deleted_count, synced_count, now());
+END;
+$$ LANGUAGE plpgsql;
+
+DO $$ BEGIN PERFORM cron.unschedule('inventory-cleanup'); EXCEPTION WHEN OTHERS THEN END; $$;
+SELECT cron.schedule('inventory-cleanup', '*/15 * * * *', 'SELECT cron_inventory_cleanup();');
