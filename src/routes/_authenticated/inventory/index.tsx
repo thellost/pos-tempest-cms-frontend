@@ -155,7 +155,7 @@ function InventoryPage() {
 
   const handleFilterClear = () => {
     setFilterValues({
-      branch_id: '1',
+      branch_id: userBranchId ? String(userBranchId) : '1',
       search: '',
     })
     setPage(1)

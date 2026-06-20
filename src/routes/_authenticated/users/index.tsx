@@ -27,7 +27,7 @@ export const Route = createFileRoute('/_authenticated/users/')({
 function UsersPage() {
   const navigate = useNavigate()
   const isMobile = useIsMobile()
-  const { role } = useAuth()
+  const { role, branchId: userBranchId } = useAuth()
   const canManage = role === 'admin' || role === 'manager'
 
   // Pagination
@@ -37,7 +37,7 @@ function UsersPage() {
   // Filter state
   const [filterValues, setFilterValues] = useState<Record<string, string>>({
     search: '',
-    branch_id: '1',
+    branch_id: userBranchId ? String(userBranchId) : '1',
     role_id: '',
     is_active: '',
   })
@@ -101,7 +101,7 @@ function UsersPage() {
   }
 
   const handleClearFilters = () => {
-    setFilterValues({ search: '', branch_id: '1', role_id: '', is_active: '' })
+    setFilterValues({ search: '', branch_id: userBranchId ? String(userBranchId) : '1', role_id: '', is_active: '' })
     setPage(1)
   }
 

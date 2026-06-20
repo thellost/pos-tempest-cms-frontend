@@ -37,6 +37,7 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/hooks/use-auth'
 
 // ─── Route ────────────────────────────────────────────────────────────────────
 
@@ -48,13 +49,15 @@ export const Route = createFileRoute('/_authenticated/audit-logs/')({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 function AuditLogsPage() {
+  const { branchId: userBranchId } = useAuth()
+
   // Pagination
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(20)
 
   // Filters
   const [userId, setUserId] = useState('')
-  const [branchId, setBranchId] = useState('1')
+  const [branchId, setBranchId] = useState(userBranchId ? String(userBranchId) : '1')
   const [action, setAction] = useState('')
   const [tableName, setTableName] = useState('')
   const [dateFrom, setDateFrom] = useState('')

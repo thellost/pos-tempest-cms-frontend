@@ -47,6 +47,7 @@ import { Label } from '@/components/ui/label'
 import { Separator } from '@/components/ui/separator'
 import { requireRole } from '@/lib/auth-guards'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/hooks/use-auth'
 
 // ─── Route ────────────────────────────────────────────────────────────────────
 
@@ -608,7 +609,8 @@ interface ShiftSelectorProps {
 }
 
 function ShiftSelector({ selectedShiftId, onSelect }: ShiftSelectorProps) {
-  const [branchId, setBranchId] = useState<number | undefined>(1)
+  const { branchId: userBranchId } = useAuth()
+  const [branchId, setBranchId] = useState<number | undefined>(userBranchId ?? 1)
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
 

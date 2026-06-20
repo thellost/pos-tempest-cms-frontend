@@ -48,6 +48,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { requireRole } from '@/lib/auth-guards'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/hooks/use-auth'
 
 // ─── Route ────────────────────────────────────────────────────────────────────
 
@@ -636,8 +637,9 @@ function SummaryItem({ label, value, muted = false }: { label: string; value: st
 function SalesReportPage() {
   const defaults = defaultDateRange()
   const search = Route.useSearch()
+  const { branchId: userBranchId } = useAuth()
 
-  const [branchId, setBranchId] = useState<number | undefined>(1)
+  const [branchId, setBranchId] = useState<number | undefined>(userBranchId ?? 1)
   const [dateFrom, setDateFrom] = useState<string>(search.date_from ?? defaults.dateFrom)
   const [dateTo, setDateTo] = useState<string>(search.date_to ?? defaults.dateTo)
   const [groupBy, setGroupBy] = useState<'day' | 'week' | 'month'>('day')

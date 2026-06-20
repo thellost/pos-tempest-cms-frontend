@@ -38,6 +38,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { requireRole } from '@/lib/auth-guards'
+import { useAuth } from '@/hooks/use-auth'
 
 // ─── Route ────────────────────────────────────────────────────────────────────
 
@@ -404,12 +405,13 @@ function CashTxBreakdownSection({ branchId, dateFrom, dateTo }: CashTxBreakdownS
 // ─── Expense Report Page ──────────────────────────────────────────────────────
 
 function ExpenseReportPage() {
+  const { branchId: userBranchId } = useAuth()
   const { data: branchesData } = useBranches()
   const branches = branchesData?.data ?? []
   const search = Route.useSearch()
 
   const defaults = defaultDateRange()
-  const [branchId, setBranchId] = useState<number | undefined>(1)
+  const [branchId, setBranchId] = useState<number | undefined>(userBranchId ?? 1)
   const [datePreset, setDatePreset] = useState('30')
   const [dateFrom, setDateFrom] = useState(search.date_from ?? defaults.dateFrom)
   const [dateTo, setDateTo] = useState(search.date_to ?? defaults.dateTo)

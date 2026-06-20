@@ -44,6 +44,7 @@ import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { requireRole } from '@/lib/auth-guards'
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/hooks/use-auth'
 
 // ─── Route ────────────────────────────────────────────────────────────────────
 
@@ -707,8 +708,9 @@ function BreakdownRow({
 
 function CashFlowReportPage() {
   const defaults = defaultDateRange()
+  const { branchId: userBranchId } = useAuth()
 
-  const [branchId, setBranchId] = useState<number | undefined>(1)
+  const [branchId, setBranchId] = useState<number | undefined>(userBranchId ?? 1)
   const [dateFrom, setDateFrom] = useState<string>(defaults.dateFrom)
   const [dateTo, setDateTo] = useState<string>(defaults.dateTo)
 

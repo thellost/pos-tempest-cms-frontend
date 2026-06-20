@@ -38,7 +38,7 @@ export const Route = createFileRoute('/_authenticated/reports/cash-transactions/
         : undefined,
     shift_id: typeof search.shift_id === 'string' ? search.shift_id : undefined,
     branch_id:
-      typeof search.branch_id === 'string' ? Number(search.branch_id) : 1,
+      typeof search.branch_id === 'string' ? Number(search.branch_id) : undefined,
     date_from: typeof search.date_from === 'string' ? search.date_from : undefined,
     date_to: typeof search.date_to === 'string' ? search.date_to : undefined,
   }),
@@ -67,6 +67,7 @@ function formatDateTime(iso: string | null | undefined): string {
 function CashTransactionsPage() {
   const { reason, type, shift_id, branch_id, date_from, date_to } = Route.useSearch()
   const navigate = useNavigate()
+  const { branchId: userBranchId } = useAuth()
   const { data: branchesData } = useBranches()
   const branches = branchesData?.data ?? []
 
@@ -75,7 +76,7 @@ function CashTransactionsPage() {
 
   const [filterReason, setFilterReason] = useState(reason ?? '')
   const [filterType, setFilterType] = useState<'all' | 'cash_in' | 'cash_out'>(type ?? 'all')
-  const [filterBranchId, setFilterBranchId] = useState<number | undefined>(branch_id)
+  const [filterBranchId, setFilterBranchId] = useState<number | undefined>(branch_id ?? userBranchId ?? undefined)
   const [filterDateFrom, setFilterDateFrom] = useState(date_from ?? defaultFrom)
   const [filterDateTo, setFilterDateTo] = useState(date_to ?? today)
   const [page, setPage] = useState(1)

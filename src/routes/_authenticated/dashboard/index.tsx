@@ -264,8 +264,8 @@ function CashFlowSummaryCard({ branchId }: { branchId?: number }) {
 // ─── Dashboard Page ───────────────────────────────────────────────────────────
 
 function DashboardPage() {
-  const { user } = useAuth()
-  const [branchId, setBranchId] = useState<number | undefined>(1)
+  const { user, branchId: userBranchId } = useAuth()
+  const [branchId, setBranchId] = useState<number | undefined>(userBranchId ?? 1)
   const { data, isLoading } = useDashboardStats(branchId)
   const { data: branchesData } = useBranches({ pageSize: 100 })
   const branches = branchesData?.data ?? []
