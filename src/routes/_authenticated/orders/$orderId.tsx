@@ -1,6 +1,8 @@
-import { createFileRoute, Link } from '@tanstack/react-router'
-import { ArrowLeftIcon } from 'lucide-react'
-import { useOrder } from '@/hooks/use-orders'
+import { useState } from 'react'
+import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
+import { ArrowLeftIcon, XCircleIcon } from 'lucide-react'
+import { useOrder, useCancelOrder } from '@/hooks/use-orders'
+import { useAuth } from '@/hooks/use-auth'
 import { PageHeader } from '@/components/page-header'
 import { StatusBadge } from '@/components/status-badge'
 import { Badge } from '@/components/ui/badge'
@@ -16,6 +18,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { Textarea } from '@/components/ui/textarea'
+import { ConfirmDialog } from '@/components/confirm-dialog'
 import { requireRole } from '@/lib/auth-guards'
 import { formatIDR } from '@/components/orders/columns'
 
@@ -89,8 +93,26 @@ function OrderDetailSkeleton() {
 
 function OrderDetailPage() {
   const { orderId } = Route.useParams()
+  const router = useRouter()
   const { data: result, isLoading } = useOrder(orderId)
   const order = result?.data
+
+  const { role } = useAuth()
+  const cancelOrder = useCancelOrder()
+  const [cancelDialogOpen, setCancelDialogOpen] = useState(false)
+  const [cancelReason, setCancelReason] = useState('')
+
+  const canCancel =
+    role === 'admin' &&
+    order?.status === 'completed' &&
+    !order?.voided_at
+
+  const handleCancel = async () => {
+    await cancelOrder.mutateAsync({ id: orderId, reason: cancelReason || undefined })
+    setCancelDialogOpen(false)
+    setCancelReason('')
+    router.navigate({ to: '/orders' })
+  }
 
   if (isLoading) {
     return <OrderDetailSkeleton />
@@ -113,10 +135,22 @@ function OrderDetailPage() {
             <ArrowLeftIcon className="size-4" />
           </Link>
         </Button>
-        <PageHeader
-          title={order.order_number}
-          description={`${order.branch_name}${order.table_number ? ` · Table ${order.table_number}` : ''}`}
-        />
+          <PageHeader
+            title={order.order_number}
+            description={`${order.branch_name}${order.table_number ? ` · Table ${order.table_number}` : ''}`}
+            actions={
+              canCancel ? (
+                <Button
+                  variant="outline"
+                  className="text-destructive hover:bg-destructive/10"
+                  onClick={() => setCancelDialogOpen(true)}
+                >
+                  <XCircleIcon className="mr-2 size-4" />
+                  Cancel Order
+                </Button>
+              ) : undefined
+            }
+          />
       </div>
 
       {/* Status row */}
@@ -441,6 +475,33 @@ function OrderDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Cancel Order Confirm Dialog */}
+      <ConfirmDialog
+        open={cancelDialogOpen}
+        onOpenChange={(open) => {
+          setCancelDialogOpen(open)
+          if (!open) setCancelReason('')
+        }}
+        title="Cancel Order?"
+        description={
+          <div className="space-y-3">
+            <span>
+              Are you sure you want to cancel{' '}
+              <strong>{order.order_number}</strong>? This action cannot be undone.
+            </span>
+            <Textarea
+              placeholder="Reason for cancellation (optional)"
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+            />
+          </div>
+        }
+        confirmLabel="Cancel Order"
+        variant="destructive"
+        isLoading={cancelOrder.isPending}
+        onConfirm={handleCancel}
+      />
     </div>
   )
 }

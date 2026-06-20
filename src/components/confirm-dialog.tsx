@@ -18,7 +18,7 @@ interface ConfirmDialogProps {
    */
   trigger?: React.ReactNode
   title: string
-  description?: string
+  description?: React.ReactNode
   /** Label for the confirm button. Defaults to "Confirm". */
   confirmLabel?: string
   /** Label for the cancel button. Defaults to "Cancel". */

@@ -142,4 +142,7 @@ export const ordersService = {
   },
 
   get: (id: string) => api.get<Order>(`/api/v1/orders/${id}`),
+
+  cancel: (id: string, reason?: string) =>
+    api.post<Order>(`/api/v1/orders/${id}/cancel`, { reason }),
 }
