@@ -1,22 +1,25 @@
 import { useMemo, useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { format, subDays, parseISO, startOfMonth } from 'date-fns'
+import { format, parseISO, startOfMonth, subDays } from 'date-fns'
 import {
-  TrendingUpIcon,
-  TrendingDownIcon,
-  CreditCardIcon,
   ActivityIcon,
+  CreditCardIcon,
+  Download,
+  Loader2,
+  TrendingDownIcon,
+  TrendingUpIcon,
 } from 'lucide-react'
 import {
-  ComposedChart,
   Bar,
+  CartesianGrid,
+  Cell,
+  ComposedChart,
+  Pie,
+  PieChart,
   XAxis,
   YAxis,
-  CartesianGrid,
-  PieChart,
-  Pie,
-  Cell,
 } from 'recharts'
+import type { ProfitLossLayout } from '@/lib/services/reports'
 import {
   useCashFlowStats,
   usePaymentMethodsStats,
@@ -24,12 +27,12 @@ import {
 import { useBranches } from '@/hooks/use-branches'
 import { PageHeader } from '@/components/page-header'
 import {
+  type ChartConfig,
   ChartContainer,
   ChartLegend,
   ChartLegendContent,
   ChartTooltip,
   ChartTooltipContent,
-  type ChartConfig,
 } from '@/components/ui/chart'
 import {
   Select,
@@ -42,9 +45,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Button } from '@/components/ui/button'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { requireRole } from '@/lib/auth-guards'
 import { cn } from '@/lib/utils'
 import { useAuth } from '@/hooks/use-auth'
+import { useDownloadProfitLossReport } from '@/hooks/use-reports'
 
 // ─── Route ────────────────────────────────────────────────────────────────────
 
@@ -56,11 +62,11 @@ export const Route = createFileRoute('/_authenticated/reports/cash-flow')({
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const PAYMENT_COLORS: Record<string, string> = {
-  cash: '#10b981',        // emerald
-  debit_card: '#3b82f6',  // blue
+  cash: '#10b981', // emerald
+  debit_card: '#3b82f6', // blue
   credit_card: '#8b5cf6', // violet
-  ewallet: '#f59e0b',     // amber
-  qris: '#06b6d4',        // cyan
+  ewallet: '#f59e0b', // amber
+  qris: '#06b6d4', // cyan
   bank_transfer: '#f97316', // orange
 }
 
@@ -76,7 +82,9 @@ const FALLBACK_COLORS = [
 ]
 
 function getPaymentColor(method: string, index: number): string {
-  return PAYMENT_COLORS[method] ?? FALLBACK_COLORS[index % FALLBACK_COLORS.length]
+  return (
+    PAYMENT_COLORS[method] ?? FALLBACK_COLORS[index % FALLBACK_COLORS.length]
+  )
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -90,7 +98,8 @@ function formatShortIDR(value: number | null | undefined): string {
   if (value == null || isNaN(value)) return ''
   const abs = Math.abs(value)
   const sign = value < 0 ? '-' : ''
-  if (abs >= 1_000_000_000) return `${sign}Rp ${(abs / 1_000_000_000).toFixed(1)}B`
+  if (abs >= 1_000_000_000)
+    return `${sign}Rp ${(abs / 1_000_000_000).toFixed(1)}B`
   if (abs >= 1_000_000) return `${sign}Rp ${(abs / 1_000_000).toFixed(1)}M`
   if (abs >= 1_000) return `${sign}Rp ${(abs / 1_000).toFixed(0)}K`
   return `${sign}Rp ${abs}`
@@ -113,7 +122,10 @@ function labelForPaymentMethod(method: string): string {
     qris: 'QRIS',
     bank_transfer: 'Bank Transfer',
   }
-  return labels[method] ?? method.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+  return (
+    labels[method] ??
+    method.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+  )
 }
 
 // ─── Section 1 — Cash Flow Over Time ─────────────────────────────────────────
@@ -174,15 +186,25 @@ function CashFlowSection({ branchId, dateFrom, dateTo }: CashFlowSectionProps) {
           </div>
         ) : (
           <ChartContainer config={chartConfig} className="h-72 w-full">
-            <ComposedChart data={points} margin={{ top: 8, right: 24, bottom: 4, left: 0 }}>
-              <CartesianGrid strokeDasharray="3 3" className="stroke-border/50" />
+            <ComposedChart
+              data={points}
+              margin={{ top: 8, right: 24, bottom: 4, left: 0 }}
+            >
+              <CartesianGrid
+                strokeDasharray="3 3"
+                className="stroke-border/50"
+              />
               <XAxis
                 dataKey="date"
                 tick={{ fontSize: 11 }}
                 tickLine={false}
                 axisLine={false}
                 tickFormatter={(v: string) => {
-                  try { return format(parseISO(v), 'd MMM') } catch { return v }
+                  try {
+                    return format(parseISO(v), 'd MMM')
+                  } catch {
+                    return v
+                  }
                 }}
               />
               <YAxis
@@ -202,7 +224,10 @@ function CashFlowSection({ branchId, dateFrom, dateTo }: CashFlowSectionProps) {
                         total_income: 'Total Income',
                         total_expense: 'Total Expense',
                       }
-                      return [formatIDR(value as number), labels[name as string] ?? String(name)]
+                      return [
+                        formatIDR(value as number),
+                        labels[name as string] ?? String(name),
+                      ]
                     }}
                   />
                 }
@@ -259,8 +284,12 @@ function CashFlowSection({ branchId, dateFrom, dateTo }: CashFlowSectionProps) {
               <thead>
                 <tr className="border-b text-left text-muted-foreground">
                   <th className="pb-2 pr-4 font-medium">Date</th>
-                  <th className="pb-2 pr-4 text-right font-medium">Total Income</th>
-                  <th className="pb-2 pr-4 text-right font-medium">Total Expense</th>
+                  <th className="pb-2 pr-4 text-right font-medium">
+                    Total Income
+                  </th>
+                  <th className="pb-2 pr-4 text-right font-medium">
+                    Total Expense
+                  </th>
                   <th className="pb-2 text-right font-medium">Net</th>
                 </tr>
               </thead>
@@ -270,7 +299,13 @@ function CashFlowSection({ branchId, dateFrom, dateTo }: CashFlowSectionProps) {
                   return (
                     <tr key={p.date} className="border-b last:border-0">
                       <td className="py-1.5 pr-4 text-muted-foreground">
-                        {(() => { try { return format(parseISO(p.date), 'EEE, d MMM yyyy') } catch { return p.date } })()}
+                        {(() => {
+                          try {
+                            return format(parseISO(p.date), 'EEE, d MMM yyyy')
+                          } catch {
+                            return p.date
+                          }
+                        })()}
                       </td>
                       <td className="py-1.5 pr-4 text-right tabular-nums text-emerald-600">
                         {formatIDR(p.total_income)}
@@ -302,7 +337,9 @@ function CashFlowSection({ branchId, dateFrom, dateTo }: CashFlowSectionProps) {
                   <td
                     className={cn(
                       'pt-2 text-right tabular-nums font-bold',
-                      totals.total_income - totals.total_expense >= 0 ? 'text-emerald-600' : 'text-red-500',
+                      totals.total_income - totals.total_expense >= 0
+                        ? 'text-emerald-600'
+                        : 'text-red-500',
                     )}
                   >
                     {formatIDR(totals.total_income - totals.total_expense)}
@@ -325,12 +362,23 @@ interface PaymentMethodSectionProps {
   dateTo?: string
 }
 
-function PaymentMethodSection({ branchId, dateFrom, dateTo }: PaymentMethodSectionProps) {
-  const { data, isLoading } = usePaymentMethodsStats({ branchId, dateFrom, dateTo })
+function PaymentMethodSection({
+  branchId,
+  dateFrom,
+  dateTo,
+}: PaymentMethodSectionProps) {
+  const { data, isLoading } = usePaymentMethodsStats({
+    branchId,
+    dateFrom,
+    dateTo,
+  })
   const methods = data?.data ?? []
 
   const sorted = useMemo(
-    () => [...methods].sort((a, b) => (b.total_amount ?? 0) - (a.total_amount ?? 0)),
+    () =>
+      [...methods].sort(
+        (a, b) => (b.total_amount ?? 0) - (a.total_amount ?? 0),
+      ),
     [methods],
   )
 
@@ -387,7 +435,10 @@ function PaymentMethodSection({ branchId, dateFrom, dateTo }: PaymentMethodSecti
           <div className="flex flex-col gap-6 md:flex-row md:items-start">
             {/* Donut chart */}
             <div className="shrink-0 md:w-56">
-              <ChartContainer config={chartConfig} className="aspect-square w-full max-w-64 mx-auto">
+              <ChartContainer
+                config={chartConfig}
+                className="aspect-square w-full max-w-64 mx-auto"
+              >
                 <PieChart>
                   <Pie
                     data={pieData}
@@ -407,7 +458,10 @@ function PaymentMethodSection({ branchId, dateFrom, dateTo }: PaymentMethodSecti
                   <ChartTooltip
                     content={
                       <ChartTooltipContent
-                        formatter={(value) => [formatIDR(value as number), 'Amount']}
+                        formatter={(value) => [
+                          formatIDR(value as number),
+                          'Amount',
+                        ]}
                       />
                     }
                   />
@@ -421,19 +475,31 @@ function PaymentMethodSection({ branchId, dateFrom, dateTo }: PaymentMethodSecti
                 <thead>
                   <tr className="border-b text-left text-muted-foreground">
                     <th className="pb-2 pr-4 font-medium">Payment Method</th>
-                    <th className="pb-2 pr-4 text-right font-medium">Transactions</th>
-                    <th className="pb-2 pr-4 text-right font-medium">Total Amount</th>
+                    <th className="pb-2 pr-4 text-right font-medium">
+                      Transactions
+                    </th>
+                    <th className="pb-2 pr-4 text-right font-medium">
+                      Total Amount
+                    </th>
                     <th className="pb-2 text-right font-medium">Share</th>
                   </tr>
                 </thead>
                 <tbody>
                   {sorted.map((m, i) => (
-                    <tr key={m.payment_method} className="border-b last:border-0">
+                    <tr
+                      key={m.payment_method}
+                      className="border-b last:border-0"
+                    >
                       <td className="py-2 pr-4">
                         <div className="flex items-center gap-2">
                           <span
                             className="inline-block size-3 rounded-full shrink-0"
-                            style={{ backgroundColor: getPaymentColor(m.payment_method, i) }}
+                            style={{
+                              backgroundColor: getPaymentColor(
+                                m.payment_method,
+                                i,
+                              ),
+                            }}
                           />
                           {labelForPaymentMethod(m.payment_method)}
                         </div>
@@ -445,7 +511,9 @@ function PaymentMethodSection({ branchId, dateFrom, dateTo }: PaymentMethodSecti
                         {formatIDR(m.total_amount)}
                       </td>
                       <td className="py-2 text-right">
-                        <Badge variant="secondary">{m.percentage?.toFixed(1) ?? '0.0'}%</Badge>
+                        <Badge variant="secondary">
+                          {m.percentage?.toFixed(1) ?? '0.0'}%
+                        </Badge>
                       </td>
                     </tr>
                   ))}
@@ -482,7 +550,11 @@ interface SummarySectionProps {
 }
 
 function SummarySection({ branchId, dateFrom, dateTo }: SummarySectionProps) {
-  const { data: cashFlowData, isLoading } = useCashFlowStats({ branchId, dateFrom, dateTo })
+  const { data: cashFlowData, isLoading } = useCashFlowStats({
+    branchId,
+    dateFrom,
+    dateTo,
+  })
   const points = cashFlowData?.data ?? []
 
   const totals = useMemo(
@@ -496,7 +568,14 @@ function SummarySection({ branchId, dateFrom, dateTo }: SummarySectionProps) {
           poExpenses: acc.poExpenses + p.po_expenses,
           shiftCashOut: acc.shiftCashOut + p.shift_cash_out,
         }),
-        { cashIn: 0, nonCashIn: 0, shiftCashIn: 0, cashOut: 0, poExpenses: 0, shiftCashOut: 0 },
+        {
+          cashIn: 0,
+          nonCashIn: 0,
+          shiftCashIn: 0,
+          cashOut: 0,
+          poExpenses: 0,
+          shiftCashOut: 0,
+        },
       ),
     [points],
   )
@@ -582,9 +661,24 @@ function SummarySection({ branchId, dateFrom, dateTo }: SummarySectionProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <BreakdownRow label="Cash In" value={totals.cashIn} total={totalIncome} color="emerald" />
-            <BreakdownRow label="Non-Cash In" value={totals.nonCashIn} total={totalIncome} color="emerald" />
-            <BreakdownRow label="Shift Cash In" value={totals.shiftCashIn} total={totalIncome} color="emerald" />
+            <BreakdownRow
+              label="Cash In"
+              value={totals.cashIn}
+              total={totalIncome}
+              color="emerald"
+            />
+            <BreakdownRow
+              label="Non-Cash In"
+              value={totals.nonCashIn}
+              total={totalIncome}
+              color="emerald"
+            />
+            <BreakdownRow
+              label="Shift Cash In"
+              value={totals.shiftCashIn}
+              total={totalIncome}
+              color="emerald"
+            />
             <Separator />
             <div className="flex justify-between text-sm font-semibold">
               <span>Total</span>
@@ -604,9 +698,24 @@ function SummarySection({ branchId, dateFrom, dateTo }: SummarySectionProps) {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <BreakdownRow label="Cash Out" value={totals.cashOut} total={totalExpense} color="red" />
-            <BreakdownRow label="PO Purchases" value={totals.poExpenses} total={totalExpense} color="red" />
-            <BreakdownRow label="Shift Cash Out" value={totals.shiftCashOut} total={totalExpense} color="red" />
+            <BreakdownRow
+              label="Cash Out"
+              value={totals.cashOut}
+              total={totalExpense}
+              color="red"
+            />
+            <BreakdownRow
+              label="PO Purchases"
+              value={totals.poExpenses}
+              total={totalExpense}
+              color="red"
+            />
+            <BreakdownRow
+              label="Shift Cash Out"
+              value={totals.shiftCashOut}
+              total={totalExpense}
+              color="red"
+            />
             <Separator />
             <div className="flex justify-between text-sm font-semibold">
               <span>Total</span>
@@ -634,7 +743,9 @@ function SummarySection({ branchId, dateFrom, dateTo }: SummarySectionProps) {
                   <tr className="border-b text-left text-muted-foreground">
                     <th className="pb-2 pr-4 font-medium">Month</th>
                     <th className="pb-2 pr-4 text-right font-medium">Income</th>
-                    <th className="pb-2 pr-4 text-right font-medium">Expense</th>
+                    <th className="pb-2 pr-4 text-right font-medium">
+                      Expense
+                    </th>
                     <th className="pb-2 text-right font-medium">Net</th>
                   </tr>
                 </thead>
@@ -686,12 +797,17 @@ function BreakdownRow({
 }) {
   const pct = total > 0 ? (value / total) * 100 : 0
   const barColor = color === 'emerald' ? 'bg-emerald-500' : 'bg-red-500'
-  const textColor = color === 'emerald' ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'
+  const textColor =
+    color === 'emerald'
+      ? 'text-emerald-600 dark:text-emerald-400'
+      : 'text-red-500'
   return (
     <div className="space-y-1">
       <div className="flex items-center justify-between text-sm">
         <span className="text-muted-foreground">{label}</span>
-        <span className={cn('tabular-nums font-medium', textColor)}>{formatIDR(value)}</span>
+        <span className={cn('tabular-nums font-medium', textColor)}>
+          {formatIDR(value)}
+        </span>
       </div>
       <div className="relative h-1.5 w-full overflow-hidden rounded-full bg-muted">
         <div
@@ -699,7 +815,9 @@ function BreakdownRow({
           style={{ width: `${pct.toFixed(1)}%` }}
         />
       </div>
-      <p className="text-right text-[10px] text-muted-foreground">{pct.toFixed(1)}%</p>
+      <p className="text-right text-[10px] text-muted-foreground">
+        {pct.toFixed(1)}%
+      </p>
     </div>
   )
 }
@@ -708,20 +826,50 @@ function BreakdownRow({
 
 function CashFlowReportPage() {
   const defaults = defaultDateRange()
-  const { branchId: userBranchId } = useAuth()
+  const { branchId: userBranchId, role } = useAuth()
 
-  const [branchId, setBranchId] = useState<number | undefined>(userBranchId ?? 1)
+  const [branchId, setBranchId] = useState<number | undefined>(
+    userBranchId ?? 1,
+  )
   const [dateFrom, setDateFrom] = useState<string>(defaults.dateFrom)
   const [dateTo, setDateTo] = useState<string>(defaults.dateTo)
+  const [layout, setLayout] = useState<ProfitLossLayout>('full')
 
   const { data: branchesData } = useBranches({ pageSize: 100 })
   const branches = branchesData?.data ?? []
+
+  const canExport = role === 'admin' || role === 'manager'
+  const { mutate, isPending } = useDownloadProfitLossReport()
+
+  const reportActions = canExport ? (
+    <div className="flex items-center gap-2">
+      <Tabs
+        value={layout}
+        onValueChange={(v) => setLayout(v as ProfitLossLayout)}
+      >
+        <TabsList>
+          <TabsTrigger value="summary">Summary</TabsTrigger>
+          <TabsTrigger value="full">Full</TabsTrigger>
+        </TabsList>
+      </Tabs>
+      <Button
+        variant="outline"
+        size="sm"
+        disabled={isPending}
+        onClick={() => mutate({ branchId, dateFrom, dateTo, layout })}
+      >
+        {isPending ? <Loader2 className="animate-spin" /> : <Download />}
+        Export Excel
+      </Button>
+    </div>
+  ) : null
 
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Financial Reports"
         description="Analyse cash flow, payment methods, and income vs expense over time."
+        actions={reportActions}
       />
 
       {/* ── Shared Filter Bar ─────────────────────────────────────────────── */}
@@ -729,10 +877,14 @@ function CashFlowReportPage() {
         <CardContent className="flex flex-wrap items-end gap-4 pt-4">
           {/* Branch */}
           <div className="flex flex-col gap-1.5 min-w-40">
-            <label className="text-xs font-medium text-muted-foreground">Branch</label>
+            <label className="text-xs font-medium text-muted-foreground">
+              Branch
+            </label>
             <Select
               value={branchId ? String(branchId) : 'all'}
-              onValueChange={(v) => setBranchId(v === 'all' ? undefined : Number(v))}
+              onValueChange={(v) =>
+                setBranchId(v === 'all' ? undefined : Number(v))
+              }
             >
               <SelectTrigger className="w-56">
                 <SelectValue placeholder="All branches" />
@@ -750,7 +902,9 @@ function CashFlowReportPage() {
 
           {/* Date From */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-muted-foreground">From</label>
+            <label className="text-xs font-medium text-muted-foreground">
+              From
+            </label>
             <input
               type="date"
               value={dateFrom}
@@ -766,7 +920,9 @@ function CashFlowReportPage() {
 
           {/* Date To */}
           <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-medium text-muted-foreground">To</label>
+            <label className="text-xs font-medium text-muted-foreground">
+              To
+            </label>
             <input
               type="date"
               value={dateTo}
@@ -814,10 +970,18 @@ function CashFlowReportPage() {
       </Card>
 
       {/* ── Section 1 — Cash Flow Over Time ──────────────────────────────── */}
-      <CashFlowSection branchId={branchId} dateFrom={dateFrom} dateTo={dateTo} />
+      <CashFlowSection
+        branchId={branchId}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+      />
 
       {/* ── Section 2 — Payment Method Breakdown ─────────────────────────── */}
-      <PaymentMethodSection branchId={branchId} dateFrom={dateFrom} dateTo={dateTo} />
+      <PaymentMethodSection
+        branchId={branchId}
+        dateFrom={dateFrom}
+        dateTo={dateTo}
+      />
 
       {/* ── Section 3 — Income vs Expense Summary ────────────────────────── */}
       <SummarySection branchId={branchId} dateFrom={dateFrom} dateTo={dateTo} />
