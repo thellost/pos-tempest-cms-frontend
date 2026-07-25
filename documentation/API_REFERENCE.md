@@ -2,7 +2,7 @@
 
 > **Base URL:** `http://localhost:8080`
 > **Content-Type:** `application/json`
-> **Total Endpoints:** 105
+> **Total Endpoints:** 106
 
 ---
 
@@ -35,7 +35,8 @@
 24. [Audit Logs (Read-Only)](#24-audit-logs-read-only)
 25. [Statistics](#25-statistics)
 26. [Cash Transaction Reasons](#26-cash-transaction-reasons)
-27. [Enum Reference](#27-enum-reference)
+27. [Reports](#27-reports)
+28. [Enum Reference](#28-enum-reference)
 
 ---
 
@@ -4425,7 +4426,58 @@ Soft-delete (deactivate) a cash transaction reason.
 
 ---
 
-## 27. Enum Reference
+## 27. Reports
+
+### `GET /api/v1/reports/profit-loss/export`
+
+> **Roles:** admin, manager
+
+Exports a **Laporan Laba Rugi** (Profit & Loss) report as an `.xlsx` spreadsheet download.
+
+**Query Parameters:**
+
+| Parameter   | Type    | Default  | Description                                                      |
+|-------------|---------|----------|------------------------------------------------------------------|
+| `branch_id` | int     | auto     | Filter by branch. Non-admin users are forced to their own branch. |
+| `date_from` | string  | 30 days ago | Start date in `YYYY-MM-DD` format.                              |
+| `date_to`   | string  | today    | End date in `YYYY-MM-DD` format.                                 |
+| `layout`    | string  | `full`   | `summary` or `full`. `full` includes revenue-by-category, payment breakdown, and expense transaction detail sheets. |
+
+**Example Request:**
+
+```
+GET /api/v1/reports/profit-loss/export?branch_id=1&date_from=2026-07-01&date_to=2026-07-25&layout=full HTTP/1.1
+Host: localhost:8080
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
+
+**Response `200 OK`:**
+
+Returns a binary `.xlsx` file with the following headers:
+
+```
+Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+Content-Disposition: attachment; filename="laporan-laba-rugi-Tempest-Cafe-Sudirman-2026-07-01-sd-2026-07-25.xlsx"
+```
+
+**Excel workbook structure:**
+
+| Sheet Name           | Layout    | Contents                                                                 |
+|----------------------|-----------|---------------------------------------------------------------------------|
+| Ringkasan            | both      | Summary: gross revenue, discounts, net revenue, tax, service charge, order count, COGS (purchase order costs), operating expenses, gross profit, net profit. |
+| Pendapatan per Kategori | `full` | Revenue broken down by menu category (name, item count, quantity sold, gross, net). |
+| Metode Pembayaran    | `full`    | Payment method breakdown (method name, transaction count, total amount, percentage). |
+| Beban Operasional    | both      | Operating expenses grouped by cash-out reason with amounts, counts, and percentages. |
+| Transaksi Beban      | `full`    | Individual cash-out transaction lines (date, reason, label, amount, note, user). |
+| Pembelian (HPP)      | both      | Received purchase orders (PO number, supplier, received date, subtotal, tax, total, notes). |
+
+**Error `400`:** Invalid layout value (must be `summary` or `full`).
+
+**Error `403`:** User role is not admin or manager.
+
+---
+
+## 28. Enum Reference
 
 ### Role Types
 | Value | Description |
