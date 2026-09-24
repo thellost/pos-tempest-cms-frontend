@@ -32,6 +32,7 @@ export interface OrderItem {
   menu_item_name: string
   quantity: number
   unit_of_measure: string
+  weight: number | null
   unit_price: number
   modifier_total: number
   subtotal: number

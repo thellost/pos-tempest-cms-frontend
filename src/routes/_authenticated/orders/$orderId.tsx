@@ -319,10 +319,20 @@ function OrderDetailPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      {item.quantity} {item.unit_of_measure}
+                      {item.weight != null
+                        ? `${item.weight.toLocaleString('id-ID', {
+                            maximumFractionDigits: 3,
+                          })} ${item.unit_of_measure}`
+                        : `${item.quantity} ${item.unit_of_measure}`}
                     </TableCell>
                     <TableCell className="text-right">
                       {formatIDR(item.unit_price)}
+                      {item.weight != null && (
+                        <span className="text-muted-foreground">
+                          {' /'}
+                          {item.unit_of_measure}
+                        </span>
+                      )}
                     </TableCell>
                     <TableCell className="text-right font-semibold">
                       {formatIDR(item.subtotal)}

@@ -2696,6 +2696,7 @@ Get full order detail with nested items, modifiers, payments, and discounts.
         "menu_item_name": "Nasi Goreng Spesial",
         "quantity": 2.000,
         "unit_of_measure": "portion",
+        "weight": null,
         "unit_price": 45000.00,
         "modifier_total": 5000.00,
         "subtotal": 95000.00,
@@ -2724,6 +2725,7 @@ Get full order detail with nested items, modifiers, payments, and discounts.
         "menu_item_name": "Es Teh Manis",
         "quantity": 2.000,
         "unit_of_measure": "portion",
+        "weight": null,
         "unit_price": 15000.00,
         "modifier_total": 0.00,
         "subtotal": 30000.00,
@@ -4470,6 +4472,13 @@ Content-Disposition: attachment; filename="laporan-laba-rugi-Tempest-Cafe-Sudirm
 | Beban Operasional    | both      | Operating expenses grouped by cash-out reason with amounts, counts, and percentages. |
 | Transaksi Beban      | `full`    | Individual cash-out transaction lines (date, reason, label, amount, note, user). |
 | Pembelian (HPP)      | both      | Received purchase orders (PO number, supplier, received date, subtotal, tax, total, notes). |
+
+#### Reconciliation notes
+
+- **Penjualan Kotor** and **Metode Pembayaran** both count **only** orders with `status = 'completed'` **AND** `payment_status = 'paid'`. For a healthy POS the two totals match exactly: `SUM(payments.amount − payments.change_amount) = SUM(orders.total)` across paid orders.
+  - Any residual gap indicates real data issues (over/underpayment, stale payment rows, or orders marked paid without matching payment records) and should be investigated as data-integrity problems rather than query differences.
+- **Pendapatan per Kategori** sums `order_items.total` (line-item totals), which **excludes** Pajak, Biaya Layanan, diskon level order, and pembulatan. It is intentionally a pre-adjustment view and will therefore be lower than Penjualan Kotor. The sheet includes a footnote reminding the reader of this.
+- Orders with `payment_status = 'unpaid'` or `'partial'` are excluded from all three metrics. If you need to include billed-but-unpaid revenue, query the orders endpoints directly.
 
 **Error `400`:** Invalid layout value (must be `summary` or `full`).
 
