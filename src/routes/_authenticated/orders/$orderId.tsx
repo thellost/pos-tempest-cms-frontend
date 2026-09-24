@@ -326,13 +326,9 @@ function OrderDetailPage() {
                         : `${item.quantity} ${item.unit_of_measure}`}
                     </TableCell>
                     <TableCell className="text-right">
-                      {formatIDR(item.unit_price)}
-                      {item.weight != null && (
-                        <span className="text-muted-foreground">
-                          {' /'}
-                          {item.unit_of_measure}
-                        </span>
-                      )}
+                      {item.weight != null && item.weight > 0
+                        ? `${formatIDR(item.unit_price / item.weight)} /${item.unit_of_measure}`
+                        : formatIDR(item.unit_price)}
                     </TableCell>
                     <TableCell className="text-right font-semibold">
                       {formatIDR(item.subtotal)}
