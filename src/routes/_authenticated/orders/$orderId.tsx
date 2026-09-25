@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
-import { ArrowLeftIcon, XCircleIcon } from 'lucide-react'
+import { ArrowLeftIcon, FileDownIcon, XCircleIcon } from 'lucide-react'
+import { toast } from 'sonner'
 import { useOrder, useCancelOrder } from '@/hooks/use-orders'
 import { useAuth } from '@/hooks/use-auth'
 import { PageHeader } from '@/components/page-header'
@@ -21,6 +22,8 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { requireRole } from '@/lib/auth-guards'
+import { getItemQuantity, getItemUnitPrice, isWeightedItem } from '@/lib/order-items'
+import { downloadOrderReceipt } from '@/lib/order-receipt'
 import { formatIDR } from '@/components/orders/columns'
 
 // ─── Route ────────────────────────────────────────────────────────────────────
@@ -101,6 +104,7 @@ function OrderDetailPage() {
   const cancelOrder = useCancelOrder()
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false)
   const [cancelReason, setCancelReason] = useState('')
+  const [isExportingReceipt, setIsExportingReceipt] = useState(false)
 
   const canCancel =
     role === 'admin' &&
@@ -112,6 +116,18 @@ function OrderDetailPage() {
     setCancelDialogOpen(false)
     setCancelReason('')
     router.navigate({ to: '/orders' })
+  }
+
+  const handleExportReceipt = async () => {
+    if (!order) return
+    setIsExportingReceipt(true)
+    try {
+      await downloadOrderReceipt(order)
+    } catch {
+      toast.error('Failed to generate receipt')
+    } finally {
+      setIsExportingReceipt(false)
+    }
   }
 
   if (isLoading) {
@@ -139,16 +155,26 @@ function OrderDetailPage() {
             title={order.order_number}
             description={`${order.branch_name}${order.table_number ? ` · Table ${order.table_number}` : ''}`}
             actions={
-              canCancel ? (
+              <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
-                  className="text-destructive hover:bg-destructive/10"
-                  onClick={() => setCancelDialogOpen(true)}
+                  disabled={isExportingReceipt}
+                  onClick={handleExportReceipt}
                 >
-                  <XCircleIcon className="mr-2 size-4" />
-                  Cancel Order
+                  <FileDownIcon className="mr-2 size-4" />
+                  {isExportingReceipt ? 'Generating…' : 'Receipt PDF'}
                 </Button>
-              ) : undefined
+                {canCancel && (
+                  <Button
+                    variant="outline"
+                    className="text-destructive hover:bg-destructive/10"
+                    onClick={() => setCancelDialogOpen(true)}
+                  >
+                    <XCircleIcon className="mr-2 size-4" />
+                    Cancel Order
+                  </Button>
+                )}
+              </div>
             }
           />
       </div>
@@ -319,15 +345,14 @@ function OrderDetailPage() {
                       )}
                     </TableCell>
                     <TableCell className="text-right">
-                      {item.weight != null
-                        ? `${item.weight.toLocaleString('id-ID', {
-                            maximumFractionDigits: 3,
-                          })} ${item.unit_of_measure}`
-                        : `${item.quantity} ${item.unit_of_measure}`}
+                      {getItemQuantity(item).toLocaleString('id-ID', {
+                        maximumFractionDigits: 3,
+                      })}{' '}
+                      {item.unit_of_measure}
                     </TableCell>
                     <TableCell className="text-right">
-                      {item.weight != null && item.weight > 0
-                        ? `${formatIDR(item.unit_price / item.weight)} /${item.unit_of_measure}`
+                      {isWeightedItem(item)
+                        ? `${formatIDR(getItemUnitPrice(item))} /${item.unit_of_measure}`
                         : formatIDR(item.unit_price)}
                     </TableCell>
                     <TableCell className="text-right font-semibold">
