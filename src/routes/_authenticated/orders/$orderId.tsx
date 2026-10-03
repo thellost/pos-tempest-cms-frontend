@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
+import * as Sentry from '@sentry/tanstackstart-react'
 import { ArrowLeftIcon, FileDownIcon, XCircleIcon } from 'lucide-react'
 import { toast } from 'sonner'
 import { useOrder, useCancelOrder } from '@/hooks/use-orders'
@@ -123,7 +124,17 @@ function OrderDetailPage() {
     setIsExportingReceipt(true)
     try {
       await downloadOrderReceipt(order)
-    } catch {
+    } catch (error) {
+      console.error('[order-receipt] failed to generate receipt', error, {
+        orderId: order.id,
+        orderNumber: order.order_number,
+      })
+      Sentry.captureException(error, {
+        extra: {
+          orderId: order.id,
+          orderNumber: order.order_number,
+        },
+      })
       toast.error('Failed to generate receipt')
     } finally {
       setIsExportingReceipt(false)

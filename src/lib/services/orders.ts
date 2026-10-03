@@ -43,7 +43,7 @@ export interface OrderItem {
   voided_by: number | null
   void_reason: string | null
   created_at: string
-  modifiers: OrderItemModifier[]
+  modifiers?: OrderItemModifier[]
 }
 
 export interface OrderPayment {

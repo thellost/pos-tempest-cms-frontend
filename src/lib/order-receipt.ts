@@ -67,7 +67,12 @@ interface LogoImage {
   heightMm: number
 }
 
-function formatIDR(value: number): string {
+function text(value: unknown): string {
+  return String(value ?? '')
+}
+
+function formatIDR(value: number | null | undefined): string {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return '-'
   return new Intl.NumberFormat('id-ID', {
     style: 'currency',
     currency: 'IDR',
@@ -78,29 +83,33 @@ function formatIDR(value: number): string {
     .replace(/\u00a0/g, ' ')
 }
 
-function formatQuantity(value: number): string {
+function formatQuantity(value: number | null | undefined): string {
+  if (typeof value !== 'number' || !Number.isFinite(value)) return '-'
   return new Intl.NumberFormat('id-ID', { maximumFractionDigits: 3 })
     .format(value)
     .replace(/\u00a0/g, ' ')
 }
 
-function formatDate(iso: string): string {
+function formatDate(iso: string | null | undefined): string {
+  if (!iso) return ''
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return ''
   return new Intl.DateTimeFormat('id-ID', {
     dateStyle: 'medium',
     timeStyle: 'short',
-  }).format(new Date(iso))
+  }).format(date)
 }
 
 function wrap(
   probe: jsPDF,
-  text: string,
+  content: string,
   size: number,
   style: 'normal' | 'bold' | 'italic',
   indent: number,
 ): Array<string> {
   probe.setFont('helvetica', style)
   probe.setFontSize(size)
-  return probe.splitTextToSize(text, CONTENT_WIDTH_MM - indent) as Array<string>
+  return probe.splitTextToSize(content, CONTENT_WIDTH_MM - indent) as Array<string>
 }
 
 async function loadLogo(): Promise<LogoImage | null> {
@@ -121,7 +130,8 @@ async function loadLogo(): Promise<LogoImage | null> {
       widthMm: LOGO_WIDTH_MM,
       heightMm: (LOGO_WIDTH_MM * canvas.height) / canvas.width,
     }
-  } catch {
+  } catch (error) {
+    console.warn('[order-receipt] failed to load or downscale logo', error)
     return null
   }
 }
@@ -142,7 +152,7 @@ function buildBlocks(order: Order, logo: LogoImage | null, probe: jsPDF): Array<
   blocks.push({
     kind: 'centered',
     height: 5,
-    text: order.branch_name,
+    text: text(order.branch_name),
     size: 9.5,
     style: 'bold',
   })
@@ -150,18 +160,18 @@ function buildBlocks(order: Order, logo: LogoImage | null, probe: jsPDF): Array<
   blocks.push({ kind: 'separator', height: 4 })
 
   const infoRows: Array<[string, string]> = [
-    [LABELS.orderNumber, order.order_number],
+    [LABELS.orderNumber, text(order.order_number)],
     [LABELS.date, formatDate(order.created_at)],
     [
       LABELS.type,
-      `${ORDER_TYPE_LABELS[order.order_type] || order.order_type}${
-        order.table_number ? ` · Table ${order.table_number}` : ''
+      `${ORDER_TYPE_LABELS[order.order_type] || text(order.order_type)}${
+        order.table_number ? ` · Table ${text(order.table_number)}` : ''
       }`,
     ],
-    [LABELS.cashier, order.cashier_name],
+    [LABELS.cashier, text(order.cashier_name)],
   ]
   if (order.customer_name) {
-    infoRows.push([LABELS.customer, order.customer_name])
+    infoRows.push([LABELS.customer, text(order.customer_name)])
   }
   if (order.guest_count > 0) {
     infoRows.push([LABELS.guests, String(order.guest_count)])
@@ -180,7 +190,8 @@ function buildBlocks(order: Order, logo: LogoImage | null, probe: jsPDF): Array<
   blocks.push({ kind: 'separator', height: 4 })
 
   for (const item of order.items ?? []) {
-    const nameText = item.is_voided ? `[VOID] ${item.menu_item_name}` : item.menu_item_name
+    const itemName = text(item.menu_item_name)
+    const nameText = item.is_voided ? `[VOID] ${itemName}` : itemName
     const nameLines = wrap(probe, nameText, 7.5, 'bold', 0)
     blocks.push({
       kind: 'text',
@@ -195,19 +206,19 @@ function buildBlocks(order: Order, logo: LogoImage | null, probe: jsPDF): Array<
     blocks.push({
       kind: 'row',
       height: BASE_LINE_MM,
-      left: `  ${formatQuantity(getItemQuantity(item))} ${item.unit_of_measure} x ${formatIDR(
-        getItemUnitPrice(item),
-      )}`,
+      left: `  ${formatQuantity(getItemQuantity(item))} ${text(
+        item.unit_of_measure,
+      )} x ${formatIDR(getItemUnitPrice(item))}`,
       right: formatIDR(item.subtotal),
       size: 7,
       style: 'normal',
       gray: item.is_voided,
     })
 
-    for (const modifier of item.modifiers) {
+    for (const modifier of item.modifiers ?? []) {
       const suffix =
         modifier.extra_price > 0 ? ` (+${formatIDR(modifier.extra_price)})` : ''
-      const lines = wrap(probe, `+ ${modifier.modifier_name}${suffix}`, 6.5, 'normal', 3)
+      const lines = wrap(probe, `+ ${text(modifier.modifier_name)}${suffix}`, 6.5, 'normal', 3)
       blocks.push({
         kind: 'text',
         height: lines.length * SMALL_LINE_MM,
@@ -220,7 +231,7 @@ function buildBlocks(order: Order, logo: LogoImage | null, probe: jsPDF): Array<
     }
 
     if (item.notes) {
-      const lines = wrap(probe, item.notes, 6.5, 'italic', 3)
+      const lines = wrap(probe, text(item.notes), 6.5, 'italic', 3)
       blocks.push({
         kind: 'text',
         height: lines.length * SMALL_LINE_MM,
@@ -295,7 +306,9 @@ function buildBlocks(order: Order, logo: LogoImage | null, probe: jsPDF): Array<
       blocks.push({
         kind: 'row',
         height: BASE_LINE_MM,
-        left: PAYMENT_METHOD_LABELS[payment.payment_method] || payment.payment_method,
+        left: text(
+          PAYMENT_METHOD_LABELS[payment.payment_method] || payment.payment_method,
+        ),
         right: formatIDR(payment.amount),
         size: 7.5,
         style: 'normal',
